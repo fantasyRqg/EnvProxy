@@ -22,6 +22,10 @@ public class ProxyNative {
 
 
     public void startProxy() {
+        if (mVpnFd < 0) {
+            throw new RuntimeException("not set Vpn fd");
+        }
+
 
     }
 
@@ -44,6 +48,10 @@ public class ProxyNative {
     private native void initNative();
 
     private native void destroyNative();
+
+    private native void setVpnFd(int fd);
+
+    private native void startProxy_Native();
 
     private static native void initClass();
 

@@ -6,33 +6,45 @@
 #include "proxyEngine.h"
 #include "log.h"
 
+
+#define SOCKT_MTU  10000
+
 jfieldID nativeHandlerField;
 
 proxyEngine *getProxyEngine(JNIEnv *env, jobject thiz) {
     return reinterpret_cast<proxyEngine *>(env->GetLongField(thiz, nativeHandlerField));
 }
 
-static void initClass(JNIEnv *env, jclass clazz) {
+void initClass(JNIEnv *env, jclass clazz) {
     nativeHandlerField = env->GetFieldID(clazz, "mNativeHandler", "J");
 }
 
-static jint getMTU(JNIEnv *, jclass) {
+jint getMTU(JNIEnv *, jclass) {
 //    int result = a + b;
 //    ALOGI("%d + %d = %d", a, b, result);
-    return 10000;
+    return SOCKT_MTU;
 }
 
-static void initNative(JNIEnv *env, jobject thiz) {
-    auto p = new proxyEngine();
+void initNative(JNIEnv *env, jobject thiz) {
+    auto p = new proxyEngine(SOCKT_MTU);
 
     ALOGI("new instance %ld", p);
     env->SetLongField(thiz, nativeHandlerField, reinterpret_cast<jlong>(p));
 }
 
 
-static void destroyNative(JNIEnv *env, jobject thiz) {
+void destroyNative(JNIEnv *env, jobject thiz) {
     delete getProxyEngine(env, thiz);
     env->SetLongField(thiz, nativeHandlerField, NULL);
+}
+
+void setVpnFd(JNIEnv *env, jobject thiz, jint fd) {
+    getProxyEngine(env, thiz)->mVpnFd = fd;
+}
+
+
+void startProxy(JNIEnv *env, jobject thiz) {
+    getProxyEngine(env, thiz)->mVpnFd = fd;
 }
 
 
@@ -72,10 +84,12 @@ static void destroyNative(JNIEnv *env, jobject thiz) {
 
 static const char *classPathName = "com/youzan/envproxy/ProxyNative";
 static JNINativeMethod methods[] = {
-        {"getMTU",        "()I", (void *) getMTU},
-        {"initNative",    "()V", (void *) initNative},
-        {"initClass",     "()V", (void *) initClass},
-        {"destroyNative", "()V", (void *) destroyNative},
+        {"getMTU",            "()I",  (void *) getMTU},
+        {"initNative",        "()V",  (void *) initNative},
+        {"initClass",         "()V",  (void *) initClass},
+        {"destroyNative",     "()V",  (void *) destroyNative},
+        {"setVpnFd",          "(I)V", (void *) setVpnFd},
+        {"startProxy_Native", "(I)V", (void *) startProxy},
 };
 
 /*

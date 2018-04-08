@@ -45,6 +45,7 @@ class ProxyService : VpnService() {
 
         val fileDp = getVpnBuilder().establish()
 
+        fileDp.fd
         return notification
 
     }

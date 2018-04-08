@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">EnvProxy</string>
+
+    <string name="tcp_count">tcp: %1$d</string>
+    <string name="udp_count">udp: %1$d</string>
+    <string name="icmp_count">icmp: %1$d</string>
+    <string name="unknown_count">unknow: %1$d</string>
+    <string name="vpn_switch">Vpn Switch</string>
+</resources>

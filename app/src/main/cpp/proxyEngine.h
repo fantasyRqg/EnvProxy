@@ -11,6 +11,10 @@
 
 #define EPOLL_EVENTS 20
 
+#include <sys/epoll.h>
+
+#include "ip/ip.h"
+
 
 class proxyEngine {
 public:
@@ -20,13 +24,17 @@ public:
 
     void handleEvents();
 
+    void stopHandleEvents();
+
 public:
     int mVpnFd = -1;
     bool mRunning = false;
     size_t mMTU = 1000;
 
 private:
-    int checkTun(epoll_event *pEvent);
+    int checkTun(epoll_event *pEvent, proxy::ip **ip_hdl_s, size_t hdl_size);
+
+
 };
 
 

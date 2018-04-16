@@ -33,7 +33,6 @@ class MainActivity : Activity() {
                 stopProxy()
             }
         }
-        File.separator
     }
 
 

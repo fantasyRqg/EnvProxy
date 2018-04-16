@@ -15,17 +15,16 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <netinet/in6.h>
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/udp.h>
 #include <netinet/tcp.h>
-#include <netinet/ip_icmp.h>
 #include <netinet/icmp6.h>
 
 
 #include "proxyEngine.h"
 #include "log.h"
+#include "ip/ip4.h"
 
 #define LOG_TAG "proxyEngine"
 
@@ -63,6 +62,13 @@ void proxyEngine::handleEvents() {
         return;
     }
 
+
+    //init ip handlers
+#define IP_HDL_SIZE  1
+    proxy::ip **ip_hdl_s = static_cast<proxy::ip **>(malloc(sizeof(proxy::ip *)));
+    ip_hdl_s[0] = new ip4(epoll_fd, mVpnFd);
+
+
     //monitor tun event
     struct epoll_event ev_tun;
     memset(&ev_tun, 0, sizeof(struct epoll_event));
@@ -81,16 +87,22 @@ void proxyEngine::handleEvents() {
 
         if (ready > 0) {
             for (int i = 0; i < ready; ++i) {
-                checkTun(&ev[i]);
+                checkTun(&ev[i], ip_hdl_s, IP_HDL_SIZE);
             }
         }
 
     }
 
+    //release resource
+    for (int i = 0; i < IP_HDL_SIZE; ++i) {
+        delete ip_hdl_s[i];
+    }
+    free(ip_hdl_s);
+
 
 }
 
-int proxyEngine::checkTun(epoll_event *pEvent) {
+int proxyEngine::checkTun(epoll_event *pEvent, proxy::ip **ip_hdl_s, size_t hdl_size) {
     if (pEvent->events & EPOLLERR) {
         ALOGE("tun error %d: %s", errno, strerror(errno));
         return -1;
@@ -106,33 +118,13 @@ int proxyEngine::checkTun(epoll_event *pEvent) {
                 // Retry later
                 return 0;
         } else if (length > 0) {
-            uint8_t protocol;
-            void *saddr;
-            void *daddr;
-            char source[INET6_ADDRSTRLEN + 1];
-            char dest[INET6_ADDRSTRLEN + 1];
-
-            uint8_t version = (*buffer) >> 4;
-            if (version == 4) {
-                //ipv4
-                if (length < sizeof(struct iphdr)) {
-                    ALOGW("IP4 packet too short length %ld", length);
+            for (int i = 0; i < hdl_size; ++i) {
+                if (ip_hdl_s[i]->handlePackage(buffer, (size_t) length) == IP_HANDLE_SUCCESS) {
                     return 0;
                 }
-
-                struct iphdr *ip4hdr = (struct iphdr *) buffer;
-                protocol = ip4hdr->protocol;
-                saddr = &ip4hdr->saddr;
-                daddr = &ip4hdr->daddr;
-
-
-
-            } else if (version == 6) {
-
-            } else {
-                ALOGE("Unknown version %d", version);
-                return 0;
             }
+            ALOGW("unhandled package ip version %d", *buffer >> 4);
+            return -1;
         } else {
             free(buffer);
             ALOGE("tun %d empty read", mVpnFd);
@@ -143,6 +135,10 @@ int proxyEngine::checkTun(epoll_event *pEvent) {
     }
 
     return 0;
+}
+
+void proxyEngine::stopHandleEvents() {
+    mRunning = false;
 }
 
 

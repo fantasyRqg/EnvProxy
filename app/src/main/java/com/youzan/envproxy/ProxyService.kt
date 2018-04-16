@@ -22,6 +22,12 @@ class ProxyService : VpnService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(1, getNotification())
 
+        val fileDp = getVpnBuilder().establish()
+
+        proxyNative.setVpnFileDescriptor(fileDp.fd)
+        Thread {
+            proxyNative.startProxy()
+        }.start()
 
         return Service.START_STICKY
     }
@@ -43,9 +49,6 @@ class ProxyService : VpnService() {
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .build()
 
-        val fileDp = getVpnBuilder().establish()
-
-        fileDp.fd
         return notification
 
     }
@@ -71,8 +74,6 @@ class ProxyService : VpnService() {
 
         builder.addDnsServer("172.17.1.234")
         builder.addDnsServer("172.17.1.235")
-
-
         return builder
     }
 }

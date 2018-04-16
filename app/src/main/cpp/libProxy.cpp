@@ -28,7 +28,6 @@ jint getMTU(JNIEnv *, jclass) {
 void initNative(JNIEnv *env, jobject thiz) {
     auto p = new proxyEngine(SOCKT_MTU);
 
-    ALOGI("new instance %ld", p);
     env->SetLongField(thiz, nativeHandlerField, reinterpret_cast<jlong>(p));
 }
 
@@ -44,7 +43,11 @@ void setVpnFd(JNIEnv *env, jobject thiz, jint fd) {
 
 
 void startProxy(JNIEnv *env, jobject thiz) {
-    getProxyEngine(env, thiz)->mVpnFd = fd;
+    getProxyEngine(env, thiz)->handleEvents();
+}
+
+void stopProxy(JNIEnv *env, jobject thiz) {
+    getProxyEngine(env, thiz)->stopHandleEvents();
 }
 
 
@@ -89,7 +92,8 @@ static JNINativeMethod methods[] = {
         {"initClass",         "()V",  (void *) initClass},
         {"destroyNative",     "()V",  (void *) destroyNative},
         {"setVpnFd",          "(I)V", (void *) setVpnFd},
-        {"startProxy_Native", "(I)V", (void *) startProxy},
+        {"startProxy_Native", "()V",  (void *) startProxy},
+        {"stopProxy_Native",  "()V",  (void *) stopProxy},
 };
 
 /*

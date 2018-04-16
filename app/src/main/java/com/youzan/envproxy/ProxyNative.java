@@ -27,7 +27,16 @@ public class ProxyNative {
         }
 
 
+        setVpnFd(mVpnFd);
+
+        startProxy_Native();
     }
+
+
+    public void stopProxy() {
+        stopProxy_Native();
+    }
+
 
     @Override
     protected void finalize() throws Throwable {
@@ -52,6 +61,8 @@ public class ProxyNative {
     private native void setVpnFd(int fd);
 
     private native void startProxy_Native();
+
+    private native void stopProxy_Native();
 
     private static native void initClass();
 

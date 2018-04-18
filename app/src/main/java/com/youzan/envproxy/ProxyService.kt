@@ -3,9 +3,13 @@ package com.youzan.envproxy
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.VpnService
 import android.support.v4.app.NotificationCompat
+import android.support.v4.content.LocalBroadcastManager
 
 /**
  * * Created by rqg on 03/04/2018.
@@ -14,22 +18,82 @@ import android.support.v4.app.NotificationCompat
 
 class ProxyService : VpnService() {
     companion object {
+        const val STATUS_BROADCAST = "STATUS_BROADCAST"
+        const val STATUS_BROADCAST_TRIGGER = "STATUS_BROADCAST_TRIGGER"
+
+
+        const val PROXY_STATUS = "PROXY_STATUS"
+        const val STATUS_RUNNING = 1
+        const val STATUS_STOPED = 2
+
+
+        const val PROXY_CMD = "PROXY_CMD"
+        const val CMD_START = 1
+        const val CMD_STOP = 2
+
         const val NOTIFICATION_CHANNEL = "EnvProxy"
     }
 
     val proxyNative = ProxyNative()
 
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val cmd = intent?.getIntExtra(PROXY_CMD, -1)
+
+        when (cmd) {
+            CMD_START -> {
+                startProxy()
+            }
+
+            CMD_STOP -> {
+                stopProxy()
+                stopSelf()
+            }
+        }
+
+        return Service.START_STICKY
+    }
+
+    private fun stopProxy() {
+        proxyNative.stopProxy()
+        proxyNative.vpnFileDescriptor?.close()
+    }
+
+    override fun onRevoke() {
+        super.onRevoke()
+        stopProxy()
+    }
+
+    private fun startProxy() {
         startForeground(1, getNotification())
-
         val fileDp = getVpnBuilder().establish()
-
-        proxyNative.setVpnFileDescriptor(fileDp.fd)
+        proxyNative.vpnFileDescriptor = fileDp
         Thread {
             proxyNative.startProxy()
         }.start()
+    }
 
-        return Service.START_STICKY
+    private val triggerReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val bi = Intent(STATUS_BROADCAST)
+            bi.putExtra(PROXY_STATUS, if (proxyNative.isProxyRunning) STATUS_RUNNING else STATUS_STOPED)
+            LocalBroadcastManager.getInstance(this@ProxyService)
+                    .sendBroadcast(bi)
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(triggerReceiver, IntentFilter(STATUS_BROADCAST_TRIGGER))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        LocalBroadcastManager.getInstance(this@ProxyService)
+                .unregisterReceiver(triggerReceiver)
+
+        stopProxy()
     }
 
 

@@ -141,4 +141,8 @@ void proxyEngine::stopHandleEvents() {
     mRunning = false;
 }
 
+bool proxyEngine::isProxyRunning() {
+    return mRunning;
+}
+
 

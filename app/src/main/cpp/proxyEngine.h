@@ -26,6 +26,8 @@ public:
 
     void stopHandleEvents();
 
+    bool isProxyRunning();
+
 public:
     int mVpnFd = -1;
     bool mRunning = false;

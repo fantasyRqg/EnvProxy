@@ -50,6 +50,10 @@ void stopProxy(JNIEnv *env, jobject thiz) {
     getProxyEngine(env, thiz)->stopHandleEvents();
 }
 
+jboolean isProxyRunning(JNIEnv *env, jobject thiz) {
+    return (jboolean) (getProxyEngine(env, thiz)->isProxyRunning());
+}
+
 
 
 
@@ -87,13 +91,14 @@ void stopProxy(JNIEnv *env, jobject thiz) {
 
 static const char *classPathName = "com/youzan/envproxy/ProxyNative";
 static JNINativeMethod methods[] = {
-        {"getMTU",            "()I",  (void *) getMTU},
-        {"initNative",        "()V",  (void *) initNative},
-        {"initClass",         "()V",  (void *) initClass},
-        {"destroyNative",     "()V",  (void *) destroyNative},
-        {"setVpnFd",          "(I)V", (void *) setVpnFd},
-        {"startProxy_Native", "()V",  (void *) startProxy},
-        {"stopProxy_Native",  "()V",  (void *) stopProxy},
+        {"getMTU",                "()I",  (void *) getMTU},
+        {"initNative",            "()V",  (void *) initNative},
+        {"initClass",             "()V",  (void *) initClass},
+        {"destroyNative",         "()V",  (void *) destroyNative},
+        {"setVpnFd",              "(I)V", (void *) setVpnFd},
+        {"startProxy_Native",     "()V",  (void *) startProxy},
+        {"stopProxy_Native",      "()V",  (void *) stopProxy},
+        {"isProxyRunning_Native", "()Z",  (void *) isProxyRunning},
 };
 
 /*

@@ -1,5 +1,7 @@
 package com.youzan.envproxy;
 
+import android.os.ParcelFileDescriptor;
+
 /**
  * * Created by rqg on 03/04/2018.
  */
@@ -10,26 +12,34 @@ public class ProxyNative {
         initClass();
     }
 
-    private int mVpnFd = -1;
+    private ParcelFileDescriptor mVpnFd = null;
 
     public ProxyNative() {
         initNative();
     }
 
-    public void setVpnFileDescriptor(int fd) {
+    public void setVpnFileDescriptor(ParcelFileDescriptor fd) {
         mVpnFd = fd;
+    }
+
+    public ParcelFileDescriptor getVpnFileDescriptor() {
+        return mVpnFd;
     }
 
 
     public void startProxy() {
-        if (mVpnFd < 0) {
+        if (mVpnFd == null) {
             throw new RuntimeException("not set Vpn fd");
         }
 
 
-        setVpnFd(mVpnFd);
+        setVpnFd(mVpnFd.getFd());
 
         startProxy_Native();
+    }
+
+    public boolean isProxyRunning() {
+        return isProxyRunning_Native();
     }
 
 
@@ -63,6 +73,8 @@ public class ProxyNative {
     private native void startProxy_Native();
 
     private native void stopProxy_Native();
+
+    private native boolean isProxyRunning_Native();
 
     private static native void initClass();
 

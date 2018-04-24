@@ -21,7 +21,6 @@
 #include <netinet/tcp.h>
 #include <netinet/icmp6.h>
 
-
 #include "proxyEngine.h"
 #include "log.h"
 #include "ip/ip4.h"

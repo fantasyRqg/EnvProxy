@@ -18,6 +18,7 @@ android {
                 cppFlags "-frtti -fexceptions -std=c++11"
             }
         }
+
     }
     buildTypes {
         release {

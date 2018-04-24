@@ -38,7 +38,7 @@ void destroyNative(JNIEnv *env, jobject thiz) {
 }
 
 void setVpnFd(JNIEnv *env, jobject thiz, jint fd) {
-    getProxyEngine(env, thiz)->mVpnFd = fd;
+    getProxyEngine(env, thiz)->mTunFd = fd;
 }
 
 

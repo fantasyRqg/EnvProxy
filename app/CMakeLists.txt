@@ -20,12 +20,23 @@ add_library(libProxy
 
             src/main/cpp/libProxy.cpp
             src/main/cpp/proxyEngine.cpp
-            src/main/cpp/ip/ip.cpp
+            src/main/cpp/ip/IpPackage.h
             src/main/cpp/ip/ip4.cpp
             src/main/cpp/ip/ip6.cpp
+            src/main/cpp/ip/IpPackageFactory.cpp
             src/main/cpp/protocol/icmp.cpp
             src/main/cpp/protocol/tcp.cpp
             src/main/cpp/protocol/udp.cpp
+            src/main/cpp/protocol/protocol.cpp
+            src/main/cpp/protocol/ProtocolFactory.cpp
+            src/main/cpp/task/Task.cpp
+            src/main/cpp/task/TaskDNS.cpp
+            src/main/cpp/task/TaskHttp.cpp
+            src/main/cpp/task/TaskHttps.cpp
+            src/main/cpp/task/TaskICMP.cpp
+            src/main/cpp/task/TaskTCP.cpp
+            src/main/cpp/task/TaskUDP.cpp
+            src/main/cpp/task/TaskFactory.cpp
             )
 
 # add to target_include_directories

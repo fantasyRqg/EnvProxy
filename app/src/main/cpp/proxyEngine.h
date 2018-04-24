@@ -13,8 +13,7 @@
 
 #include <sys/epoll.h>
 
-#include "ip/ip.h"
-
+class IpPackage;
 
 class proxyEngine {
 public:
@@ -29,12 +28,12 @@ public:
     bool isProxyRunning();
 
 public:
-    int mVpnFd = -1;
+    int mTunFd = -1;
     bool mRunning = false;
     size_t mMTU = 1000;
 
 private:
-    int checkTun(epoll_event *pEvent, proxy::ip **ip_hdl_s, size_t hdl_size);
+    int checkTun(epoll_event *pEvent, IpPackage **ip_hdl_s, size_t hdl_size);
 
 
 };

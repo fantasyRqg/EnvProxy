@@ -5,8 +5,9 @@
 #ifndef ENVPROXY_ICMP_H
 #define ENVPROXY_ICMP_H
 
+#include "protocol.h"
 
-class icmp {
+class icmp :public protocol{
 
 };
 

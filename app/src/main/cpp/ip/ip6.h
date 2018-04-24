@@ -6,14 +6,18 @@
 #define ENVPROXY_IP6_H
 
 
-#include "ip.h"
+#include "IpPackage.h"
 
-class ip6 : public proxy::ip {
+
+class ip6 : public IpPackage {
 public:
-    ip6(int epollFd, int tunFd);
+    ip6(int epollFd, int tunFd, uint8_t *pkt, size_t length);
+
+    static int isIpV6Package(uint8_t *pkt, size_t length);
 
 private:
-    int handlePackage(uint8_t *pkt, size_t length) override;
+public:
+    int handlePackage() override;
 
 };
 

@@ -5,15 +5,18 @@
 #ifndef ENVPROXY_IP4_H
 #define ENVPROXY_IP4_H
 
+#include "IpPackage.h"
 
-#include "ip.h"
 
-class ip4 : public proxy::ip {
+class ip4 : public IpPackage {
 public:
-    ip4(int epollFd, int tunFd);
 
-private:
-    int handlePackage(uint8_t *pkt, size_t length) override;
+    ip4(int epollFd, int tunFd, uint8_t *pkt, size_t length);
+
+    static int isIpV4Package(uint8_t *pkt, size_t length);
+
+    int handlePackage() override;
+
 
 };
 

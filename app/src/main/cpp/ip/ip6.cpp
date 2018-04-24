@@ -7,19 +7,21 @@
 #include <netinet/ip.h>
 
 #include "ip6.h"
-#include "../log.h"
+
 
 #define LOG_TAG "IPV6"
 
-ip6::ip6(int epollFd, int tunFd) : proxy::ip(epollFd, tunFd) {}
 
-int ip6::handlePackage(uint8_t *pkt, size_t length) {
-    struct ip6_hdr *ip6hdr = (struct ip6_hdr *) pkt;
+ip6::ip6(int epollFd, int tunFd, uint8_t *pkt, size_t length) : IpPackage(epollFd, tunFd, pkt,
+                                                                          length) {}
+
+int ip6::handlePackage() {
+    struct ip6_hdr *ip6hdr = (struct ip6_hdr *) mPkt;
 
     if ((ip6hdr->ip6_vfc & IPV6_VERSION_MASK) != IPV6_VERSION)
         return IP_HANDLE_VERSION_NOT_MATCH;
 
-    if (length < sizeof(struct ip6_hdr)) {
+    if (mPktLength < sizeof(struct ip6_hdr)) {
         return IP_HANDLE_HDR_LEN_INVALID;
     }
 //
@@ -45,3 +47,16 @@ int ip6::handlePackage(uint8_t *pkt, size_t length) {
     return IP_HANDLE_SUCCESS;
 
 }
+
+int ip6::isIpV6Package(uint8_t *pkt, size_t length) {
+    struct ip6_hdr *ip6hdr = (struct ip6_hdr *) pkt;
+
+    if ((ip6hdr->ip6_vfc & IPV6_VERSION_MASK) != IPV6_VERSION)
+        return IP_HANDLE_VERSION_NOT_MATCH;
+
+    if (length < sizeof(struct ip6_hdr)) {
+        return IP_HANDLE_HDR_LEN_INVALID;
+    }
+    return IP_HANDLE_SUCCESS;
+}
+

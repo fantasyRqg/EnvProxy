@@ -24,6 +24,7 @@
 #include "proxyEngine.h"
 #include "log.h"
 #include "ip/ip4.h"
+#include "ip/IpPackage.h"
 
 #define LOG_TAG "proxyEngine"
 
@@ -36,7 +37,7 @@ proxyEngine::~proxyEngine() {
 
 void proxyEngine::handleEvents() {
     mRunning = true;
-    if (mVpnFd < 0) {
+    if (mTunFd < 0) {
         ALOGE("not set vpn fd");
         return;
     }
@@ -62,10 +63,10 @@ void proxyEngine::handleEvents() {
     }
 
 
-    //init ip handlers
+    //init IpPackage handlers
 #define IP_HDL_SIZE  1
-    proxy::ip **ip_hdl_s = static_cast<proxy::ip **>(malloc(sizeof(proxy::ip *)));
-    ip_hdl_s[0] = new ip4(epoll_fd, mVpnFd);
+    IpPackage **ip_hdl_s = static_cast<IpPackage **>(malloc(sizeof(IpPackage *)));
+    ip_hdl_s[0] = new ip4(epoll_fd, mTunFd);
 
 
     //monitor tun event
@@ -73,7 +74,7 @@ void proxyEngine::handleEvents() {
     memset(&ev_tun, 0, sizeof(struct epoll_event));
     ev_tun.events = EPOLLIN | EPOLLERR;
     ev_tun.data.ptr = nullptr;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, mVpnFd, &ev_tun)) {
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, mTunFd, &ev_tun)) {
         ALOGE("epoll add tun error %d: %s", errno, strerror(errno));
         return;
     }
@@ -101,7 +102,7 @@ void proxyEngine::handleEvents() {
 
 }
 
-int proxyEngine::checkTun(epoll_event *pEvent, proxy::ip **ip_hdl_s, size_t hdl_size) {
+int proxyEngine::checkTun(epoll_event *pEvent, IpPackage **ip_hdl_s, size_t hdl_size) {
     if (pEvent->events & EPOLLERR) {
         ALOGE("tun error %d: %s", errno, strerror(errno));
         return -1;
@@ -110,9 +111,9 @@ int proxyEngine::checkTun(epoll_event *pEvent, proxy::ip **ip_hdl_s, size_t hdl_
     if (pEvent->events & EPOLLIN) {
         uint8_t *buffer = static_cast<uint8_t *>(malloc(mMTU));
 
-        auto length = read(mVpnFd, buffer, mMTU);
+        auto length = read(mTunFd, buffer, mMTU);
         if (length < 0) {
-            ALOGE("tun %d read error %d: %s", mVpnFd, errno, strerror(errno));
+            ALOGE("tun %d read error %d: %s", mTunFd, errno, strerror(errno));
             if (errno == EINTR || errno == EAGAIN)
                 // Retry later
                 return 0;
@@ -122,11 +123,11 @@ int proxyEngine::checkTun(epoll_event *pEvent, proxy::ip **ip_hdl_s, size_t hdl_
                     return 0;
                 }
             }
-            ALOGW("unhandled package ip version %d", *buffer >> 4);
+            ALOGW("unhandled package IpPackage version %d", *buffer >> 4);
             return -1;
         } else {
             free(buffer);
-            ALOGE("tun %d empty read", mVpnFd);
+            ALOGE("tun %d empty read", mTunFd);
             return -1;
         }
 

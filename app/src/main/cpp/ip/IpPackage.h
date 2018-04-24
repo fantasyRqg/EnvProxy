@@ -7,7 +7,6 @@
 
 
 #include <stdint.h>
-#include <cstring>
 
 
 #define IP_HANDLE_SUCCESS 0
@@ -17,22 +16,19 @@
 #define IP_HANDLE_NOT_SUPPORT_MF 3
 #define IP_HANDLE_TOT_LEN_INVALID 4
 
-namespace proxy {
-    class ip {
-    public:
-        ip(int epollFd, int tunFd);
+class IpPackage {
+public:
+    IpPackage(int epollFd, int tunFd, uint8_t *pkt, size_t length);
 
-    public:
+public:
+    virtual int handlePackage() = 0;
 
-        virtual int handlePackage(uint8_t *pkt, size_t length) = 0;
+protected:
+    int epollFd;
+    int tunFd;
+    uint8_t *mPkt;
+    size_t mPktLength;
 
-    protected:
-        int epollFd;
-        int tunFd;
-
-    };
-
-
-}
+};
 
 #endif //ENVPROXY_IP_H

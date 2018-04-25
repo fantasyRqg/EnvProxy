@@ -11,7 +11,7 @@
 
 class ip6 : public IpPackage {
 public:
-    ip6(int epollFd, int tunFd, uint8_t *pkt, size_t length);
+    ip6(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength);
 
     ~ip6();
 

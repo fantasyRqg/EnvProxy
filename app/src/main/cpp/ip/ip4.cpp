@@ -66,5 +66,8 @@ ip4::~ip4() {
 
 }
 
-ip4::ip4(int epollFd, int tunFd, uint8_t *pkt, size_t length) : IpPackage(epollFd, tunFd, pkt,
-                                                                          length) {}
+ip4::ip4(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength) :
+        IpPackage(proxyEngine, pkt, pktLength) {
+
+}
+

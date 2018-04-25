@@ -63,7 +63,7 @@ void proxyEngine::handleEvents() {
     }
 
     //ip package factory
-    IpPackageFactory ipPackageFactory(epoll_fd, mTunFd);
+    IpPackageFactory ipPackageFactory(this);
 
 
     //monitor tun event

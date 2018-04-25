@@ -16,9 +16,12 @@
 #define IP_HANDLE_NOT_SUPPORT_MF 3
 #define IP_HANDLE_TOT_LEN_INVALID 4
 
+
+class proxyEngine;
+
 class IpPackage {
 public:
-    IpPackage(int epollFd, int tunFd, uint8_t *pkt, size_t pktLength);
+    IpPackage(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength);
 
     virtual ~IpPackage();
 
@@ -26,8 +29,7 @@ public:
     virtual int handlePackage() = 0;
 
 protected:
-    int epollFd;
-    int tunFd;
+    proxyEngine *mProxyEngine;
     uint8_t *mPkt;
     size_t mPktLength;
 

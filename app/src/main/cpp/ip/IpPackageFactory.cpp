@@ -14,16 +14,14 @@
 IpPackage *IpPackageFactory::createIpPackage(uint8_t *pkt, size_t length) {
     if (ip4::isIpV4Package(pkt, length) == IP_HANDLE_SUCCESS) {
         ALOGD("create ipv4 package");
-        return new ip4(mEpollFd, mTunFd, pkt, length);
-    } else if (ip6::isIpV6Package(pkt, length) == IP_HANDLE_SUCCESS) {
-        ALOGV("create ipv6 package");
-        return new ip6(mEpollFd, mTunFd, pkt, length);
+        return new ip4(mProxyEngine, pkt, length);
+//    } else if (ip6::isIpV6Package(pkt, length) == IP_HANDLE_SUCCESS) {
+//        ALOGV("create ipv6 package");
+//        return new ip6(mProxyEngine, pkt, length);
     } else {
         return nullptr;
     }
 }
 
-IpPackageFactory::IpPackageFactory(int epollFd, int tunFd) : mEpollFd(epollFd), mTunFd(tunFd) {
-
-}
+IpPackageFactory::IpPackageFactory(proxyEngine *proxyEngine) : mProxyEngine(proxyEngine) {}
 

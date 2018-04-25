@@ -6,11 +6,11 @@
 #include "IpPackage.h"
 
 
-IpPackage::IpPackage(int epollFd, int tunFd, uint8_t *pkt, size_t pktLength) :
-        epollFd(epollFd), tunFd(tunFd), mPkt(pkt), mPktLength(pktLength) {
-
-}
-
 IpPackage::~IpPackage() {
     free(mPkt);
+}
+
+IpPackage::IpPackage(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength) :
+        mProxyEngine(proxyEngine), mPkt(pkt), mPktLength(pktLength) {
+
 }

@@ -10,15 +10,18 @@
 
 class IpPackage;
 
+class proxyEngine;
+
 class IpPackageFactory {
 public:
-    IpPackageFactory(int epollFd, int tunFd);
+
+    IpPackageFactory(proxyEngine *proxyEngine);
 
     IpPackage *createIpPackage(uint8_t *pkt, size_t length);
 
 private:
-    int mEpollFd;
-    int mTunFd;
+    proxyEngine *mProxyEngine;
+
 };
 
 

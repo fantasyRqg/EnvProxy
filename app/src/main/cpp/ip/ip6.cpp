@@ -60,6 +60,9 @@ int ip6::isIpV6Package(uint8_t *pkt, size_t length) {
 ip6::~ip6() {
 }
 
-ip6::ip6(int epollFd, int tunFd, uint8_t *pkt, size_t length) : IpPackage(epollFd, tunFd, pkt,
-                                                                          length) {}
+ip6::ip6(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength) :
+        IpPackage(proxyEngine, pkt, pktLength) {
+
+}
+
 

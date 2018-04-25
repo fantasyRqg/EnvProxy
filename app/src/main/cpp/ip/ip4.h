@@ -10,8 +10,9 @@
 
 class ip4 : public IpPackage {
 public:
-
     ip4(int epollFd, int tunFd, uint8_t *pkt, size_t length);
+
+    ~ip4();
 
     static int isIpV4Package(uint8_t *pkt, size_t length);
 

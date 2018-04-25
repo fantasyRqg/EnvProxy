@@ -12,9 +12,6 @@
 
 #define LOG_TAG "IPV4"
 
-ip4::ip4(int epollFd, int tunFd, uint8_t *pkt, size_t length) : IpPackage(epollFd, tunFd, pkt,
-                                                                          length) {}
-
 int ip4::handlePackage() {
     struct iphdr *ip4hdr = (struct iphdr *) mPkt;
 
@@ -65,6 +62,9 @@ int ip4::isIpV4Package(uint8_t *pkt, size_t length) {
     return IP_HANDLE_SUCCESS;
 }
 
-int ip4::handlePackage() {
-    return 0;
+ip4::~ip4() {
+
 }
+
+ip4::ip4(int epollFd, int tunFd, uint8_t *pkt, size_t length) : IpPackage(epollFd, tunFd, pkt,
+                                                                          length) {}

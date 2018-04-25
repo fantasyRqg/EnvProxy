@@ -18,7 +18,9 @@
 
 class IpPackage {
 public:
-    IpPackage(int epollFd, int tunFd, uint8_t *pkt, size_t length);
+    IpPackage(int epollFd, int tunFd, uint8_t *pkt, size_t pktLength);
+
+    virtual ~IpPackage();
 
 public:
     virtual int handlePackage() = 0;

@@ -24,6 +24,7 @@ add_library(libProxy
             src/main/cpp/ip/ip4.cpp
             src/main/cpp/ip/ip6.cpp
             src/main/cpp/ip/IpPackageFactory.cpp
+            src/main/cpp/ip/IpPackage.cpp
             src/main/cpp/protocol/icmp.cpp
             src/main/cpp/protocol/tcp.cpp
             src/main/cpp/protocol/udp.cpp

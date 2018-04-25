@@ -13,6 +13,8 @@ class ip6 : public IpPackage {
 public:
     ip6(int epollFd, int tunFd, uint8_t *pkt, size_t length);
 
+    ~ip6();
+
     static int isIpV6Package(uint8_t *pkt, size_t length);
 
 private:

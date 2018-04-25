@@ -13,7 +13,7 @@
 
 #include <sys/epoll.h>
 
-class IpPackage;
+class IpPackageFactory;
 
 class proxyEngine {
 public:
@@ -33,7 +33,7 @@ public:
     size_t mMTU = 1000;
 
 private:
-    int checkTun(epoll_event *pEvent, IpPackage **ip_hdl_s, size_t hdl_size);
+    int checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory);
 
 
 };

@@ -12,9 +12,6 @@
 #define LOG_TAG "IPV6"
 
 
-ip6::ip6(int epollFd, int tunFd, uint8_t *pkt, size_t length) : IpPackage(epollFd, tunFd, pkt,
-                                                                          length) {}
-
 int ip6::handlePackage() {
     struct ip6_hdr *ip6hdr = (struct ip6_hdr *) mPkt;
 
@@ -59,4 +56,10 @@ int ip6::isIpV6Package(uint8_t *pkt, size_t length) {
     }
     return IP_HANDLE_SUCCESS;
 }
+
+ip6::~ip6() {
+}
+
+ip6::ip6(int epollFd, int tunFd, uint8_t *pkt, size_t length) : IpPackage(epollFd, tunFd, pkt,
+                                                                          length) {}
 

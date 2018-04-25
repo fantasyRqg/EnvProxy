@@ -23,7 +23,7 @@
 
 #include "proxyEngine.h"
 #include "log.h"
-#include "ip/ip4.h"
+#include "ip/IpPackageFactory.h"
 #include "ip/IpPackage.h"
 
 #define LOG_TAG "proxyEngine"
@@ -62,11 +62,8 @@ void proxyEngine::handleEvents() {
         return;
     }
 
-
-    //init IpPackage handlers
-#define IP_HDL_SIZE  1
-    IpPackage **ip_hdl_s = static_cast<IpPackage **>(malloc(sizeof(IpPackage *)));
-    ip_hdl_s[0] = new ip4(epoll_fd, mTunFd);
+    //ip package factory
+    IpPackageFactory ipPackageFactory(epoll_fd, mTunFd);
 
 
     //monitor tun event
@@ -87,22 +84,15 @@ void proxyEngine::handleEvents() {
 
         if (ready > 0) {
             for (int i = 0; i < ready; ++i) {
-                checkTun(&ev[i], ip_hdl_s, IP_HDL_SIZE);
+                checkTun(&ev[i], &ipPackageFactory);
             }
         }
 
     }
-
-    //release resource
-    for (int i = 0; i < IP_HDL_SIZE; ++i) {
-        delete ip_hdl_s[i];
-    }
-    free(ip_hdl_s);
-
-
 }
 
-int proxyEngine::checkTun(epoll_event *pEvent, IpPackage **ip_hdl_s, size_t hdl_size) {
+
+int proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory) {
     if (pEvent->events & EPOLLERR) {
         ALOGE("tun error %d: %s", errno, strerror(errno));
         return -1;
@@ -116,14 +106,17 @@ int proxyEngine::checkTun(epoll_event *pEvent, IpPackage **ip_hdl_s, size_t hdl_
             ALOGE("tun %d read error %d: %s", mTunFd, errno, strerror(errno));
             if (errno == EINTR || errno == EAGAIN)
                 // Retry later
-                return 0;
+                return -1;
         } else if (length > 0) {
-            for (int i = 0; i < hdl_size; ++i) {
-                if (ip_hdl_s[i]->handlePackage(buffer, (size_t) length) == IP_HANDLE_SUCCESS) {
-                    return 0;
-                }
+            auto ipPkt = ipPackageFactory->createIpPackage(buffer, (size_t) length);
+
+            if (ipPkt == NULL) {
+                ALOGW("unhandled package IpPackage version %d", *buffer >> 4);
+            } else {
+                ipPkt->handlePackage();
+                delete ipPkt;
             }
-            ALOGW("unhandled package IpPackage version %d", *buffer >> 4);
+
             return -1;
         } else {
             free(buffer);

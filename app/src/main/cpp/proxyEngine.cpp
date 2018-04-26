@@ -35,6 +35,7 @@ proxyEngine::proxyEngine(size_t mtu) {
 proxyEngine::~proxyEngine() {
 }
 
+
 void proxyEngine::handleEvents() {
     mRunning = true;
     if (mTunFd < 0) {
@@ -70,7 +71,7 @@ void proxyEngine::handleEvents() {
     struct epoll_event ev_tun;
     memset(&ev_tun, 0, sizeof(struct epoll_event));
     ev_tun.events = EPOLLIN | EPOLLERR;
-    ev_tun.data.ptr = nullptr;
+    ev_tun.data.ptr = &ev_tun;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, mTunFd, &ev_tun)) {
         ALOGE("epoll add tun error %d: %s", errno, strerror(errno));
         return;
@@ -84,7 +85,15 @@ void proxyEngine::handleEvents() {
 
         if (ready > 0) {
             for (int i = 0; i < ready; ++i) {
-                checkTun(&ev[i], &ipPackageFactory);
+                if (ev[i].data.ptr == &ev_tun) {
+                    auto ipPkt = checkTun(&ev[i], &ipPackageFactory);
+
+
+                } else {
+                    //task event
+                }
+
+
             }
         }
 
@@ -92,10 +101,10 @@ void proxyEngine::handleEvents() {
 }
 
 
-int proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory) {
+IpPackage *proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory) {
     if (pEvent->events & EPOLLERR) {
         ALOGE("tun error %d: %s", errno, strerror(errno));
-        return -1;
+        return nullptr;
     }
 
     if (pEvent->events & EPOLLIN) {
@@ -106,28 +115,26 @@ int proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactor
             ALOGE("tun %d read error %d: %s", mTunFd, errno, strerror(errno));
             if (errno == EINTR || errno == EAGAIN)
                 // Retry later
-                return -1;
+                return nullptr;
         } else if (length > 0) {
             auto ipPkt = ipPackageFactory->createIpPackage(buffer, (size_t) length);
-
             if (ipPkt == NULL) {
                 ALOGW("unhandled package IpPackage version %d", *buffer >> 4);
             } else {
                 ipPkt->handlePackage();
-                delete ipPkt;
             }
 
-            return -1;
+            return ipPkt;
         } else {
             free(buffer);
             ALOGE("tun %d empty read", mTunFd);
-            return -1;
+            return nullptr;
         }
 
 
     }
 
-    return 0;
+    return nullptr;
 }
 
 void proxyEngine::stopHandleEvents() {

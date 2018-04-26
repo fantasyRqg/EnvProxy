@@ -18,6 +18,8 @@ public:
 
     int handlePackage() override;
 
+    int getIpVersion() override;
+
 
 };
 

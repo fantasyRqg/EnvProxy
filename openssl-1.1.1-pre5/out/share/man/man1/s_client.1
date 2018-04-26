@@ -237,7 +237,7 @@ s_client \- SSL/TLS client program
 [\fB\-cipher cipherlist\fR]
 [\fB\-ciphersuites val\fR]
 [\fB\-serverpref\fR]
-[\fB\-starttls protocol\fR]
+[\fB\-starttls Protocol\fR]
 [\fB\-xmpphost hostname\fR]
 [\fB\-name hostname\fR]
 [\fB\-engine id\fR]
@@ -453,10 +453,10 @@ Prints out the \s-1SSL\s0 session states.
 Print extensive debugging information including a hex dump of all traffic.
 .IP "\fB\-msg\fR" 4
 .IX Item "-msg"
-Show all protocol messages with hex dump.
+Show all Protocol messages with hex dump.
 .IP "\fB\-trace\fR" 4
 .IX Item "-trace"
-Show verbose trace output of protocol messages. OpenSSL needs to be compiled
+Show verbose trace output of Protocol messages. OpenSSL needs to be compiled
 with \fBenable-ssl-trace\fR for this option to work.
 .IP "\fB\-msgfile\fR" 4
 .IX Item "-msgfile"
@@ -496,19 +496,19 @@ This option must be provided in order to use a \s-1PSK\s0 cipher.
 .IP "\fB\-ssl3\fR, \fB\-tls1\fR, \fB\-tls1_1\fR, \fB\-tls1_2\fR, \fB\-tls1_3\fR, \fB\-no_ssl3\fR, \fB\-no_tls1\fR, \fB\-no_tls1_1\fR, \fB\-no_tls1_2\fR, \fB\-no_tls1_3\fR" 4
 .IX Item "-ssl3, -tls1, -tls1_1, -tls1_2, -tls1_3, -no_ssl3, -no_tls1, -no_tls1_1, -no_tls1_2, -no_tls1_3"
 These options require or disable the use of the specified \s-1SSL\s0 or \s-1TLS\s0 protocols.
-By default \fBs_client\fR will negotiate the highest mutually supported protocol
+By default \fBs_client\fR will negotiate the highest mutually supported Protocol
 version.
 When a specific \s-1TLS\s0 version is required, only that version will be offered to
 and accepted from the server.
 .IP "\fB\-dtls\fR, \fB\-dtls1\fR, \fB\-dtls1_2\fR" 4
 .IX Item "-dtls, -dtls1, -dtls1_2"
 These options make \fBs_client\fR use \s-1DTLS\s0 protocols instead of \s-1TLS.\s0
-With \fB\-dtls\fR, \fBs_client\fR will negotiate any supported \s-1DTLS\s0 protocol version,
+With \fB\-dtls\fR, \fBs_client\fR will negotiate any supported \s-1DTLS\s0 Protocol version,
 whilst \fB\-dtls1\fR and \fB\-dtls1_2\fR will only support \s-1DTLS1.0\s0 and \s-1DTLS1.2\s0
 respectively.
 .IP "\fB\-sctp\fR" 4
 .IX Item "-sctp"
-Use \s-1SCTP\s0 for the transport protocol instead of \s-1UDP\s0 in \s-1DTLS.\s0 Must be used in
+Use \s-1SCTP\s0 for the transport Protocol instead of \s-1UDP\s0 in \s-1DTLS.\s0 Must be used in
 conjunction with \fB\-dtls\fR, \fB\-dtls1\fR or \fB\-dtls1_2\fR. This option is only
 available where OpenSSL has support for \s-1SCTP\s0 enabled.
 .IP "\fB\-fallback_scsv\fR" 4
@@ -591,10 +591,10 @@ configured. Although the server determines which cipher suite is used it should
 take the first supported cipher in the list sent by the client. See the
 \&\fBciphers\fR command for more information. The format for this list is a simple
 colon (\*(L":\*(R") separated list of TLSv1.3 ciphersuite names.
-.IP "\fB\-starttls protocol\fR" 4
-.IX Item "-starttls protocol"
-Send the protocol-specific message(s) to switch to \s-1TLS\s0 for communication.
-\&\fBprotocol\fR is a keyword for the intended protocol.  Currently, the only
+.IP "\fB\-starttls Protocol\fR" 4
+.IX Item "-starttls Protocol"
+Send the Protocol-specific message(s) to switch to \s-1TLS\s0 for communication.
+\&\fBprotocol\fR is a keyword for the intended Protocol.  Currently, the only
 supported keywords are \*(L"smtp\*(R", \*(L"pop3\*(R", \*(L"imap\*(R", \*(L"ftp\*(R", \*(L"xmpp\*(R", \*(L"xmpp-server\*(R",
 \&\*(L"irc\*(R", \*(L"postgres\*(R", \*(L"mysql\*(R", \*(L"lmtp\*(R", \*(L"nntp\*(R", \*(L"sieve\*(R" and \*(L"ldap\*(R".
 .IP "\fB\-xmpphost hostname\fR" 4
@@ -663,7 +663,7 @@ response (if any) is printed out.
 These flags enable the Enable the Application-Layer Protocol Negotiation
 or Next Protocol Negotiation (\s-1NPN\s0) extension, respectively. \s-1ALPN\s0 is the
 \&\s-1IETF\s0 standard and replaces \s-1NPN.\s0
-The \fBprotocols\fR list is a comma-separated list of protocol names that
+The \fBprotocols\fR list is a comma-separated list of Protocol names that
 the client should advertise support for. The list should contain the most
 desirable protocols first.  Protocol names are printable \s-1ASCII\s0 strings,
 for example \*(L"http/1.1\*(R" or \*(L"spdy/3\*(R".

@@ -193,10 +193,10 @@
 <p>A negotiation not in compliance with export restrictions was detected; for example, attempting to transfer a 1024 bit ephemeral RSA key for the RSA_EXPORT handshake method. This message is always fatal.</p>
 
 </dd>
-<dt id="PV-protocol-version">&quot;PV&quot;/&quot;protocol version&quot;</dt>
+<dt id="PV-Protocol-version">&quot;PV&quot;/&quot;Protocol version&quot;</dt>
 <dd>
 
-<p>The protocol version the client has attempted to negotiate is recognized, but not supported. (For example, old protocol versions might be avoided for security reasons). This message is always fatal.</p>
+<p>The Protocol version the client has attempted to negotiate is recognized, but not supported. (For example, old Protocol versions might be avoided for security reasons). This message is always fatal.</p>
 
 </dd>
 <dt id="IS-insufficient-security">&quot;IS&quot;/&quot;insufficient security&quot;</dt>
@@ -208,13 +208,13 @@
 <dt id="IE-internal-error">&quot;IE&quot;/&quot;internal error&quot;</dt>
 <dd>
 
-<p>An internal error unrelated to the peer or the correctness of the protocol makes it impossible to continue (such as a memory allocation failure). This message is always fatal.</p>
+<p>An internal error unrelated to the peer or the correctness of the Protocol makes it impossible to continue (such as a memory allocation failure). This message is always fatal.</p>
 
 </dd>
 <dt id="US-user-canceled">&quot;US&quot;/&quot;user canceled&quot;</dt>
 <dd>
 
-<p>This handshake is being canceled for some reason unrelated to a protocol failure. If the user cancels an operation after the handshake is complete, just closing the connection by sending a close_notify is more appropriate. This alert should be followed by a close_notify. This message is generally a warning.</p>
+<p>This handshake is being canceled for some reason unrelated to a Protocol failure. If the user cancels an operation after the handshake is complete, just closing the connection by sending a close_notify is more appropriate. This alert should be followed by a close_notify. This message is generally a warning.</p>
 
 </dd>
 <dt id="NR-no-renegotiation">&quot;NR&quot;/&quot;no renegotiation&quot;</dt>

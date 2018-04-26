@@ -237,7 +237,7 @@ This implements a generic SSL/TLS server which accepts connections from remote
 clients speaking SSL/TLS. It's intended for testing purposes only and provides
 only rudimentary interface functionality but internally uses mostly all
 functionality of the OpenSSL B<ssl> library.  It provides both an own command
-line oriented protocol for testing SSL functions and a simple HTTP response
+line oriented Protocol for testing SSL functions and a simple HTTP response
 facility to emulate an SSL/TLS-aware webserver.
 
 =item L<B<s_time>|s_time(1)>

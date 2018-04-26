@@ -169,11 +169,11 @@ should not be free'd.
 \&\fISSL_SESSION_set1_hostname()\fR sets the \s-1SNI\s0 value for the hostname to a copy of
 the string provided in hostname.
 .PP
-\&\fISSL_SESSION_get0_alpn_selected()\fR retrieves the selected \s-1ALPN\s0 protocol for this
+\&\fISSL_SESSION_get0_alpn_selected()\fR retrieves the selected \s-1ALPN\s0 Protocol for this
 session and its associated length in bytes. The returned value of \fB*alpn\fR is a
 pointer to memory maintained within \fBs\fR and should not be free'd.
 .PP
-\&\fISSL_SESSION_set1_alpn_selected()\fR sets the \s-1ALPN\s0 protocol for this session to the
+\&\fISSL_SESSION_set1_alpn_selected()\fR sets the \s-1ALPN\s0 Protocol for this session to the
 value in \fBalpn\fR which should be of length \fBlen\fR bytes. A copy of the input
 value is made, and the caller retains ownership of the memory pointed to by
 \&\fBalpn\fR.

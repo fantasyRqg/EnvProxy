@@ -304,11 +304,11 @@ A negotiation not in compliance with export restrictions was
 detected; for example, attempting to transfer a 1024 bit
 ephemeral \s-1RSA\s0 key for the \s-1RSA_EXPORT\s0 handshake method. This
 message is always fatal.
-.ie n .IP """\s-1PV""/\s0""protocol version""" 4
-.el .IP "``\s-1PV''/\s0``protocol version''" 4
-.IX Item "PV/protocol version"
-The protocol version the client has attempted to negotiate is
-recognized, but not supported. (For example, old protocol
+.ie n .IP """\s-1PV""/\s0""Protocol version""" 4
+.el .IP "``\s-1PV''/\s0``Protocol version''" 4
+.IX Item "PV/Protocol version"
+The Protocol version the client has attempted to negotiate is
+recognized, but not supported. (For example, old Protocol
 versions might be avoided for security reasons). This message is
 always fatal.
 .ie n .IP """\s-1IS""/\s0""insufficient security""" 4
@@ -322,13 +322,13 @@ fatal.
 .el .IP "``\s-1IE''/\s0``internal error''" 4
 .IX Item "IE/internal error"
 An internal error unrelated to the peer or the correctness of the
-protocol makes it impossible to continue (such as a memory
+Protocol makes it impossible to continue (such as a memory
 allocation failure). This message is always fatal.
 .ie n .IP """\s-1US""/\s0""user canceled""" 4
 .el .IP "``\s-1US''/\s0``user canceled''" 4
 .IX Item "US/user canceled"
 This handshake is being canceled for some reason unrelated to a
-protocol failure. If the user cancels an operation after the
+Protocol failure. If the user cancels an operation after the
 handshake is complete, just closing the connection by sending a
 close_notify is more appropriate. This alert should be followed
 by a close_notify. This message is generally a warning.

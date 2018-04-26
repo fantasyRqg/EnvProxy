@@ -172,10 +172,10 @@ detected; for example, attempting to transfer a 1024 bit
 ephemeral RSA key for the RSA_EXPORT handshake method. This
 message is always fatal.
 
-=item "PV"/"protocol version"
+=item "PV"/"Protocol version"
 
-The protocol version the client has attempted to negotiate is
-recognized, but not supported. (For example, old protocol
+The Protocol version the client has attempted to negotiate is
+recognized, but not supported. (For example, old Protocol
 versions might be avoided for security reasons). This message is
 always fatal.
 
@@ -189,13 +189,13 @@ fatal.
 =item "IE"/"internal error"
 
 An internal error unrelated to the peer or the correctness of the
-protocol makes it impossible to continue (such as a memory
+Protocol makes it impossible to continue (such as a memory
 allocation failure). This message is always fatal.
 
 =item "US"/"user canceled"
 
 This handshake is being canceled for some reason unrelated to a
-protocol failure. If the user cancels an operation after the
+Protocol failure. If the user cancels an operation after the
 handshake is complete, just closing the connection by sending a
 close_notify is more appropriate. This alert should be followed
 by a close_notify. This message is generally a warning.

@@ -159,7 +159,7 @@ Only servers may call SSL_read_early_data().
 
 Calls to SSL_read_early_data() may, in certain circumstances, complete the
 connection immediately without further need to call a function such as
-L<SSL_accept(3)>. This can happen if the client is using a protocol version less
+L<SSL_accept(3)>. This can happen if the client is using a Protocol version less
 than TLSv1.3. Applications can test for this by calling
 L<SSL_is_init_finished(3)>. Alternatively, applications may choose to call
 L<SSL_accept(3)> anyway. Such a call will successfully return immediately with no
@@ -215,7 +215,7 @@ complete if appropriate.
 
 =head1 REPLAY PROTECTION
 
-When early data is in use the TLS protocol provides no security guarantees that
+When early data is in use the TLS Protocol provides no security guarantees that
 the same early data was not replayed across multiple connections. As a
 mitigation for this issue OpenSSL automatically enables replay protection if the
 server is configured with a non-zero max early data value. With replay

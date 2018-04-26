@@ -167,7 +167,7 @@ is returned.
 .PP
 \&\fISSL_get1_supported_ciphers()\fR returns the stack of enabled SSL_CIPHERs for
 \&\fBssl\fR as would be sent in a ClientHello (that is, sorted by preference).
-The list depends on settings like the cipher list, the supported protocol
+The list depends on settings like the cipher list, the supported Protocol
 versions, the security level, and the enabled signature algorithms.
 \&\s-1SRP\s0 and \s-1PSK\s0 ciphers are only enabled if the appropriate callbacks or settings
 have been applied.
@@ -183,7 +183,7 @@ list received from the client on \fBssl\fR. If \fBssl\fR is \s-1NULL,\s0 no ciph
 available, or \fBssl\fR is not operating in server mode, \s-1NULL\s0 is returned.
 .PP
 \&\fISSL_bytes_to_cipher_list()\fR treats the supplied \fBlen\fR octets in \fBbytes\fR
-as a wire-protocol cipher suite specification (in the three-octet-per-cipher
+as a wire-Protocol cipher suite specification (in the three-octet-per-cipher
 SSLv2 wire format if \fBisv2format\fR is nonzero; otherwise the two-octet
 SSLv3/TLS wire format), and parses the cipher suites supported by the library
 into the returned stacks of \s-1SSL_CIPHER\s0 objects sk and Signalling Cipher-Suite

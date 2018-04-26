@@ -51,7 +51,7 @@
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
-<p>The <b>ts</b> command is a basic Time Stamping Authority (TSA) client and server application as specified in RFC 3161 (Time-Stamp Protocol, TSP). A TSA can be part of a PKI deployment and its role is to provide long term proof of the existence of a certain datum before a particular time. Here is a brief description of the protocol:</p>
+<p>The <b>ts</b> command is a basic Time Stamping Authority (TSA) client and server application as specified in RFC 3161 (Time-Stamp Protocol, TSP). A TSA can be part of a PKI deployment and its role is to provide long term proof of the existence of a certain datum before a particular time. Here is a brief description of the Protocol:</p>
 
 <ol>
 
@@ -66,7 +66,7 @@
 </li>
 </ol>
 
-<p>There is one DER encoded protocol data unit defined for transporting a time stamp request to the TSA and one for sending the time stamp response back to the client. The <b>ts</b> command has three main functions: creating a time stamp request based on a data file, creating a time stamp response based on a request, verifying if a response corresponds to a particular request or a data file.</p>
+<p>There is one DER encoded Protocol data unit defined for transporting a time stamp request to the TSA and one for sending the time stamp response back to the client. The <b>ts</b> command has three main functions: creating a time stamp request based on a data file, creating a time stamp response based on a request, verifying if a response corresponds to a particular request or a data file.</p>
 
 <p>There is no support for sending the requests/responses automatically over HTTP or TCP yet as suggested in RFC 3161. The users must send the requests either by ftp or e-mail.</p>
 
@@ -516,7 +516,7 @@
 
 <ul>
 
-<li><p>No support for time stamps over SMTP, though it is quite easy to implement an automatic e-mail based TSA with <a href="../man1/procmail.html">procmail(1)</a> and <a href="../man1/perl.html">perl(1)</a>. HTTP server support is provided in the form of a separate apache module. HTTP client support is provided by <a href="../man1/tsget.html">tsget(1)</a>. Pure TCP/IP protocol is not supported.</p>
+<li><p>No support for time stamps over SMTP, though it is quite easy to implement an automatic e-mail based TSA with <a href="../man1/procmail.html">procmail(1)</a> and <a href="../man1/perl.html">perl(1)</a>. HTTP server support is provided in the form of a separate apache module. HTTP client support is provided by <a href="../man1/tsget.html">tsget(1)</a>. Pure TCP/IP Protocol is not supported.</p>
 
 </li>
 <li><p>The file containing the last serial number of the TSA is not locked when being read or written. This is a problem if more than one instance of <a href="../man1/openssl.html">openssl(1)</a> is trying to create a time stamp response at the same time. This is not an issue when using the apache server module, it does proper locking.</p>

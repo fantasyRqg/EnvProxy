@@ -70,7 +70,7 @@ custom_ext_add_cb, custom_ext_free_cb, custom_ext_parse_cb
 =head1 DESCRIPTION
 
 SSL_CTX_add_custom_ext() adds a custom extension for a TLS/DTLS client or server
-for all supported protocol versions with extension type B<ext_type> and
+for all supported Protocol versions with extension type B<ext_type> and
 callbacks B<add_cb>, B<free_cb> and B<parse_cb> (see the
 L</EXTENSION CALLBACKS> section below). The B<context> value determines
 which messages and under what conditions the extension will be added/parsed (see

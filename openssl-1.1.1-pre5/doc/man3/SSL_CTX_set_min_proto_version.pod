@@ -6,7 +6,7 @@ SSL_CTX_set_min_proto_version, SSL_CTX_set_max_proto_version,
 SSL_CTX_get_min_proto_version, SSL_CTX_get_max_proto_version,
 SSL_set_min_proto_version, SSL_set_max_proto_version,
 SSL_get_min_proto_version, SSL_get_max_proto_version - Get and set minimum
-and maximum supported protocol version
+and maximum supported Protocol version
 
 =head1 SYNOPSIS
 
@@ -24,14 +24,14 @@ and maximum supported protocol version
 
 =head1 DESCRIPTION
 
-The functions get or set the minimum and maximum supported protocol versions
+The functions get or set the minimum and maximum supported Protocol versions
 for the B<ctx> or B<ssl>.
 This works in combination with the options set via
 L<SSL_CTX_set_options(3)> that also make it possible to disable
-specific protocol versions.
-Use these functions instead of disabling specific protocol versions.
+specific Protocol versions.
+Use these functions instead of disabling specific Protocol versions.
 
-Setting the minimum or maximum version to 0, will enable protocol
+Setting the minimum or maximum version to 0, will enable Protocol
 versions down to the lowest version, or up to the highest version
 supported by the library, respectively.
 
@@ -46,7 +46,7 @@ B<DTLS1_VERSION>, B<DTLS1_2_VERSION> for DTLS.
 
 These setter functions return 1 on success and 0 on failure. The getter
 functions return the configured version or 0 for auto-configuration of
-lowest or highest protocol, respectively.
+lowest or highest Protocol, respectively.
 
 =head1 NOTES
 

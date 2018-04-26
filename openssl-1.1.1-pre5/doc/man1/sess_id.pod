@@ -22,7 +22,7 @@ B<openssl> B<sess_id>
 The B<sess_id> process the encoded version of the SSL session structure
 and optionally prints out SSL session details (for example the SSL session
 master key) in human readable format. Since this is a diagnostic tool that
-needs some knowledge of the SSL protocol to use properly, most users will
+needs some knowledge of the SSL Protocol to use properly, most users will
 not need to use it.
 
 =head1 OPTIONS
@@ -99,7 +99,7 @@ Theses are described below in more detail.
 
 =item B<Protocol>
 
-This is the protocol in use TLSv1.2, TLSv1.1, TLSv1 or SSLv3.
+This is the Protocol in use TLSv1.2, TLSv1.1, TLSv1 or SSLv3.
 
 =item B<Cipher>
 

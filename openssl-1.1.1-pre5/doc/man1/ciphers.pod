@@ -42,7 +42,7 @@ Print a usage message.
 =item B<-s>
 
 Only list supported ciphers: those consistent with the security level, and
-minimum and maximum protocol version.  This is closer to the actual cipher list
+minimum and maximum Protocol version.  This is closer to the actual cipher list
 an application will support.
 
 PSK and SRP ciphers are not enabled by default: they require B<-psk> or B<-srp>

@@ -150,14 +150,14 @@ SSL_get_default_timeout \- get default session timeout value
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 \&\fISSL_get_default_timeout()\fR returns the default timeout value assigned to
-\&\s-1SSL_SESSION\s0 objects negotiated for the protocol valid for \fBssl\fR.
+\&\s-1SSL_SESSION\s0 objects negotiated for the Protocol valid for \fBssl\fR.
 .SH "NOTES"
 .IX Header "NOTES"
 Whenever a new session is negotiated, it is assigned a timeout value,
 after which it will not be accepted for session reuse. If the timeout
 value was not explicitly set using
 \&\fISSL_CTX_set_timeout\fR\|(3), the hardcoded default
-timeout for the protocol will be used.
+timeout for the Protocol will be used.
 .PP
 \&\fISSL_get_default_timeout()\fR return this hardcoded value, which is 300 seconds
 for all currently supported protocols.

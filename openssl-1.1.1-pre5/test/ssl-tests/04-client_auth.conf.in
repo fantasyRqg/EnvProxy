@@ -11,7 +11,7 @@ use OpenSSL::Test;
 use OpenSSL::Test::Utils qw(anydisabled disabled);
 setup("no_test_here");
 
-# We test version-flexible negotiation (undef) and each protocol version.
+# We test version-flexible negotiation (undef) and each Protocol version.
 my @protocols = (undef, "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "DTLSv1", "DTLSv1.2");
 
 my @is_disabled = (0);
@@ -21,8 +21,8 @@ our @tests = ();
 
 sub generate_tests() {
     foreach (0..$#protocols) {
-        my $protocol = $protocols[$_];
-        my $protocol_name = $protocol || "flex";
+        my $Protocol = $protocols[$_];
+        my $protocol_name = $Protocol || "flex";
         my $caalert;
         my $method;
         my $sctpenabled = 0;
@@ -51,12 +51,12 @@ sub generate_tests() {
                     name => "server-auth-${protocol_name}"
                             .($sctp ? "-sctp" : ""),
                     server => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol
                     },
                     client => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol
                     },
                     test   => {
                         "ExpectedResult" => "Success",
@@ -70,13 +70,13 @@ sub generate_tests() {
                     name => "client-auth-${protocol_name}-request"
                             .($sctp ? "-sctp" : ""),
                     server => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol,
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol,
                         "VerifyMode" => "Request"
                     },
                     client => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol
                     },
                     test   => {
                         "ExpectedResult" => "Success",
@@ -90,14 +90,14 @@ sub generate_tests() {
                     name => "client-auth-${protocol_name}-require-fail"
                             .($sctp ? "-sctp" : ""),
                     server => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol,
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol,
                         "VerifyCAFile" => test_pem("root-cert.pem"),
                         "VerifyMode" => "Require",
                     },
                     client => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol
                     },
                     test   => {
                         "ExpectedResult" => "ServerFail",
@@ -112,15 +112,15 @@ sub generate_tests() {
                     name => "client-auth-${protocol_name}-require"
                              .($sctp ? "-sctp" : ""),
                     server => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol,
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol,
                         "ClientSignatureAlgorithms" => $clisigalgs,
                         "VerifyCAFile" => test_pem("root-cert.pem"),
                         "VerifyMode" => "Request",
                     },
                     client => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol,
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol,
                         "Certificate" => test_pem("ee-client-chain.pem"),
                         "PrivateKey"  => test_pem("ee-key.pem"),
                     },
@@ -140,16 +140,16 @@ sub generate_tests() {
                     name => "client-auth-${protocol_name}-require-non-empty-names"
                             .($sctp ? "-sctp" : ""),
                     server => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol,
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol,
                         "ClientSignatureAlgorithms" => $clisigalgs,
                         "ClientCAFile" => test_pem("root-cert.pem"),
                         "VerifyCAFile" => test_pem("root-cert.pem"),
                         "VerifyMode" => "Request",
                     },
                     client => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol,
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol,
                         "Certificate" => test_pem("ee-client-chain.pem"),
                         "PrivateKey"  => test_pem("ee-key.pem"),
                     },
@@ -169,13 +169,13 @@ sub generate_tests() {
                     name => "client-auth-${protocol_name}-noroot"
                             .($sctp ? "-sctp" : ""),
                     server => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol,
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol,
                         "VerifyMode" => "Require",
                     },
                     client => {
-                        "MinProtocol" => $protocol,
-                        "MaxProtocol" => $protocol,
+                        "MinProtocol" => $Protocol,
+                        "MaxProtocol" => $Protocol,
                         "Certificate" => test_pem("ee-client-chain.pem"),
                         "PrivateKey"  => test_pem("ee-key.pem"),
                     },

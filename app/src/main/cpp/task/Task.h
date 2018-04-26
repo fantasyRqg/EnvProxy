@@ -8,6 +8,10 @@
 
 class Task {
 
+
+public:
+    Task *next;
+
 };
 
 

@@ -20,7 +20,7 @@ setup("test_cipherbytes");
 my $no_anytls = alldisabled(available_protocols("tls"));
 
 # If we have no protocols, then we also have no supported ciphers.
-plan skip_all => "No SSL/TLS protocol is supported by this OpenSSL build."
+plan skip_all => "No SSL/TLS Protocol is supported by this OpenSSL build."
     if $no_anytls;
 
 simple_test("test_cipherbytes", "cipherbytes_test", "bytes_to_cipherlist");

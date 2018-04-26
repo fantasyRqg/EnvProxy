@@ -1837,7 +1837,7 @@ BIO_R_UNINITIALIZED:120:uninitialized
 BIO_R_UNKNOWN_INFO_TYPE:140:unknown info type
 BIO_R_UNSUPPORTED_IP_FAMILY:146:unsupported ip family
 BIO_R_UNSUPPORTED_METHOD:121:unsupported method
-BIO_R_UNSUPPORTED_PROTOCOL_FAMILY:131:unsupported protocol family
+BIO_R_UNSUPPORTED_PROTOCOL_FAMILY:131:unsupported Protocol family
 BIO_R_WRITE_TO_READ_ONLY_BIO:126:write to read only BIO
 BIO_R_WSASTARTUP:122:WSAStartup
 BN_R_ARG2_LT_ARG3:100:arg2 lt arg3
@@ -2570,7 +2570,7 @@ SSL_R_BAD_KEY_UPDATE:122:bad key update
 SSL_R_BAD_LENGTH:271:bad length
 SSL_R_BAD_PACKET:240:bad packet
 SSL_R_BAD_PACKET_LENGTH:115:bad packet length
-SSL_R_BAD_PROTOCOL_VERSION_NUMBER:116:bad protocol version number
+SSL_R_BAD_PROTOCOL_VERSION_NUMBER:116:bad Protocol version number
 SSL_R_BAD_PSK:219:bad psk
 SSL_R_BAD_PSK_IDENTITY:114:bad psk identity
 SSL_R_BAD_RECORD_TYPE:443:bad record type
@@ -2697,7 +2697,7 @@ SSL_R_MISSING_TMP_ECDH_KEY:311:missing tmp ecdh key
 SSL_R_NOT_ON_RECORD_BOUNDARY:182:not on record boundary
 SSL_R_NOT_REPLACING_CERTIFICATE:289:not replacing certificate
 SSL_R_NOT_SERVER:284:not server
-SSL_R_NO_APPLICATION_PROTOCOL:235:no application protocol
+SSL_R_NO_APPLICATION_PROTOCOL:235:no application Protocol
 SSL_R_NO_CERTIFICATES_RETURNED:176:no certificates returned
 SSL_R_NO_CERTIFICATE_ASSIGNED:177:no certificate assigned
 SSL_R_NO_CERTIFICATE_SET:179:no certificate set
@@ -2739,7 +2739,7 @@ SSL_R_PEM_NAME_TOO_SHORT:392:pem name too short
 SSL_R_PIPELINE_FAILURE:406:pipeline failure
 SSL_R_POST_HANDSHAKE_AUTH_ENCODING_ERR:278:post handshake auth encoding err
 SSL_R_PRIVATE_KEY_MISMATCH:288:private key mismatch
-SSL_R_PROTOCOL_IS_SHUTDOWN:207:protocol is shutdown
+SSL_R_PROTOCOL_IS_SHUTDOWN:207:Protocol is shutdown
 SSL_R_PSK_IDENTITY_NOT_FOUND:223:psk identity not found
 SSL_R_PSK_NO_CLIENT_CB:224:psk no client cb
 SSL_R_PSK_NO_SERVER_CB:225:psk no server cb
@@ -2814,7 +2814,7 @@ SSL_R_UNKNOWN_COMMAND:139:unknown command
 SSL_R_UNKNOWN_DIGEST:368:unknown digest
 SSL_R_UNKNOWN_KEY_EXCHANGE_TYPE:250:unknown key exchange type
 SSL_R_UNKNOWN_PKEY_TYPE:251:unknown pkey type
-SSL_R_UNKNOWN_PROTOCOL:252:unknown protocol
+SSL_R_UNKNOWN_PROTOCOL:252:unknown Protocol
 SSL_R_UNKNOWN_SSL_VERSION:254:unknown ssl version
 SSL_R_UNKNOWN_STATE:255:unknown state
 SSL_R_UNSAFE_LEGACY_RENEGOTIATION_DISABLED:338:\
@@ -2822,7 +2822,7 @@ SSL_R_UNSAFE_LEGACY_RENEGOTIATION_DISABLED:338:\
 SSL_R_UNSOLICITED_EXTENSION:217:unsolicited extension
 SSL_R_UNSUPPORTED_COMPRESSION_ALGORITHM:257:unsupported compression algorithm
 SSL_R_UNSUPPORTED_ELLIPTIC_CURVE:315:unsupported elliptic curve
-SSL_R_UNSUPPORTED_PROTOCOL:258:unsupported protocol
+SSL_R_UNSUPPORTED_PROTOCOL:258:unsupported Protocol
 SSL_R_UNSUPPORTED_SSL_VERSION:259:unsupported ssl version
 SSL_R_UNSUPPORTED_STATUS_TYPE:329:unsupported status type
 SSL_R_USE_SRTP_NOT_NEGOTIATED:369:use srtp not negotiated

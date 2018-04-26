@@ -3,7 +3,7 @@
 =head1 NAME
 
 SSL_client_version, SSL_get_version, SSL_is_dtls, SSL_version - get the
-protocol information of a connection
+Protocol information of a connection
 
 =head1 SYNOPSIS
 
@@ -19,15 +19,15 @@ protocol information of a connection
 
 =head1 DESCRIPTION
 
-SSL_client_version() returns the protocol version used by the client when
+SSL_client_version() returns the Protocol version used by the client when
 initiating the connection.
 
-SSL_get_version() returns the name of the protocol used for the
+SSL_get_version() returns the name of the Protocol used for the
 connection.
 
 SSL_is_dtls() returns one if the connection is using DTLS, zero if not.
 
-SSL_version() returns the protocol version used for the connection.
+SSL_version() returns the Protocol version used for the connection.
 
 =head1 RETURN VALUES
 
@@ -37,23 +37,23 @@ SSL_get_version() returns one of the following strings:
 
 =item SSLv3
 
-The connection uses the SSLv3 protocol.
+The connection uses the SSLv3 Protocol.
 
 =item TLSv1
 
-The connection uses the TLSv1.0 protocol.
+The connection uses the TLSv1.0 Protocol.
 
 =item TLSv1.1
 
-The connection uses the TLSv1.1 protocol.
+The connection uses the TLSv1.1 Protocol.
 
 =item TLSv1.2
 
-The connection uses the TLSv1.2 protocol.
+The connection uses the TLSv1.2 Protocol.
 
 =item TLSv1.3
 
-The connection uses the TLSv1.3 protocol.
+The connection uses the TLSv1.3 Protocol.
 
 =item unknown
 
@@ -68,23 +68,23 @@ the following:
 
 =item SSL3_VERSION
 
-The connection uses the SSLv3 protocol.
+The connection uses the SSLv3 Protocol.
 
 =item TLS1_VERSION
 
-The connection uses the TLSv1.0 protocol.
+The connection uses the TLSv1.0 Protocol.
 
 =item TLS1_1_VERSION
 
-The connection uses the TLSv1.1 protocol.
+The connection uses the TLSv1.1 Protocol.
 
 =item TLS1_2_VERSION
 
-The connection uses the TLSv1.2 protocol.
+The connection uses the TLSv1.2 Protocol.
 
 =item TLS1_3_VERSION
 
-The connection uses the TLSv1.3 protocol.
+The connection uses the TLSv1.3 Protocol.
 
 =back
 

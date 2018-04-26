@@ -18,7 +18,7 @@ RAND_egd, RAND_egd_bytes, RAND_query_egd_bytes - query entropy gathering daemon
 On older platforms without a good source of randomness such as C</dev/urandom>,
 it is possible to query an Entropy Gathering Daemon (EGD) over a local
 socket to obtain randomness and seed the OpenSSL RNG.
-The protocol used is defined by the EGDs available at
+The Protocol used is defined by the EGDs available at
 L<http://egd.sourceforge.net/> or L<http://prngd.sourceforge.net>.
 
 RAND_egd_bytes() requests B<num> bytes of randomness from an EGD at the

@@ -218,7 +218,7 @@
 
       o Fix for CVE-2014-3513
       o Fix for CVE-2014-3567
-      o Mitigation for CVE-2014-3566 (SSL protocol vulnerability)
+      o Mitigation for CVE-2014-3566 (SSL Protocol vulnerability)
       o Fix for CVE-2014-3568
 
   Major changes between OpenSSL 1.0.1h and OpenSSL 1.0.1i [6 Aug 2014]
@@ -592,7 +592,7 @@
       o Security: fix various ASN1 parsing bugs.
       o New -ignore_err option to OCSP utility.
       o Various interop and bug fixes in S/MIME code.
-      o SSL/TLS protocol fix for unrequested client certificates.
+      o SSL/TLS Protocol fix for unrequested client certificates.
 
   Major changes between OpenSSL 0.9.7a and OpenSSL 0.9.7b [10 Apr 2003]:
 
@@ -665,7 +665,7 @@
   Major changes between OpenSSL 0.9.6j and OpenSSL 0.9.6k [30 Sep 2003]:
 
       o Security: fix various ASN1 parsing bugs.
-      o SSL/TLS protocol fix for unrequested client certificates.
+      o SSL/TLS Protocol fix for unrequested client certificates.
 
   Major changes between OpenSSL 0.9.6i and OpenSSL 0.9.6j [10 Apr 2003]:
 
@@ -809,7 +809,7 @@
       o Initial (incomplete) support for international character sets
       o New DH_METHOD, DSA_METHOD and enhanced RSA_METHOD
       o Read only memory BIOs and simplified creation function
-      o TLS/SSL protocol bugfixes: Accept TLS 'client hello' in SSL 3.0
+      o TLS/SSL Protocol bugfixes: Accept TLS 'client hello' in SSL 3.0
         record; allow fragmentation and interleaving of handshake and other
         data
       o TLS/SSL code now "tolerates" MS SGC

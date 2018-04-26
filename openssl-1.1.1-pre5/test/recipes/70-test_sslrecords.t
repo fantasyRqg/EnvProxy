@@ -87,7 +87,7 @@ ok(TLSProxy::Message->success(), "TLSv1.2 in SSLv2 ClientHello test");
 
 #Test 6: Inject an SSLv2 style record format for an SSLv2 ClientHello. We don't
 #        support this so it should fail. We actually treat it as an unknown
-#        protocol so we don't even send an alert in this case.
+#        Protocol so we don't even send an alert in this case.
 $sslv2testtype = SSLV2_IN_SSLV2;
 $proxy->clear();
 $proxy->serverflags("-tls1_2");

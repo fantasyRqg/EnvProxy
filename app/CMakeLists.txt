@@ -25,10 +25,10 @@ add_library(libProxy
             src/main/cpp/ip/ip6.cpp
             src/main/cpp/ip/IpPackageFactory.cpp
             src/main/cpp/ip/IpPackage.cpp
-            src/main/cpp/protocol/icmp.cpp
-            src/main/cpp/protocol/tcp.cpp
-            src/main/cpp/protocol/udp.cpp
-            src/main/cpp/protocol/protocol.cpp
+            src/main/cpp/protocol/Icmp.cpp
+            src/main/cpp/protocol/Tcp.cpp
+            src/main/cpp/protocol/Udp.cpp
+            src/main/cpp/protocol/Protocol.cpp
             src/main/cpp/protocol/ProtocolFactory.cpp
             src/main/cpp/task/Task.cpp
             src/main/cpp/task/TaskDNS.cpp

@@ -186,12 +186,12 @@ You probably shouldn't use these functions.
 .PP
 These functions expose internal values from the \s-1TLS\s0 handshake, for
 use in low-level protocols.  You probably should not use them, unless
-you are implementing something that needs access to the internal protocol
+you are implementing something that needs access to the internal Protocol
 details.
 .PP
 Despite the names of \fISSL_get_client_random()\fR and \fISSL_get_server_random()\fR, they
 \&\s-1ARE NOT\s0 random number generators.  Instead, they return the mostly-random values that
-were already generated and used in the \s-1TLS\s0 protocol.  Using them
+were already generated and used in the \s-1TLS\s0 Protocol.  Using them
 in place of \fIRAND_bytes()\fR would be grossly foolish.
 .PP
 The security of your \s-1TLS\s0 session depends on keeping the master key secret:

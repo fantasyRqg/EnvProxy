@@ -33,11 +33,11 @@
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
-<p>SSL_get_default_timeout() returns the default timeout value assigned to SSL_SESSION objects negotiated for the protocol valid for <b>ssl</b>.</p>
+<p>SSL_get_default_timeout() returns the default timeout value assigned to SSL_SESSION objects negotiated for the Protocol valid for <b>ssl</b>.</p>
 
 <h1 id="NOTES">NOTES</h1>
 
-<p>Whenever a new session is negotiated, it is assigned a timeout value, after which it will not be accepted for session reuse. If the timeout value was not explicitly set using <a href="../man3/SSL_CTX_set_timeout.html">SSL_CTX_set_timeout(3)</a>, the hardcoded default timeout for the protocol will be used.</p>
+<p>Whenever a new session is negotiated, it is assigned a timeout value, after which it will not be accepted for session reuse. If the timeout value was not explicitly set using <a href="../man3/SSL_CTX_set_timeout.html">SSL_CTX_set_timeout(3)</a>, the hardcoded default timeout for the Protocol will be used.</p>
 
 <p>SSL_get_default_timeout() return this hardcoded value, which is 300 seconds for all currently supported protocols.</p>
 

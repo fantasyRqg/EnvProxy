@@ -4,7 +4,7 @@
 
 SSL_SESSION_get_protocol_version,
 SSL_SESSION_set_protocol_version
-- get and set the session protocol version
+- get and set the session Protocol version
 
 =head1 SYNOPSIS
 
@@ -15,17 +15,17 @@ SSL_SESSION_set_protocol_version
 
 =head1 DESCRIPTION
 
-SSL_SESSION_get_protocol_version() returns the protocol version number used
+SSL_SESSION_get_protocol_version() returns the Protocol version number used
 by session B<s>.
 
-SSL_SESSION_set_protocol_version() sets the protocol version associated with the
+SSL_SESSION_set_protocol_version() sets the Protocol version associated with the
 SSL_SESSION object B<s> to the value B<version>. This value should be a version
 constant such as B<TLS1_3_VERSION> etc. For example, this could be used to set
 up a session based PSK (see L<SSL_CTX_set_psk_use_session_callback(3)>).
 
 =head1 RETURN VALUES
 
-SSL_SESSION_get_protocol_version() returns a number indicating the protocol
+SSL_SESSION_get_protocol_version() returns a number indicating the Protocol
 version used for the session; this number matches the constants I<e.g.>
 B<TLS1_VERSION> or B<TLS1_2_VERSION>.
 

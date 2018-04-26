@@ -76,7 +76,7 @@ The ciphersuite can be set via a call to <SSL_SESSION_set_cipher(3)>. The
 handshake digest of an SSL_CIPHER object can be checked using
 <SSL_CIPHER_get_handshake_digest(3)>.
 
-=item The protocol version
+=item The Protocol version
 
 This can be set via a call to L<SSL_SESSION_set_protocol_version(3)> and should
 be TLS1_3_VERSION.

@@ -37,7 +37,7 @@ L<SSL_CTX_flush_sessions(3)> is called, either
 directly by the application or automatically (see
 L<SSL_CTX_set_session_cache_mode(3)>)
 
-The default value for session timeout is decided on a per protocol
+The default value for session timeout is decided on a per Protocol
 basis, see L<SSL_get_default_timeout(3)>.
 All currently supported protocols have the same default timeout value
 of 300 seconds.

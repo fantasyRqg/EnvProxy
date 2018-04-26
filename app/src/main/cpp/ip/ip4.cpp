@@ -12,19 +12,32 @@
 
 #define LOG_TAG "IPV4"
 
+
+ip4::~ip4() {
+
+}
+
+ip4::ip4(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength) :
+        IpPackage(proxyEngine, pkt, pktLength) {
+
+}
+
+
 int ip4::handlePackage() {
     struct iphdr *ip4hdr = (struct iphdr *) mPkt;
 
-    if (ip4hdr->version != IPVERSION)
-        return IP_HANDLE_VERSION_NOT_MATCH;
 
-    if (mPktLength < sizeof(struct iphdr)) {
-        return IP_HANDLE_HDR_LEN_INVALID;
-    }
+    mSrcAddr.ip4 = ip4hdr->saddr;
+    mDstAddr.ip4 = ip4hdr->daddr;
+    mProtocol = ip4hdr->protocol;
+
+    uint8_t ipoptlen = (uint8_t) ((ip4hdr->ihl - 5) * 4);
+    mPayload = mPkt + sizeof(struct iphdr) + ipoptlen;
 
 
     char source[INET6_ADDRSTRLEN + 1];
     char dest[INET6_ADDRSTRLEN + 1];
+
 
     inet_ntop(AF_INET, &ip4hdr->saddr, source, sizeof(source));
     inet_ntop(AF_INET, &ip4hdr->daddr, dest, sizeof(dest));
@@ -32,9 +45,9 @@ int ip4::handlePackage() {
     protoent *pp = getprotobynumber(ip4hdr->protocol);
 
     if (pp != NULL) {
-        ALOGD("IPV4 from %s to %s , protocol %s", source, dest, pp->p_name);
+        ALOGD("IPV4 from %s to %s , Protocol %s", source, dest, pp->p_name);
     } else {
-        ALOGD("IPV4 from %s to %s , protocol %d", source, dest, ip4hdr->protocol);
+        ALOGD("IPV4 from %s to %s , Protocol %d", source, dest, ip4hdr->protocol);
     }
 
 
@@ -62,12 +75,6 @@ int ip4::isIpV4Package(uint8_t *pkt, size_t length) {
     return IP_HANDLE_SUCCESS;
 }
 
-ip4::~ip4() {
-
+int ip4::getIpVersion() {
+    return IPVERSION;
 }
-
-ip4::ip4(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength) :
-        IpPackage(proxyEngine, pkt, pktLength) {
-
-}
-

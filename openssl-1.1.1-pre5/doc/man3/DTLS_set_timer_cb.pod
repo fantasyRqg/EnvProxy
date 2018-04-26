@@ -17,7 +17,7 @@ DTLS_set_timer_cb
 =head1 DESCRIPTION
 
 This function sets an optional callback function for controlling the
-timeout interval on the DTLS protocol. The callback function will be
+timeout interval on the DTLS Protocol. The callback function will be
 called by DTLS for every new DTLS packet that is sent.
 
 =head1 RETURN VALUES

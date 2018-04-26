@@ -5,10 +5,10 @@
 #ifndef ENVPROXY_TCP_H
 #define ENVPROXY_TCP_H
 
-#include "protocol.h"
+#include "Protocol.h"
 
 
-class tcp:public protocol {
+class Tcp : public Protocol {
 
 };
 

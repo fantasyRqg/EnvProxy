@@ -21,6 +21,8 @@ private:
 public:
     int handlePackage() override;
 
+    int getIpVersion() override;
+
 };
 
 

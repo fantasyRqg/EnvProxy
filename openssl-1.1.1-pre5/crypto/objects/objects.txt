@@ -473,7 +473,7 @@ id-pkix-mod 9		: id-mod-cmp
 id-pkix-mod 10		: id-mod-qualified-cert-88
 id-pkix-mod 11		: id-mod-qualified-cert-93
 id-pkix-mod 12		: id-mod-attribute-cert
-id-pkix-mod 13		: id-mod-timestamp-protocol
+id-pkix-mod 13		: id-mod-timestamp-Protocol
 id-pkix-mod 14		: id-mod-ocsp
 id-pkix-mod 15		: id-mod-dvcs
 id-pkix-mod 16		: id-mod-cmp2000

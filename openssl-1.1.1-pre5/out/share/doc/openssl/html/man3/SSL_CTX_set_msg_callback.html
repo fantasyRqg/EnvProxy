@@ -24,7 +24,7 @@
 
 <h1 id="NAME">NAME</h1>
 
-<p>SSL_CTX_set_msg_callback, SSL_CTX_set_msg_callback_arg, SSL_set_msg_callback, SSL_set_msg_callback_arg - install callback for observing protocol messages</p>
+<p>SSL_CTX_set_msg_callback, SSL_CTX_set_msg_callback_arg, SSL_set_msg_callback, SSL_set_msg_callback_arg - install callback for observing Protocol messages</p>
 
 <h1 id="SYNOPSIS">SYNOPSIS</h1>
 
@@ -44,7 +44,7 @@
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
-<p>SSL_CTX_set_msg_callback() or SSL_set_msg_callback() can be used to define a message callback function <i>cb</i> for observing all SSL/TLS protocol messages (such as handshake messages) that are received or sent, as well as other events that occur during processing. SSL_CTX_set_msg_callback_arg() and SSL_set_msg_callback_arg() can be used to set argument <i>arg</i> to the callback function, which is available for arbitrary application use.</p>
+<p>SSL_CTX_set_msg_callback() or SSL_set_msg_callback() can be used to define a message callback function <i>cb</i> for observing all SSL/TLS Protocol messages (such as handshake messages) that are received or sent, as well as other events that occur during processing. SSL_CTX_set_msg_callback_arg() and SSL_set_msg_callback_arg() can be used to set argument <i>arg</i> to the callback function, which is available for arbitrary application use.</p>
 
 <p>SSL_CTX_set_msg_callback() and SSL_CTX_set_msg_callback_arg() specify default settings that will be copied to new <b>SSL</b> objects by <a href="../man3/SSL_new.html">SSL_new(3)</a>. SSL_set_msg_callback() and SSL_set_msg_callback_arg() modify the actual settings of an <b>SSL</b> object. Using a <b>NULL</b> pointer for <i>cb</i> disables the message callback.</p>
 
@@ -55,25 +55,25 @@
 <dt id="write_p"><i>write_p</i></dt>
 <dd>
 
-<p>This flag is <b>0</b> when a protocol message has been received and <b>1</b> when a protocol message has been sent.</p>
+<p>This flag is <b>0</b> when a Protocol message has been received and <b>1</b> when a Protocol message has been sent.</p>
 
 </dd>
 <dt id="version"><i>version</i></dt>
 <dd>
 
-<p>The protocol version according to which the protocol message is interpreted by the library such as <b>TLS1_3_VERSION</b>, <b>TLS1_2_VERSION</b> etc. This is set to 0 for the SSL3_RT_HEADER pseudo content type (see NOTES below).</p>
+<p>The Protocol version according to which the Protocol message is interpreted by the library such as <b>TLS1_3_VERSION</b>, <b>TLS1_2_VERSION</b> etc. This is set to 0 for the SSL3_RT_HEADER pseudo content type (see NOTES below).</p>
 
 </dd>
 <dt id="content_type"><i>content_type</i></dt>
 <dd>
 
-<p>This is one of the content type values defined in the protocol specification (<b>SSL3_RT_CHANGE_CIPHER_SPEC</b>, <b>SSL3_RT_ALERT</b>, <b>SSL3_RT_HANDSHAKE</b>; but never <b>SSL3_RT_APPLICATION_DATA</b> because the callback will only be called for protocol messages). Alternatively it may be a &quot;pseudo&quot; content type. These pseudo content types are used to signal some other event in the processing of data (see NOTES below).</p>
+<p>This is one of the content type values defined in the Protocol specification (<b>SSL3_RT_CHANGE_CIPHER_SPEC</b>, <b>SSL3_RT_ALERT</b>, <b>SSL3_RT_HANDSHAKE</b>; but never <b>SSL3_RT_APPLICATION_DATA</b> because the callback will only be called for Protocol messages). Alternatively it may be a &quot;pseudo&quot; content type. These pseudo content types are used to signal some other event in the processing of data (see NOTES below).</p>
 
 </dd>
 <dt id="buf-len"><i>buf</i>, <i>len</i></dt>
 <dd>
 
-<p><i>buf</i> points to a buffer containing the protocol message or other data (in the case of pseudo content types), which consists of <i>len</i> bytes. The buffer is no longer valid after the callback function has returned.</p>
+<p><i>buf</i> points to a buffer containing the Protocol message or other data (in the case of pseudo content types), which consists of <i>len</i> bytes. The buffer is no longer valid after the callback function has returned.</p>
 
 </dd>
 <dt id="ssl"><i>ssl</i></dt>
@@ -94,9 +94,9 @@
 
 <p>Protocol messages are passed to the callback function after decryption and fragment collection where applicable. (Thus record boundaries are not visible.)</p>
 
-<p>If processing a received protocol message results in an error, the callback function may not be called. For example, the callback function will never see messages that are considered too large to be processed.</p>
+<p>If processing a received Protocol message results in an error, the callback function may not be called. For example, the callback function will never see messages that are considered too large to be processed.</p>
 
-<p>Due to automatic protocol version negotiation, <i>version</i> is not necessarily the protocol version used by the sender of the message: If a TLS 1.0 ClientHello message is received by an SSL 3.0-only server, <i>version</i> will be <b>SSL3_VERSION</b>.</p>
+<p>Due to automatic Protocol version negotiation, <i>version</i> is not necessarily the Protocol version used by the sender of the message: If a TLS 1.0 ClientHello message is received by an SSL 3.0-only server, <i>version</i> will be <b>SSL3_VERSION</b>.</p>
 
 <p>Pseudo content type values may be sent at various points during the processing of data. The following pseudo content types are currently defined:</p>
 

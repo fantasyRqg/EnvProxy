@@ -51,10 +51,10 @@ indicates a discrete state machine state. Note that future versions of OpenSSL
 may define more states so applications should expect to receive unrecognised
 state values. The naming format is made up of a number of elements as follows:
 
-B<protocol>_ST_B<role>_B<message>
+B<Protocol>_ST_B<role>_B<message>
 
-B<protocol> is one of TLS or DTLS. DTLS is used where a state is specific to the
-DTLS protocol. Otherwise TLS is used.
+B<Protocol> is one of TLS or DTLS. DTLS is used where a state is specific to the
+DTLS Protocol. Otherwise TLS is used.
 
 B<role> is one of CR, CW, SR or SW to indicate "client reading",
 "client writing", "server reading" or "server writing" respectively.

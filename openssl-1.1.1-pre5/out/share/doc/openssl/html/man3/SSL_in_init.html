@@ -55,9 +55,9 @@
 
 <p>SSL_get_state() returns a value indicating the current state of the handshake state machine. OSSL_HANDSHAKE_STATE is an enumerated type where each value indicates a discrete state machine state. Note that future versions of OpenSSL may define more states so applications should expect to receive unrecognised state values. The naming format is made up of a number of elements as follows:</p>
 
-<p><b>protocol</b>_ST_<b>role</b>_<b>message</b></p>
+<p><b>Protocol</b>_ST_<b>role</b>_<b>message</b></p>
 
-<p><b>protocol</b> is one of TLS or DTLS. DTLS is used where a state is specific to the DTLS protocol. Otherwise TLS is used.</p>
+<p><b>Protocol</b> is one of TLS or DTLS. DTLS is used where a state is specific to the DTLS Protocol. Otherwise TLS is used.</p>
 
 <p><b>role</b> is one of CR, CW, SR or SW to indicate &quot;client reading&quot;, &quot;client writing&quot;, &quot;server reading&quot; or &quot;server writing&quot; respectively.</p>
 

@@ -5,7 +5,7 @@
 SSL_CTX_set_alpn_protos, SSL_set_alpn_protos, SSL_CTX_set_alpn_select_cb,
 SSL_CTX_set_next_proto_select_cb, SSL_CTX_set_next_protos_advertised_cb,
 SSL_select_next_proto, SSL_get0_alpn_selected, SSL_get0_next_proto_negotiated
-- handle application layer protocol negotiation (ALPN)
+- handle application layer Protocol negotiation (ALPN)
 
 =head1 SYNOPSIS
 
@@ -51,25 +51,25 @@ SSL_select_next_proto, SSL_get0_alpn_selected, SSL_get0_next_proto_negotiated
 
 SSL_CTX_set_alpn_protos() and SSL_set_alpn_protos() are used by the client to
 set the list of protocols available to be negotiated. The B<protos> must be in
-protocol-list format, described below. The length of B<protos> is specified in
+Protocol-list format, described below. The length of B<protos> is specified in
 B<protos_len>.
 
 SSL_CTX_set_alpn_select_cb() sets the application callback B<cb> used by a
-server to select which protocol to use for the incoming connection. When B<cb>
+server to select which Protocol to use for the incoming connection. When B<cb>
 is NULL, ALPN is not used. The B<arg> value is a pointer which is passed to
 the application callback.
 
 B<cb> is the application defined callback. The B<in>, B<inlen> parameters are a
-vector in protocol-list format. The value of the B<out>, B<outlen> vector
-should be set to the value of a single protocol selected from the B<in>,
+vector in Protocol-list format. The value of the B<out>, B<outlen> vector
+should be set to the value of a single Protocol selected from the B<in>,
 B<inlen> vector. The B<out> buffer may point directly into B<in>, or to a
 buffer that outlives the handshake. The B<arg> parameter is the pointer set via
 SSL_CTX_set_alpn_select_cb().
 
 SSL_select_next_proto() is a helper function used to select protocols. It
-implements the standard protocol selection. It is expected that this function
-is called from the application callback B<cb>. The protocol data in B<server>,
-B<server_len> and B<client>, B<client_len> must be in the protocol-list format
+implements the standard Protocol selection. It is expected that this function
+is called from the application callback B<cb>. The Protocol data in B<server>,
+B<server_len> and B<client>, B<client_len> must be in the Protocol-list format
 described below. The first item in the B<server>, B<server_len> list that
 matches an item in the B<client>, B<client_len> list is selected, and returned
 in B<out>, B<outlen>. The B<out> value will point into either B<server> or
@@ -78,20 +78,20 @@ item in B<client>, B<client_len> is returned in B<out>, B<outlen>. This
 function can also be used in the NPN callback.
 
 SSL_CTX_set_next_proto_select_cb() sets a callback B<cb> that is called when a
-client needs to select a protocol from the server's provided list, and a
+client needs to select a Protocol from the server's provided list, and a
 user-defined pointer argument B<arg> which will be passed to this callback.
 For the callback itself, B<out>
-must be set to point to the selected protocol (which may be within B<in>).
-The length of the protocol name must be written into B<outlen>. The
+must be set to point to the selected Protocol (which may be within B<in>).
+The length of the Protocol name must be written into B<outlen>. The
 server's advertised protocols are provided in B<in> and B<inlen>. The
 callback can assume that B<in> is syntactically valid. The client must
-select a protocol. It is fatal to the connection if this callback returns
+select a Protocol. It is fatal to the connection if this callback returns
 a value other than B<SSL_TLSEXT_ERR_OK>. The B<arg> parameter is the pointer
 set via SSL_CTX_set_next_proto_select_cb().
 
 SSL_CTX_set_next_protos_advertised_cb() sets a callback B<cb> that is called
 when a TLS server needs a list of supported protocols for Next Protocol
-Negotiation. The returned list must be in protocol-list format, described
+Negotiation. The returned list must be in Protocol-list format, described
 below.  The list is
 returned by setting B<out> to point to it and B<outlen> to its length. This
 memory will not be modified, but the B<SSL> does keep a
@@ -99,21 +99,21 @@ reference to it. The callback should return B<SSL_TLSEXT_ERR_OK> if it
 wishes to advertise. Otherwise, no such extension will be included in the
 ServerHello.
 
-SSL_get0_alpn_selected() returns a pointer to the selected protocol in B<data>
+SSL_get0_alpn_selected() returns a pointer to the selected Protocol in B<data>
 with length B<len>. It is not NUL-terminated. B<data> is set to NULL and B<len>
-is set to 0 if no protocol has been selected. B<data> must not be freed.
+is set to 0 if no Protocol has been selected. B<data> must not be freed.
 
 SSL_get0_next_proto_negotiated() sets B<data> and B<len> to point to the
-client's requested protocol for this connection. If the client did not
-request any protocol or NPN is not enabled, then B<data> is set to NULL and
+client's requested Protocol for this connection. If the client did not
+request any Protocol or NPN is not enabled, then B<data> is set to NULL and
 B<len> to 0. Note that
-the client can request any protocol it chooses. The value returned from
+the client can request any Protocol it chooses. The value returned from
 this function need not be a member of the list of supported protocols
 provided by the callback.
 
 =head1 NOTES
 
-The protocol-lists must be in wire-format, which is defined as a vector of
+The Protocol-lists must be in wire-format, which is defined as a vector of
 non-empty, 8-bit length-prefixed, byte strings. The length-prefix byte is not
 included in the length. Each string is limited to 255 bytes. A byte-string
 length of 0 is invalid. A truncated byte-string is invalid. The length of the
@@ -159,7 +159,7 @@ The ALPN select callback B<cb>, must return one of the following:
 
 =item SSL_TLSEXT_ERR_OK
 
-ALPN protocol selected.
+ALPN Protocol selected.
 
 =item SSL_TLSEXT_ERR_ALERT_FATAL
 
@@ -168,7 +168,7 @@ configuration.
 
 =item SSL_TLSEXT_ERR_NOACK
 
-ALPN protocol not selected, e.g., because no ALPN protocols are configured for
+ALPN Protocol not selected, e.g., because no ALPN protocols are configured for
 this connection.
 
 =back

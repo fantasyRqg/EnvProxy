@@ -134,13 +134,13 @@
 <dt id="min_protocol--max_protocol"><b>-min_protocol</b>, <b>-max_protocol</b></dt>
 <dd>
 
-<p>Sets the minimum and maximum supported protocol. Currently supported protocol values are <b>SSLv3</b>, <b>TLSv1</b>, <b>TLSv1.1</b>, <b>TLSv1.2</b> for TLS and <b>DTLSv1</b>, <b>DTLSv1.2</b> for DTLS, and <b>None</b> for no limit. If the either bound is not specified then only the other bound applies, if specified. To restrict the supported protocol versions use these commands rather than the deprecated alternative commands below.</p>
+<p>Sets the minimum and maximum supported Protocol. Currently supported Protocol values are <b>SSLv3</b>, <b>TLSv1</b>, <b>TLSv1.1</b>, <b>TLSv1.2</b> for TLS and <b>DTLSv1</b>, <b>DTLSv1.2</b> for DTLS, and <b>None</b> for no limit. If the either bound is not specified then only the other bound applies, if specified. To restrict the supported Protocol versions use these commands rather than the deprecated alternative commands below.</p>
 
 </dd>
 <dt id="no_ssl3--no_tls1--no_tls1_1--no_tls1_2--no_tls1_3"><b>-no_ssl3</b>, <b>-no_tls1</b>, <b>-no_tls1_1</b>, <b>-no_tls1_2</b>, <b>-no_tls1_3</b></dt>
 <dd>
 
-<p>Disables protocol support for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2 or TLSv1.3 by setting the corresponding options <b>SSL_OP_NO_SSLv3</b>, <b>SSL_OP_NO_TLSv1</b>, <b>SSL_OP_NO_TLSv1_1</b>, <b>SSL_OP_NO_TLSv1_2</b> and <b>SSL_OP_NO_TLSv1_3</b> respectively. These options are deprecated, instead use <b>-min_protocol</b> and <b>-max_protocol</b>.</p>
+<p>Disables Protocol support for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2 or TLSv1.3 by setting the corresponding options <b>SSL_OP_NO_SSLv3</b>, <b>SSL_OP_NO_TLSv1</b>, <b>SSL_OP_NO_TLSv1_1</b>, <b>SSL_OP_NO_TLSv1_2</b> and <b>SSL_OP_NO_TLSv1_3</b> respectively. These options are deprecated, instead use <b>-min_protocol</b> and <b>-max_protocol</b>.</p>
 
 </dd>
 <dt id="bugs"><b>-bugs</b></dt>
@@ -206,7 +206,7 @@
 <dt id="strict"><b>-strict</b></dt>
 <dd>
 
-<p>enables strict mode protocol handling. Equivalent to setting <b>SSL_CERT_FLAG_TLS_STRICT</b>.</p>
+<p>enables strict mode Protocol handling. Equivalent to setting <b>SSL_CERT_FLAG_TLS_STRICT</b>.</p>
 
 </dd>
 </dl>
@@ -316,7 +316,7 @@
 
 <p>This sets the minimum supported SSL, TLS or DTLS version.</p>
 
-<p>Currently supported protocol values are <b>SSLv3</b>, <b>TLSv1</b>, <b>TLSv1.1</b>, <b>TLSv1.2</b>, <b>DTLSv1</b> and <b>DTLSv1.2</b>. The value <b>None</b> will disable the limit.</p>
+<p>Currently supported Protocol values are <b>SSLv3</b>, <b>TLSv1</b>, <b>TLSv1.1</b>, <b>TLSv1.2</b>, <b>DTLSv1</b> and <b>DTLSv1.2</b>. The value <b>None</b> will disable the limit.</p>
 
 </dd>
 <dt id="MaxProtocol"><b>MaxProtocol</b></dt>
@@ -324,19 +324,19 @@
 
 <p>This sets the maximum supported SSL, TLS or DTLS version.</p>
 
-<p>Currently supported protocol values are <b>SSLv3</b>, <b>TLSv1</b>, <b>TLSv1.1</b>, <b>TLSv1.2</b>, <b>DTLSv1</b> and <b>DTLSv1.2</b>. The value <b>None</b> will disable the limit.</p>
+<p>Currently supported Protocol values are <b>SSLv3</b>, <b>TLSv1</b>, <b>TLSv1.1</b>, <b>TLSv1.2</b>, <b>DTLSv1</b> and <b>DTLSv1.2</b>. The value <b>None</b> will disable the limit.</p>
 
 </dd>
 <dt id="Protocol"><b>Protocol</b></dt>
 <dd>
 
-<p>This can be used to enable or disable certain versions of the SSL, TLS or DTLS protocol.</p>
+<p>This can be used to enable or disable certain versions of the SSL, TLS or DTLS Protocol.</p>
 
-<p>The <b>value</b> argument is a comma separated list of supported protocols to enable or disable. If a protocol is preceded by <b>-</b> that version is disabled.</p>
+<p>The <b>value</b> argument is a comma separated list of supported protocols to enable or disable. If a Protocol is preceded by <b>-</b> that version is disabled.</p>
 
-<p>All protocol versions are enabled by default. You need to disable at least one protocol version for this setting have any effect. Only enabling some protocol versions does not disable the other protocol versions.</p>
+<p>All Protocol versions are enabled by default. You need to disable at least one Protocol version for this setting have any effect. Only enabling some Protocol versions does not disable the other Protocol versions.</p>
 
-<p>Currently supported protocol values are <b>SSLv3</b>, <b>TLSv1</b>, <b>TLSv1.1</b>, <b>TLSv1.2</b>, <b>DTLSv1</b> and <b>DTLSv1.2</b>. The special value <b>ALL</b> refers to all supported versions.</p>
+<p>Currently supported Protocol values are <b>SSLv3</b>, <b>TLSv1</b>, <b>TLSv1.1</b>, <b>TLSv1.2</b>, <b>DTLSv1</b> and <b>DTLSv1.2</b>. The special value <b>ALL</b> refers to all supported versions.</p>
 
 <p>This can&#39;t enable protocols that are disabled using <b>MinProtocol</b> or <b>MaxProtocol</b>, but can disable protocols that are still allowed by them.</p>
 
@@ -354,7 +354,7 @@
 
 <p><b>Compression</b>: SSL/TLS compression support, enabled by default. Inverse of <b>SSL_OP_NO_COMPRESSION</b>.</p>
 
-<p><b>EmptyFragments</b>: use empty fragments as a countermeasure against a SSL 3.0/TLS 1.0 protocol vulnerability affecting CBC ciphers. It is set by default. Inverse of <b>SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS</b>.</p>
+<p><b>EmptyFragments</b>: use empty fragments as a countermeasure against a SSL 3.0/TLS 1.0 Protocol vulnerability affecting CBC ciphers. It is set by default. Inverse of <b>SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS</b>.</p>
 
 <p><b>Bugs</b>: enable various bug workarounds. Same as <b>SSL_OP_ALL</b>.</p>
 
@@ -475,7 +475,7 @@
 
 <p>There are various ways to select the supported protocols.</p>
 
-<p>This set the minimum protocol version to TLSv1, and so disables SSLv3. This is the recommended way to disable protocols.</p>
+<p>This set the minimum Protocol version to TLSv1, and so disables SSLv3. This is the recommended way to disable protocols.</p>
 
 <pre><code> SSL_CONF_cmd(ctx, &quot;MinProtocol&quot;, &quot;TLSv1&quot;);</code></pre>
 
@@ -483,7 +483,7 @@
 
 <pre><code> SSL_CONF_cmd(ctx, &quot;Protocol&quot;, &quot;-SSLv3&quot;);</code></pre>
 
-<p>The following will first enable all protocols, and then disable SSLv3. If no protocol versions were disabled before this has the same effect as &quot;-SSLv3&quot;, but if some versions were disables this will re-enable them before disabling SSLv3.</p>
+<p>The following will first enable all protocols, and then disable SSLv3. If no Protocol versions were disabled before this has the same effect as &quot;-SSLv3&quot;, but if some versions were disables this will re-enable them before disabling SSLv3.</p>
 
 <pre><code> SSL_CONF_cmd(ctx, &quot;Protocol&quot;, &quot;ALL,-SSLv3&quot;);</code></pre>
 

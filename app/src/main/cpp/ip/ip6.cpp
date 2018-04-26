@@ -12,6 +12,14 @@
 #define LOG_TAG "IPV6"
 
 
+ip6::~ip6() {
+}
+
+ip6::ip6(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength) :
+        IpPackage(proxyEngine, pkt, pktLength) {
+
+}
+
 int ip6::handlePackage() {
     struct ip6_hdr *ip6hdr = (struct ip6_hdr *) mPkt;
 
@@ -57,12 +65,7 @@ int ip6::isIpV6Package(uint8_t *pkt, size_t length) {
     return IP_HANDLE_SUCCESS;
 }
 
-ip6::~ip6() {
+
+int ip6::getIpVersion() {
+    return IPV6_VERSION;
 }
-
-ip6::ip6(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength) :
-        IpPackage(proxyEngine, pkt, pktLength) {
-
-}
-
-

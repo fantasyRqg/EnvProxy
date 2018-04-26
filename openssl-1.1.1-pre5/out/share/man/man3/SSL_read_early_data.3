@@ -289,7 +289,7 @@ Only servers may call \fISSL_read_early_data()\fR.
 .PP
 Calls to \fISSL_read_early_data()\fR may, in certain circumstances, complete the
 connection immediately without further need to call a function such as
-\&\fISSL_accept\fR\|(3). This can happen if the client is using a protocol version less
+\&\fISSL_accept\fR\|(3). This can happen if the client is using a Protocol version less
 than TLSv1.3. Applications can test for this by calling
 \&\fISSL_is_init_finished\fR\|(3). Alternatively, applications may choose to call
 \&\fISSL_accept\fR\|(3) anyway. Such a call will successfully return immediately with no
@@ -343,7 +343,7 @@ consideration should be given to turning it back on again after the handshake is
 complete if appropriate.
 .SH "REPLAY PROTECTION"
 .IX Header "REPLAY PROTECTION"
-When early data is in use the \s-1TLS\s0 protocol provides no security guarantees that
+When early data is in use the \s-1TLS\s0 Protocol provides no security guarantees that
 the same early data was not replayed across multiple connections. As a
 mitigation for this issue OpenSSL automatically enables replay protection if the
 server is configured with a non-zero max early data value. With replay

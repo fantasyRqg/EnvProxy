@@ -140,7 +140,7 @@
 .nh
 .SH "NAME"
 SSL_client_version, SSL_get_version, SSL_is_dtls, SSL_version \- get the
-protocol information of a connection
+Protocol information of a connection
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 .Vb 1
@@ -156,33 +156,33 @@ protocol information of a connection
 .Ve
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-\&\fISSL_client_version()\fR returns the protocol version used by the client when
+\&\fISSL_client_version()\fR returns the Protocol version used by the client when
 initiating the connection.
 .PP
-\&\fISSL_get_version()\fR returns the name of the protocol used for the
+\&\fISSL_get_version()\fR returns the name of the Protocol used for the
 connection.
 .PP
 \&\fISSL_is_dtls()\fR returns one if the connection is using \s-1DTLS,\s0 zero if not.
 .PP
-\&\fISSL_version()\fR returns the protocol version used for the connection.
+\&\fISSL_version()\fR returns the Protocol version used for the connection.
 .SH "RETURN VALUES"
 .IX Header "RETURN VALUES"
 \&\fISSL_get_version()\fR returns one of the following strings:
 .IP "SSLv3" 4
 .IX Item "SSLv3"
-The connection uses the SSLv3 protocol.
+The connection uses the SSLv3 Protocol.
 .IP "TLSv1" 4
 .IX Item "TLSv1"
-The connection uses the TLSv1.0 protocol.
+The connection uses the TLSv1.0 Protocol.
 .IP "TLSv1.1" 4
 .IX Item "TLSv1.1"
-The connection uses the TLSv1.1 protocol.
+The connection uses the TLSv1.1 Protocol.
 .IP "TLSv1.2" 4
 .IX Item "TLSv1.2"
-The connection uses the TLSv1.2 protocol.
+The connection uses the TLSv1.2 Protocol.
 .IP "TLSv1.3" 4
 .IX Item "TLSv1.3"
-The connection uses the TLSv1.3 protocol.
+The connection uses the TLSv1.3 Protocol.
 .IP "unknown" 4
 .IX Item "unknown"
 This indicates that no version has been set (no connection established).
@@ -191,19 +191,19 @@ This indicates that no version has been set (no connection established).
 the following:
 .IP "\s-1SSL3_VERSION\s0" 4
 .IX Item "SSL3_VERSION"
-The connection uses the SSLv3 protocol.
+The connection uses the SSLv3 Protocol.
 .IP "\s-1TLS1_VERSION\s0" 4
 .IX Item "TLS1_VERSION"
-The connection uses the TLSv1.0 protocol.
+The connection uses the TLSv1.0 Protocol.
 .IP "\s-1TLS1_1_VERSION\s0" 4
 .IX Item "TLS1_1_VERSION"
-The connection uses the TLSv1.1 protocol.
+The connection uses the TLSv1.1 Protocol.
 .IP "\s-1TLS1_2_VERSION\s0" 4
 .IX Item "TLS1_2_VERSION"
-The connection uses the TLSv1.2 protocol.
+The connection uses the TLSv1.2 Protocol.
 .IP "\s-1TLS1_3_VERSION\s0" 4
 .IX Item "TLS1_3_VERSION"
-The connection uses the TLSv1.3 protocol.
+The connection uses the TLSv1.3 Protocol.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
 \&\fIssl\fR\|(7)

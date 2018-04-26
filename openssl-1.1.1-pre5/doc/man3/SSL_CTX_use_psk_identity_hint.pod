@@ -47,7 +47,7 @@ The callback function is given a pointer to the SSL connection in B<ssl> and
 an identity in B<identity> of length B<identity_len>. The callback function
 should identify an SSL_SESSION object that provides the PSK details and store it
 in B<*sess>. The SSL_SESSION object should, as a minimum, set the master key,
-the ciphersuite and the protocol version. See
+the ciphersuite and the Protocol version. See
 L<SSL_CTX_set_psk_use_session_callback(3)> for details.
 
 It is also possible for the callback to succeed but not supply a PSK. In this
@@ -113,7 +113,7 @@ B<psk> in bytes. It is an error to return a value greater than
 B<max_psk_len>.
 
 If the PSK identity was not found but the callback instructs the
-protocol to continue anyway, the callback must provide some random
+Protocol to continue anyway, the callback must provide some random
 data to B<psk> and return the length of the random data, so the
 connection will fail with decryption_error before it will be finished
 completely.

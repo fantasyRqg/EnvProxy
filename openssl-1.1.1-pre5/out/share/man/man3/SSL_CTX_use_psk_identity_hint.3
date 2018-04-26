@@ -184,7 +184,7 @@ The callback function is given a pointer to the \s-1SSL\s0 connection in \fBssl\
 an identity in \fBidentity\fR of length \fBidentity_len\fR. The callback function
 should identify an \s-1SSL_SESSION\s0 object that provides the \s-1PSK\s0 details and store it
 in \fB*sess\fR. The \s-1SSL_SESSION\s0 object should, as a minimum, set the master key,
-the ciphersuite and the protocol version. See
+the ciphersuite and the Protocol version. See
 \&\fISSL_CTX_set_psk_use_session_callback\fR\|(3) for details.
 .PP
 It is also possible for the callback to succeed but not supply a \s-1PSK.\s0 In this
@@ -243,7 +243,7 @@ successfully in parameter \fBpsk\fR. Return value is the length of
 \&\fBmax_psk_len\fR.
 .Sp
 If the \s-1PSK\s0 identity was not found but the callback instructs the
-protocol to continue anyway, the callback must provide some random
+Protocol to continue anyway, the callback must provide some random
 data to \fBpsk\fR and return the length of the random data, so the
 connection will fail with decryption_error before it will be finished
 completely.

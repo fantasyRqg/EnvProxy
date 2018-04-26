@@ -30,7 +30,7 @@
 
 <h1 id="SYNOPSIS">SYNOPSIS</h1>
 
-<p><b>openssl</b> <b>s_client</b> [<b>-help</b>] [<b>-connect host:port</b>] [<b>-bind host:port</b>] [<b>-proxy host:port</b>] [<b>-unix path</b>] [<b>-4</b>] [<b>-6</b>] [<b>-servername name</b>] [<b>-noservername</b>] [<b>-verify depth</b>] [<b>-verify_return_error</b>] [<b>-cert filename</b>] [<b>-certform DER|PEM</b>] [<b>-key filename</b>] [<b>-keyform DER|PEM</b>] [<b>-pass arg</b>] [<b>-CApath directory</b>] [<b>-CAfile filename</b>] [<b>-no-CAfile</b>] [<b>-no-CApath</b>] [<b>-requestCAfile filename</b>] [<b>-dane_tlsa_domain domain</b>] [<b>-dane_tlsa_rrdata rrdata</b>] [<b>-dane_ee_no_namechecks</b>] [<b>-attime timestamp</b>] [<b>-check_ss_sig</b>] [<b>-crl_check</b>] [<b>-crl_check_all</b>] [<b>-explicit_policy</b>] [<b>-extended_crl</b>] [<b>-ignore_critical</b>] [<b>-inhibit_any</b>] [<b>-inhibit_map</b>] [<b>-no_check_time</b>] [<b>-partial_chain</b>] [<b>-policy arg</b>] [<b>-policy_check</b>] [<b>-policy_print</b>] [<b>-purpose purpose</b>] [<b>-suiteB_128</b>] [<b>-suiteB_128_only</b>] [<b>-suiteB_192</b>] [<b>-trusted_first</b>] [<b>-no_alt_chains</b>] [<b>-use_deltas</b>] [<b>-auth_level num</b>] [<b>-nameopt option</b>] [<b>-verify_depth num</b>] [<b>-verify_email email</b>] [<b>-verify_hostname hostname</b>] [<b>-verify_ip ip</b>] [<b>-verify_name name</b>] [<b>-x509_strict</b>] [<b>-reconnect</b>] [<b>-showcerts</b>] [<b>-debug</b>] [<b>-msg</b>] [<b>-nbio_test</b>] [<b>-state</b>] [<b>-nbio</b>] [<b>-crlf</b>] [<b>-ign_eof</b>] [<b>-no_ign_eof</b>] [<b>-quiet</b>] [<b>-ssl3</b>] [<b>-tls1</b>] [<b>-tls1_1</b>] [<b>-tls1_2</b>] [<b>-tls1_3</b>] [<b>-no_ssl3</b>] [<b>-no_tls1</b>] [<b>-no_tls1_1</b>] [<b>-no_tls1_2</b>] [<b>-no_tls1_3</b>] [<b>-dtls</b>] [<b>-dtls1</b>] [<b>-dtls1_2</b>] [<b>-sctp</b>] [<b>-fallback_scsv</b>] [<b>-async</b>] [<b>-max_send_frag</b>] [<b>-split_send_frag</b>] [<b>-max_pipelines</b>] [<b>-read_buf</b>] [<b>-bugs</b>] [<b>-comp</b>] [<b>-no_comp</b>] [<b>-allow_no_dhe_kex</b>] [<b>-sigalgs sigalglist</b>] [<b>-curves curvelist</b>] [<b>-cipher cipherlist</b>] [<b>-ciphersuites val</b>] [<b>-serverpref</b>] [<b>-starttls protocol</b>] [<b>-xmpphost hostname</b>] [<b>-name hostname</b>] [<b>-engine id</b>] [<b>-tlsextdebug</b>] [<b>-no_ticket</b>] [<b>-sess_out filename</b>] [<b>-sess_in filename</b>] [<b>-rand file...</b>] [<b>-writerand file</b>] [<b>-serverinfo types</b>] [<b>-status</b>] [<b>-alpn protocols</b>] [<b>-nextprotoneg protocols</b>] [<b>-ct</b>] [<b>-noct</b>] [<b>-ctlogfile</b>] [<b>-keylogfile file</b>] [<b>-early_data file</b>] [<b>-force_pha</b>] [<b>target</b>]</p>
+<p><b>openssl</b> <b>s_client</b> [<b>-help</b>] [<b>-connect host:port</b>] [<b>-bind host:port</b>] [<b>-proxy host:port</b>] [<b>-unix path</b>] [<b>-4</b>] [<b>-6</b>] [<b>-servername name</b>] [<b>-noservername</b>] [<b>-verify depth</b>] [<b>-verify_return_error</b>] [<b>-cert filename</b>] [<b>-certform DER|PEM</b>] [<b>-key filename</b>] [<b>-keyform DER|PEM</b>] [<b>-pass arg</b>] [<b>-CApath directory</b>] [<b>-CAfile filename</b>] [<b>-no-CAfile</b>] [<b>-no-CApath</b>] [<b>-requestCAfile filename</b>] [<b>-dane_tlsa_domain domain</b>] [<b>-dane_tlsa_rrdata rrdata</b>] [<b>-dane_ee_no_namechecks</b>] [<b>-attime timestamp</b>] [<b>-check_ss_sig</b>] [<b>-crl_check</b>] [<b>-crl_check_all</b>] [<b>-explicit_policy</b>] [<b>-extended_crl</b>] [<b>-ignore_critical</b>] [<b>-inhibit_any</b>] [<b>-inhibit_map</b>] [<b>-no_check_time</b>] [<b>-partial_chain</b>] [<b>-policy arg</b>] [<b>-policy_check</b>] [<b>-policy_print</b>] [<b>-purpose purpose</b>] [<b>-suiteB_128</b>] [<b>-suiteB_128_only</b>] [<b>-suiteB_192</b>] [<b>-trusted_first</b>] [<b>-no_alt_chains</b>] [<b>-use_deltas</b>] [<b>-auth_level num</b>] [<b>-nameopt option</b>] [<b>-verify_depth num</b>] [<b>-verify_email email</b>] [<b>-verify_hostname hostname</b>] [<b>-verify_ip ip</b>] [<b>-verify_name name</b>] [<b>-x509_strict</b>] [<b>-reconnect</b>] [<b>-showcerts</b>] [<b>-debug</b>] [<b>-msg</b>] [<b>-nbio_test</b>] [<b>-state</b>] [<b>-nbio</b>] [<b>-crlf</b>] [<b>-ign_eof</b>] [<b>-no_ign_eof</b>] [<b>-quiet</b>] [<b>-ssl3</b>] [<b>-tls1</b>] [<b>-tls1_1</b>] [<b>-tls1_2</b>] [<b>-tls1_3</b>] [<b>-no_ssl3</b>] [<b>-no_tls1</b>] [<b>-no_tls1_1</b>] [<b>-no_tls1_2</b>] [<b>-no_tls1_3</b>] [<b>-dtls</b>] [<b>-dtls1</b>] [<b>-dtls1_2</b>] [<b>-sctp</b>] [<b>-fallback_scsv</b>] [<b>-async</b>] [<b>-max_send_frag</b>] [<b>-split_send_frag</b>] [<b>-max_pipelines</b>] [<b>-read_buf</b>] [<b>-bugs</b>] [<b>-comp</b>] [<b>-no_comp</b>] [<b>-allow_no_dhe_kex</b>] [<b>-sigalgs sigalglist</b>] [<b>-curves curvelist</b>] [<b>-cipher cipherlist</b>] [<b>-ciphersuites val</b>] [<b>-serverpref</b>] [<b>-starttls Protocol</b>] [<b>-xmpphost hostname</b>] [<b>-name hostname</b>] [<b>-engine id</b>] [<b>-tlsextdebug</b>] [<b>-no_ticket</b>] [<b>-sess_out filename</b>] [<b>-sess_in filename</b>] [<b>-rand file...</b>] [<b>-writerand file</b>] [<b>-serverinfo types</b>] [<b>-status</b>] [<b>-alpn protocols</b>] [<b>-nextprotoneg protocols</b>] [<b>-ct</b>] [<b>-noct</b>] [<b>-ctlogfile</b>] [<b>-keylogfile file</b>] [<b>-early_data file</b>] [<b>-force_pha</b>] [<b>target</b>]</p>
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
@@ -248,13 +248,13 @@
 <dt id="msg"><b>-msg</b></dt>
 <dd>
 
-<p>Show all protocol messages with hex dump.</p>
+<p>Show all Protocol messages with hex dump.</p>
 
 </dd>
 <dt id="trace"><b>-trace</b></dt>
 <dd>
 
-<p>Show verbose trace output of protocol messages. OpenSSL needs to be compiled with <b>enable-ssl-trace</b> for this option to work.</p>
+<p>Show verbose trace output of Protocol messages. OpenSSL needs to be compiled with <b>enable-ssl-trace</b> for this option to work.</p>
 
 </dd>
 <dt id="msgfile"><b>-msgfile</b></dt>
@@ -314,19 +314,19 @@
 <dt id="ssl3--tls1--tls1_1--tls1_2--tls1_3--no_ssl3--no_tls1--no_tls1_1--no_tls1_2--no_tls1_3"><b>-ssl3</b>, <b>-tls1</b>, <b>-tls1_1</b>, <b>-tls1_2</b>, <b>-tls1_3</b>, <b>-no_ssl3</b>, <b>-no_tls1</b>, <b>-no_tls1_1</b>, <b>-no_tls1_2</b>, <b>-no_tls1_3</b></dt>
 <dd>
 
-<p>These options require or disable the use of the specified SSL or TLS protocols. By default <b>s_client</b> will negotiate the highest mutually supported protocol version. When a specific TLS version is required, only that version will be offered to and accepted from the server.</p>
+<p>These options require or disable the use of the specified SSL or TLS protocols. By default <b>s_client</b> will negotiate the highest mutually supported Protocol version. When a specific TLS version is required, only that version will be offered to and accepted from the server.</p>
 
 </dd>
 <dt id="dtls--dtls1--dtls1_2"><b>-dtls</b>, <b>-dtls1</b>, <b>-dtls1_2</b></dt>
 <dd>
 
-<p>These options make <b>s_client</b> use DTLS protocols instead of TLS. With <b>-dtls</b>, <b>s_client</b> will negotiate any supported DTLS protocol version, whilst <b>-dtls1</b> and <b>-dtls1_2</b> will only support DTLS1.0 and DTLS1.2 respectively.</p>
+<p>These options make <b>s_client</b> use DTLS protocols instead of TLS. With <b>-dtls</b>, <b>s_client</b> will negotiate any supported DTLS Protocol version, whilst <b>-dtls1</b> and <b>-dtls1_2</b> will only support DTLS1.0 and DTLS1.2 respectively.</p>
 
 </dd>
 <dt id="sctp"><b>-sctp</b></dt>
 <dd>
 
-<p>Use SCTP for the transport protocol instead of UDP in DTLS. Must be used in conjunction with <b>-dtls</b>, <b>-dtls1</b> or <b>-dtls1_2</b>. This option is only available where OpenSSL has support for SCTP enabled.</p>
+<p>Use SCTP for the transport Protocol instead of UDP in DTLS. Must be used in conjunction with <b>-dtls</b>, <b>-dtls1</b> or <b>-dtls1_2</b>. This option is only available where OpenSSL has support for SCTP enabled.</p>
 
 </dd>
 <dt id="fallback_scsv"><b>-fallback_scsv</b></dt>
@@ -415,10 +415,10 @@
 <p>This allows the TLSv1.3 ciphersuites sent by the client to be modified. This list will be combined with any TLSv1.2 and below ciphersuites that have been configured. Although the server determines which cipher suite is used it should take the first supported cipher in the list sent by the client. See the <b>ciphers</b> command for more information. The format for this list is a simple colon (&quot;:&quot;) separated list of TLSv1.3 ciphersuite names.</p>
 
 </dd>
-<dt id="starttls-protocol"><b>-starttls protocol</b></dt>
+<dt id="starttls-Protocol"><b>-starttls Protocol</b></dt>
 <dd>
 
-<p>Send the protocol-specific message(s) to switch to TLS for communication. <b>protocol</b> is a keyword for the intended protocol. Currently, the only supported keywords are &quot;smtp&quot;, &quot;pop3&quot;, &quot;imap&quot;, &quot;ftp&quot;, &quot;xmpp&quot;, &quot;xmpp-server&quot;, &quot;irc&quot;, &quot;postgres&quot;, &quot;mysql&quot;, &quot;lmtp&quot;, &quot;nntp&quot;, &quot;sieve&quot; and &quot;ldap&quot;.</p>
+<p>Send the Protocol-specific message(s) to switch to TLS for communication. <b>Protocol</b> is a keyword for the intended Protocol. Currently, the only supported keywords are &quot;smtp&quot;, &quot;pop3&quot;, &quot;imap&quot;, &quot;ftp&quot;, &quot;xmpp&quot;, &quot;xmpp-server&quot;, &quot;irc&quot;, &quot;postgres&quot;, &quot;mysql&quot;, &quot;lmtp&quot;, &quot;nntp&quot;, &quot;sieve&quot; and &quot;ldap&quot;.</p>
 
 </dd>
 <dt id="xmpphost-hostname"><b>-xmpphost hostname</b></dt>
@@ -496,7 +496,7 @@
 <dt id="alpn-protocols--nextprotoneg-protocols"><b>-alpn protocols</b>, <b>-nextprotoneg protocols</b></dt>
 <dd>
 
-<p>These flags enable the Enable the Application-Layer Protocol Negotiation or Next Protocol Negotiation (NPN) extension, respectively. ALPN is the IETF standard and replaces NPN. The <b>protocols</b> list is a comma-separated list of protocol names that the client should advertise support for. The list should contain the most desirable protocols first. Protocol names are printable ASCII strings, for example &quot;http/1.1&quot; or &quot;spdy/3&quot;. An empty list of protocols is treated specially and will cause the client to advertise support for the TLS extension but disconnect just after receiving ServerHello with a list of server supported protocols. The flag <b>-nextprotoneg</b> cannot be specified if <b>-tls1_3</b> is used.</p>
+<p>These flags enable the Enable the Application-Layer Protocol Negotiation or Next Protocol Negotiation (NPN) extension, respectively. ALPN is the IETF standard and replaces NPN. The <b>protocols</b> list is a comma-separated list of Protocol names that the client should advertise support for. The list should contain the most desirable protocols first. Protocol names are printable ASCII strings, for example &quot;http/1.1&quot; or &quot;spdy/3&quot;. An empty list of protocols is treated specially and will cause the client to advertise support for the TLS extension but disconnect just after receiving ServerHello with a list of server supported protocols. The flag <b>-nextprotoneg</b> cannot be specified if <b>-tls1_3</b> is used.</p>
 
 </dd>
 <dt id="ct--noct"><b>-ct</b>, <b>-noct</b></dt>

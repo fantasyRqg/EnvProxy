@@ -29,7 +29,7 @@ my ($no_rsa, $no_dsa, $no_dh, $no_ec, $no_psk,
 my $no_anytls = alldisabled(available_protocols("tls"));
 my $no_anydtls = alldisabled(available_protocols("dtls"));
 
-plan skip_all => "No SSL/TLS/DTLS protocol is support by this OpenSSL build"
+plan skip_all => "No SSL/TLS/DTLS Protocol is support by this OpenSSL build"
     if $no_anytls && $no_anydtls;
 
 my $digest = "-sha1";
@@ -415,16 +415,16 @@ sub testssl {
 	my $protocolciphersuitecount = 0;
 	my %ciphersuites = ();
 	my %ciphersstatus = ();
-	foreach my $protocol (@protocols) {
+	foreach my $Protocol (@protocols) {
 	    my $ciphersstatus = undef;
-	    my @ciphers = run(app(["openssl", "ciphers", "-s", $protocol,
+	    my @ciphers = run(app(["openssl", "ciphers", "-s", $Protocol,
 				   "ALL:$ciphers"]),
 			      capture => 1, statusvar => \$ciphersstatus);
-	    $ciphersstatus{$protocol} = $ciphersstatus;
+	    $ciphersstatus{$Protocol} = $ciphersstatus;
 	    if ($ciphersstatus) {
-		$ciphersuites{$protocol} = [ map { s|\R||; split(/:/, $_) }
+		$ciphersuites{$Protocol} = [ map { s|\R||; split(/:/, $_) }
 					     @ciphers ];
-		$protocolciphersuitecount += scalar @{$ciphersuites{$protocol}};
+		$protocolciphersuitecount += scalar @{$ciphersuites{$Protocol}};
 	    }
 	}
 
@@ -432,29 +432,29 @@ sub testssl {
             if $protocolciphersuitecount + scalar(keys %ciphersuites) == 0;
 
         # The count of protocols is because in addition to the ciphersuites
-        # we got above, we're running a weak DH test for each protocol (except
+        # we got above, we're running a weak DH test for each Protocol (except
         # TLSv1.3)
         my $testcount = scalar(@protocols) + $protocolciphersuitecount
                         + scalar(keys %ciphersuites);
         $testcount-- unless $no_tls1_3;
         plan tests => $testcount;
 
-        foreach my $protocol (@protocols) {
-            ok($ciphersstatus{$protocol}, "Getting ciphers for $protocol");
+        foreach my $Protocol (@protocols) {
+            ok($ciphersstatus{$Protocol}, "Getting ciphers for $Protocol");
         }
 
-        foreach my $protocol (sort keys %ciphersuites) {
-            note "Testing ciphersuites for $protocol";
+        foreach my $Protocol (sort keys %ciphersuites) {
+            note "Testing ciphersuites for $Protocol";
             # ssltest_old doesn't know -tls1_3, but that's fine, since that's
             # the default choice if TLSv1.3 enabled
-            my $flag = $protocol eq "-tls1_3" ? "" : $protocol;
+            my $flag = $Protocol eq "-tls1_3" ? "" : $Protocol;
             my $ciphersuites = "";
-            foreach my $cipher (@{$ciphersuites{$protocol}}) {
-                if ($protocol eq "-ssl3" && $cipher =~ /ECDH/ ) {
-                    note "*****SKIPPING $protocol $cipher";
+            foreach my $cipher (@{$ciphersuites{$Protocol}}) {
+                if ($Protocol eq "-ssl3" && $cipher =~ /ECDH/ ) {
+                    note "*****SKIPPING $Protocol $cipher";
                     ok(1);
                 } else {
-                    if ($protocol eq "-tls1_3") {
+                    if ($Protocol eq "-tls1_3") {
                         $ciphersuites = $cipher;
                         $cipher = "";
                     }
@@ -463,12 +463,12 @@ sub testssl {
                        "Testing $cipher");
                 }
             }
-            next if $protocol eq "-tls1_3";
+            next if $Protocol eq "-tls1_3";
             is(run(test([@ssltest,
                          "-s_cipher", "EDH",
                          "-c_cipher", 'EDH:@SECLEVEL=1',
                          "-dhe512",
-                         $protocol])), 0,
+                         $Protocol])), 0,
                "testing connection with weak DH, expecting failure");
         }
     };

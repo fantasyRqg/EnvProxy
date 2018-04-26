@@ -223,7 +223,7 @@ type, and a client only type.
 .IP "\fITLS_method()\fR, \fITLS_server_method()\fR, \fITLS_client_method()\fR" 4
 .IX Item "TLS_method(), TLS_server_method(), TLS_client_method()"
 These are the general-purpose \fIversion-flexible\fR \s-1SSL/TLS\s0 methods.
-The actual protocol version used will be negotiated to the highest version
+The actual Protocol version used will be negotiated to the highest version
 mutually supported by the client and the server.
 The supported protocols are SSLv3, TLSv1, TLSv1.1 and TLSv1.2.
 Applications should use these methods, and avoid the version-specific
@@ -236,20 +236,20 @@ code should use those functions instead.
 .IP "\fITLSv1_2_method()\fR, \fITLSv1_2_server_method()\fR, \fITLSv1_2_client_method()\fR" 4
 .IX Item "TLSv1_2_method(), TLSv1_2_server_method(), TLSv1_2_client_method()"
 A \s-1TLS/SSL\s0 connection established with these methods will only understand the
-TLSv1.2 protocol.
+TLSv1.2 Protocol.
 .IP "\fITLSv1_1_method()\fR, \fITLSv1_1_server_method()\fR, \fITLSv1_1_client_method()\fR" 4
 .IX Item "TLSv1_1_method(), TLSv1_1_server_method(), TLSv1_1_client_method()"
 A \s-1TLS/SSL\s0 connection established with these methods will only understand the
-TLSv1.1 protocol.
+TLSv1.1 Protocol.
 .IP "\fITLSv1_method()\fR, \fITLSv1_server_method()\fR, \fITLSv1_client_method()\fR" 4
 .IX Item "TLSv1_method(), TLSv1_server_method(), TLSv1_client_method()"
 A \s-1TLS/SSL\s0 connection established with these methods will only understand the
-TLSv1 protocol.
+TLSv1 Protocol.
 .IP "\fISSLv3_method()\fR, \fISSLv3_server_method()\fR, \fISSLv3_client_method()\fR" 4
 .IX Item "SSLv3_method(), SSLv3_server_method(), SSLv3_client_method()"
 A \s-1TLS/SSL\s0 connection established with these methods will only understand the
-SSLv3 protocol.
-The SSLv3 protocol is deprecated and should not be used.
+SSLv3 Protocol.
+The SSLv3 Protocol is deprecated and should not be used.
 .IP "\fIDTLS_method()\fR, \fIDTLS_server_method()\fR, \fIDTLS_client_method()\fR" 4
 .IX Item "DTLS_method(), DTLS_server_method(), DTLS_client_method()"
 These are the version-flexible \s-1DTLS\s0 methods.
@@ -267,7 +267,7 @@ callbacks, the keys and certificates and the options to their default values.
 \&\fITLS_method()\fR, \fITLS_server_method()\fR, \fITLS_client_method()\fR, \fIDTLS_method()\fR,
 \&\fIDTLS_server_method()\fR and \fIDTLS_client_method()\fR are the \fIversion-flexible\fR
 methods.
-All other methods only support one specific protocol version.
+All other methods only support one specific Protocol version.
 Use the \fIversion-flexible\fR methods instead of the version specific methods.
 .PP
 If you want to limit the supported protocols for the version flexible
@@ -283,15 +283,15 @@ The list of protocols available can also be limited using the
 \&\fBSSL_OP_NO_TLSv1_3\fR and \fBSSL_OP_NO_TLSv1_2\fR options of the
 \&\fISSL_CTX_set_options\fR\|(3) or \fISSL_set_options\fR\|(3) functions, but this approach
 is not recommended. Clients should avoid creating \*(L"holes\*(R" in the set of
-protocols they support. When disabling a protocol, make sure that you also
-disable either all previous or all subsequent protocol versions.
-In clients, when a protocol version is disabled without disabling \fIall\fR
-previous protocol versions, the effect is to also disable all subsequent
-protocol versions.
+protocols they support. When disabling a Protocol, make sure that you also
+disable either all previous or all subsequent Protocol versions.
+In clients, when a Protocol version is disabled without disabling \fIall\fR
+previous Protocol versions, the effect is to also disable all subsequent
+Protocol versions.
 .PP
-The SSLv3 protocol is deprecated and should generally not be used.
+The SSLv3 Protocol is deprecated and should generally not be used.
 Applications should typically use \fISSL_CTX_set_min_proto_version\fR\|(3) to set
-the minimum protocol to at least \fB\s-1TLS1_VERSION\s0\fR.
+the minimum Protocol to at least \fB\s-1TLS1_VERSION\s0\fR.
 .SH "RETURN VALUES"
 .IX Header "RETURN VALUES"
 The following return values can occur:

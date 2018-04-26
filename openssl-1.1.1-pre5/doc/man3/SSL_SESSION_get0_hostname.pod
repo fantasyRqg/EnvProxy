@@ -32,11 +32,11 @@ should not be free'd.
 SSL_SESSION_set1_hostname() sets the SNI value for the hostname to a copy of
 the string provided in hostname.
 
-SSL_SESSION_get0_alpn_selected() retrieves the selected ALPN protocol for this
+SSL_SESSION_get0_alpn_selected() retrieves the selected ALPN Protocol for this
 session and its associated length in bytes. The returned value of B<*alpn> is a
 pointer to memory maintained within B<s> and should not be free'd.
 
-SSL_SESSION_set1_alpn_selected() sets the ALPN protocol for this session to the
+SSL_SESSION_set1_alpn_selected() sets the ALPN Protocol for this session to the
 value in B<alpn> which should be of length B<len> bytes. A copy of the input
 value is made, and the caller retains ownership of the memory pointed to by
 B<alpn>.

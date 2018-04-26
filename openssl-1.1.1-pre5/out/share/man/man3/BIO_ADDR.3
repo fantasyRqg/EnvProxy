@@ -179,17 +179,17 @@ with routines that will fill it with information, such as
 \&\fIBIO_ADDR_clear()\fR clears any data held within the provided \fB\s-1BIO_ADDR\s0\fR and sets
 it back to an uninitialised state.
 .PP
-\&\fIBIO_ADDR_rawmake()\fR takes a protocol \fBfamily\fR, an byte array of
+\&\fIBIO_ADDR_rawmake()\fR takes a Protocol \fBfamily\fR, an byte array of
 size \fBwherelen\fR with an address in network byte order pointed at
 by \fBwhere\fR and a port number in network byte order in \fBport\fR (except
-for the \fB\s-1AF_UNIX\s0\fR protocol family, where \fBport\fR is meaningless and
+for the \fB\s-1AF_UNIX\s0\fR Protocol family, where \fBport\fR is meaningless and
 therefore ignored) and populates the given \fB\s-1BIO_ADDR\s0\fR with them.
 In case this creates a \fB\s-1AF_UNIX\s0\fR \fB\s-1BIO_ADDR\s0\fR, \fBwherelen\fR is expected
 to be the length of the path string (not including the terminating
 \&\s-1NUL,\s0 such as the result of a call to \fIstrlen()\fR).
 \&\fIRead on about the addresses in \*(L"\s-1RAW ADDRESSES\*(R"\s0 below\fR.
 .PP
-\&\fIBIO_ADDR_family()\fR returns the protocol family of the given
+\&\fIBIO_ADDR_family()\fR returns the Protocol family of the given
 \&\fB\s-1BIO_ADDR\s0\fR.  The possible non-error results are one of the
 constants \s-1AF_INET, AF_INET6\s0 and \s-1AF_UNIX.\s0 It will also return \s-1AF_UNSPEC\s0 if the
 \&\s-1BIO_ADDR\s0 has not been initialised.
@@ -212,20 +212,20 @@ The raw port will be in network byte order.
 \&\fIBIO_ADDR_hostname_string()\fR returns a character string with the
 hostname of the given \fB\s-1BIO_ADDR\s0\fR.  If \fBnumeric\fR is 1, the string
 will contain the numerical form of the address.  This only works for
-\&\fB\s-1BIO_ADDR\s0\fR of the protocol families \s-1AF_INET\s0 and \s-1AF_INET6. \s0 The
+\&\fB\s-1BIO_ADDR\s0\fR of the Protocol families \s-1AF_INET\s0 and \s-1AF_INET6. \s0 The
 returned string has been allocated on the heap and must be freed
 with \fIOPENSSL_free()\fR.
 .PP
 \&\fIBIO_ADDR_service_string()\fR returns a character string with the
 service name of the port of the given \fB\s-1BIO_ADDR\s0\fR.  If \fBnumeric\fR
 is 1, the string will contain the port number.  This only works
-for \fB\s-1BIO_ADDR\s0\fR of the protocol families \s-1AF_INET\s0 and \s-1AF_INET6. \s0 The
+for \fB\s-1BIO_ADDR\s0\fR of the Protocol families \s-1AF_INET\s0 and \s-1AF_INET6. \s0 The
 returned string has been allocated on the heap and must be freed
 with \fIOPENSSL_free()\fR.
 .PP
 \&\fIBIO_ADDR_path_string()\fR returns a character string with the path
 of the given \fB\s-1BIO_ADDR\s0\fR.  This only works for \fB\s-1BIO_ADDR\s0\fR of the
-protocol family \s-1AF_UNIX. \s0 The returned string has been allocated
+Protocol family \s-1AF_UNIX. \s0 The returned string has been allocated
 on the heap and must be freed with \fIOPENSSL_free()\fR.
 .SH "RAW ADDRESSES"
 .IX Header "RAW ADDRESSES"
@@ -233,7 +233,7 @@ Both \fIBIO_ADDR_rawmake()\fR and \fIBIO_ADDR_rawaddress()\fR take a pointer to 
 network byte order address of a specific site.  Internally, those are
 treated as a pointer to \fBstruct in_addr\fR (for \fB\s-1AF_INET\s0\fR), \fBstruct
 in6_addr\fR (for \fB\s-1AF_INET6\s0\fR) or \fBchar *\fR (for \fB\s-1AF_UNIX\s0\fR), all
-depending on the protocol family the address is for.
+depending on the Protocol family the address is for.
 .SH "RETURN VALUES"
 .IX Header "RETURN VALUES"
 The string producing functions \fIBIO_ADDR_hostname_string()\fR,

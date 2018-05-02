@@ -10,6 +10,8 @@
 
 class IpHandler;
 
+struct IpPackage;
+
 class proxyEngine;
 
 class IpPackageFactory {
@@ -17,10 +19,15 @@ public:
 
     IpPackageFactory(proxyEngine *proxyEngine);
 
-    IpHandler *createIpPackage(uint8_t *pkt, size_t length);
+    IpPackage *createIpPackage(uint8_t *pkt, size_t pktSize);
+
+    virtual ~IpPackageFactory();
 
 private:
     proxyEngine *mProxyEngine;
+
+    IpHandler **pIpHandlers;
+
 
 };
 

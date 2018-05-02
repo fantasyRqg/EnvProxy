@@ -15,7 +15,7 @@
 
 class IpPackageFactory;
 
-class IpHandler;
+struct IpPackage;
 
 
 class proxyEngine {
@@ -36,7 +36,7 @@ public:
     size_t mMTU = 1000;
 
 private:
-    IpHandler *checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory);
+    IpPackage *checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory);
 
 
 };

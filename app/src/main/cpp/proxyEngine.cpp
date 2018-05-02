@@ -79,34 +79,31 @@ void proxyEngine::handleEvents() {
 
 
     while (mRunning) {
+        //main looping
 
         struct epoll_event ev[EPOLL_EVENTS];
         int ready = epoll_wait(epoll_fd, ev, EPOLL_EVENTS, 1000);
 
-        if (ready > 0) {
-            for (int i = 0; i < ready; ++i) {
-                if (ev[i].data.ptr == &ev_tun) {
-                    auto ipPkt = checkTun(&ev[i], &ipPackageFactory);
-//
-//                    if (ipPkt != nullptr) {
-//                        write(mTunFd, ipPkt->getPkt(), ipPkt->getPktLength());
-//
-//                    delete ipPkt;
-//                }
+        for (int i = 0; i < ready; ++i) {
+            if (ev[i].data.ptr == &ev_tun) {
+                //tun event
+                auto ipPkt = checkTun(&ev[i], &ipPackageFactory);
+                if (ipPkt != nullptr) {
+                    delete ipPkt;
                 } else {
-                    //task event
-                }
 
+                }
+            } else if (ev[i].data.ptr != nullptr) {
+                //task event
 
             }
         }
 
     }
-
 }
 
 
-IpHandler *proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory) {
+IpPackage *proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory) {
     if (pEvent->events & EPOLLERR) {
         ALOGE("tun error %d: %s", errno, strerror(errno));
         return nullptr;
@@ -123,17 +120,11 @@ IpHandler *proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackag
                 return nullptr;
         } else if (length > 0) {
 
-            write(mTunFd, buffer, static_cast<size_t>(length));
-            return nullptr;
-
-//            auto ipPkt = ipPackageFactory->createIpPackage(buffer, (size_t) length);
-//            if (ipPkt == NULL) {
-//                ALOGW("unhandled package IpHandler version %d", *buffer >> 4);
-//            } else {
-//                ipPkt->handlePackage();
-//            }
-//
-//            return ipPkt;
+            auto ipPkt = ipPackageFactory->createIpPackage(buffer, (size_t) length);
+            if (ipPkt == NULL) {
+                ALOGW("unhandled package IpHandler version %d", *buffer >> 4);
+            }
+            return ipPkt;
         } else {
             free(buffer);
             ALOGE("tun %d empty read", mTunFd);

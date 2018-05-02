@@ -45,7 +45,7 @@ IpPackage *Ip4Handler::handlePackage(uint8_t *pkt, size_t pktSize) {
     }
 
 
-    return IP_HANDLE_SUCCESS;
+    return p;
 }
 
 int Ip4Handler::canHandlePackage(uint8_t *pkt, size_t pktSize) {

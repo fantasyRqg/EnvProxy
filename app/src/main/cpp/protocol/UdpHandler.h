@@ -5,7 +5,7 @@
 #ifndef ENVPROXY_UDP_H
 #define ENVPROXY_UDP_H
 
-#include "Protocol.h"
+#include "ProtocolHandler.h"
 
 
 class Udp : public Protocol {

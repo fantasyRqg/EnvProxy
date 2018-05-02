@@ -34,7 +34,7 @@ void initNative(JNIEnv *env, jobject thiz) {
 
 void destroyNative(JNIEnv *env, jobject thiz) {
     delete getProxyEngine(env, thiz);
-    env->SetLongField(thiz, nativeHandlerField, NULL);
+    env->SetLongField(thiz, nativeHandlerField, static_cast<jlong >(NULL));
 }
 
 void setVpnFd(JNIEnv *env, jobject thiz, jint fd) {

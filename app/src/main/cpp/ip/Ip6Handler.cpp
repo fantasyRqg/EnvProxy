@@ -6,29 +6,28 @@
 #include <arpa/inet.h>
 #include <netinet/ip.h>
 
-#include "ip6.h"
+#include "Ip6Handler.h"
 
 
 #define LOG_TAG "IPV6"
 
+Ip6Handler::Ip6Handler(proxyEngine *proxyEngine) : IpHandler(proxyEngine) {}
 
-ip6::~ip6() {
-}
+/**
+ *  not implement
+ * @param pkt
+ * @param pktSize
+ * @return
+ */
+IpPackage *Ip6Handler::handlePackage(uint8_t *pkt, size_t pktSize) {
+    struct ip6_hdr *ip6hdr = (struct ip6_hdr *) pkt;
 
-ip6::ip6(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength) :
-        IpPackage(proxyEngine, pkt, pktLength) {
-
-}
-
-int ip6::handlePackage() {
-    struct ip6_hdr *ip6hdr = (struct ip6_hdr *) mPkt;
-
-    if ((ip6hdr->ip6_vfc & IPV6_VERSION_MASK) != IPV6_VERSION)
-        return IP_HANDLE_VERSION_NOT_MATCH;
-
-    if (mPktLength < sizeof(struct ip6_hdr)) {
-        return IP_HANDLE_HDR_LEN_INVALID;
-    }
+//    if ((ip6hdr->ip6_vfc & IPV6_VERSION_MASK) != IPV6_VERSION)
+//        return IP_HANDLE_VERSION_NOT_MATCH;
+//
+//    if (mPktLength < sizeof(struct ip6_hdr)) {
+//        return IP_HANDLE_HDR_LEN_INVALID;
+//    }
 //
 //
 //    u_int8_t ext_hdr_type = ip6hdr->ip6_nxt;
@@ -50,22 +49,18 @@ int ip6::handlePackage() {
 //    ALOGD("IPV6 from %s to %s", source, dest);
 
     return IP_HANDLE_SUCCESS;
-
 }
 
-int ip6::isIpV6Package(uint8_t *pkt, size_t length) {
+int Ip6Handler::canHandlePackage(uint8_t *pkt, size_t pktSize) {
     struct ip6_hdr *ip6hdr = (struct ip6_hdr *) pkt;
 
     if ((ip6hdr->ip6_vfc & IPV6_VERSION_MASK) != IPV6_VERSION)
         return IP_HANDLE_VERSION_NOT_MATCH;
 
-    if (length < sizeof(struct ip6_hdr)) {
+    if (pktSize < sizeof(struct ip6_hdr)) {
         return IP_HANDLE_HDR_LEN_INVALID;
     }
     return IP_HANDLE_SUCCESS;
 }
 
 
-int ip6::getIpVersion() {
-    return IPV6_VERSION;
-}

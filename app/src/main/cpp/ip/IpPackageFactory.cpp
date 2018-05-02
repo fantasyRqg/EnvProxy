@@ -6,18 +6,18 @@
 
 #include "IpPackageFactory.h"
 
-#include "ip4.h"
-#include "ip6.h"
+#include "Ip4Handler.h"
+#include "Ip6Handler.h"
 #include "../log.h"
 
 
-IpPackage *IpPackageFactory::createIpPackage(uint8_t *pkt, size_t length) {
-    if (ip4::isIpV4Package(pkt, length) == IP_HANDLE_SUCCESS) {
+IpHandler *IpPackageFactory::createIpPackage(uint8_t *pkt, size_t length) {
+    if (Ip4Handler::isIpV4Package(pkt, length) == IP_HANDLE_SUCCESS) {
         ALOGD("create ipv4 package");
-        return new ip4(mProxyEngine, pkt, length);
-//    } else if (ip6::isIpV6Package(pkt, length) == IP_HANDLE_SUCCESS) {
+        return new Ip4Handler(mProxyEngine, pkt, length);
+//    } else if (Ip6Handler::isIpV6Package(pkt, length) == IP_HANDLE_SUCCESS) {
 //        ALOGV("create ipv6 package");
-//        return new ip6(mProxyEngine, pkt, length);
+//        return new Ip6Handler(mProxyEngine, pkt, length);
     } else {
         return nullptr;
     }

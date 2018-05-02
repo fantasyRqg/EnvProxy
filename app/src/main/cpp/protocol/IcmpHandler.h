@@ -5,16 +5,16 @@
 #ifndef ENVPROXY_ICMP_H
 #define ENVPROXY_ICMP_H
 
-#include "Protocol.h"
+#include "ProtocolHandler.h"
 
 class Icmp : public Protocol {
 
 public:
-    Icmp(IpPackage *ipPkt);
+    Icmp(IpHandler *ipPkt);
 
     virtual ~Icmp();
 
-    int handleProtocol() override;
+//    int handleProtocol() override;
 };
 
 

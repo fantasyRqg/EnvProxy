@@ -6,35 +6,29 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "ip4.h"
+#include "Ip4Handler.h"
 #include "../log.h"
 
 
 #define LOG_TAG "IPV4"
 
+Ip4Handler::Ip4Handler(proxyEngine *proxyEngine) : IpHandler(proxyEngine) {}
 
-ip4::~ip4() {
+IpPackage *Ip4Handler::handlePackage(uint8_t *pkt, size_t pktSize) {
+    struct iphdr *ip4hdr = (struct iphdr *) pkt;
 
-}
+    IpPackage *p = new IpPackage();
 
-ip4::ip4(proxyEngine *proxyEngine, uint8_t *pkt, size_t pktLength) :
-        IpPackage(proxyEngine, pkt, pktLength) {
+    p->ipHandler = this;
+    p->protocol = IPVERSION;
+    p->dstAddr.ip4 = ip4hdr->daddr;
+    p->srcAddr.ip4 = ip4hdr->saddr;
+    p->pkt = pkt;
+    p->pktSize = pktSize;
 
-}
-
-
-int ip4::handlePackage() {
-    struct iphdr *ip4hdr = (struct iphdr *) mPkt;
-
-
-    mSrcAddr.ip4 = ip4hdr->saddr;
-    mDstAddr.ip4 = ip4hdr->daddr;
-    mProtocol = ip4hdr->protocol;
-
-    uint8_t ipoptlen = (uint8_t) ((ip4hdr->ihl - 5) * 4);
-    mPayload = mPkt + sizeof(struct iphdr) + ipoptlen;
-
-
+    uint8_t hdrSize = (uint8_t) (ip4hdr->ihl * 4);
+    p->payload = pkt + hdrSize;
+    p->payloadSize = pktSize - hdrSize;
     char source[INET6_ADDRSTRLEN + 1];
     char dest[INET6_ADDRSTRLEN + 1];
 
@@ -54,13 +48,13 @@ int ip4::handlePackage() {
     return IP_HANDLE_SUCCESS;
 }
 
-int ip4::isIpV4Package(uint8_t *pkt, size_t length) {
+int Ip4Handler::canHandlePackage(uint8_t *pkt, size_t pktSize) {
     struct iphdr *ip4hdr = (struct iphdr *) pkt;
 
     if (ip4hdr->version != IPVERSION)
         return IP_HANDLE_VERSION_NOT_MATCH;
 
-    if (length < sizeof(struct iphdr)) {
+    if (pktSize < sizeof(struct iphdr)) {
         return IP_HANDLE_HDR_LEN_INVALID;
     }
 
@@ -68,13 +62,10 @@ int ip4::isIpV4Package(uint8_t *pkt, size_t length) {
         return IP_HANDLE_NOT_SUPPORT_MF;
     }
 
-    if (ntohs(ip4hdr->tot_len) != length) {
+    if (ntohs(ip4hdr->tot_len) != pktSize) {
         return IP_HANDLE_HDR_LEN_INVALID;
     }
 
     return IP_HANDLE_SUCCESS;
 }
 
-int ip4::getIpVersion() {
-    return IPVERSION;
-}

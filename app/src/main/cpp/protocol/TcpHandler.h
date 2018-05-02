@@ -5,7 +5,7 @@
 #ifndef ENVPROXY_TCP_H
 #define ENVPROXY_TCP_H
 
-#include "Protocol.h"
+#include "ProtocolHandler.h"
 
 
 class Tcp : public Protocol {

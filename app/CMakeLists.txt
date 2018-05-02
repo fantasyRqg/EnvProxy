@@ -20,15 +20,14 @@ add_library(libProxy
 
             src/main/cpp/libProxy.cpp
             src/main/cpp/proxyEngine.cpp
-            src/main/cpp/ip/IpPackage.h
-            src/main/cpp/ip/ip4.cpp
-            src/main/cpp/ip/ip6.cpp
+            src/main/cpp/ip/Ip4Handler.cpp
+            src/main/cpp/ip/Ip6Handler.cpp
             src/main/cpp/ip/IpPackageFactory.cpp
-            src/main/cpp/ip/IpPackage.cpp
-            src/main/cpp/protocol/Icmp.cpp
-            src/main/cpp/protocol/Tcp.cpp
-            src/main/cpp/protocol/Udp.cpp
-            src/main/cpp/protocol/Protocol.cpp
+            src/main/cpp/ip/IpHandler.cpp
+            src/main/cpp/protocol/IcmpHandler.cpp
+            src/main/cpp/protocol/TcpHandler.cpp
+            src/main/cpp/protocol/UdpHandler.cpp
+            src/main/cpp/protocol/ProtocolHandler.cpp
             src/main/cpp/protocol/ProtocolFactory.cpp
             src/main/cpp/task/Task.cpp
             src/main/cpp/task/TaskDNS.cpp

@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-class IpPackage;
+class IpHandler;
 
 class proxyEngine;
 
@@ -17,7 +17,7 @@ public:
 
     IpPackageFactory(proxyEngine *proxyEngine);
 
-    IpPackage *createIpPackage(uint8_t *pkt, size_t length);
+    IpHandler *createIpPackage(uint8_t *pkt, size_t length);
 
 private:
     proxyEngine *mProxyEngine;

@@ -9,19 +9,19 @@
 #include <stdint.h>
 
 
-class IpPackage;
+class IpHandler;
 
 class Protocol {
 
 public:
-    Protocol(IpPackage *ipPkt);
+    Protocol(IpHandler *ipPkt);
 
-    virtual int handleProtocol() = 0;
-
-    virtual ~Protocol();
+//    virtual int handleProtocol() = 0;
+//
+//    virtual ~Protocol();
 
 protected:
-    IpPackage *mIpPkt;
+    IpHandler *mIpPkt;
     uint16_t mSrcPort;
     uint16_t mDstPort;
     uint8_t *mPayload;

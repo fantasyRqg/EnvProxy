@@ -24,7 +24,7 @@
 #include "proxyEngine.h"
 #include "log.h"
 #include "ip/IpPackageFactory.h"
-#include "ip/IpPackage.h"
+#include "ip/IpHandler.h"
 
 #define LOG_TAG "proxyEngine"
 
@@ -87,8 +87,12 @@ void proxyEngine::handleEvents() {
             for (int i = 0; i < ready; ++i) {
                 if (ev[i].data.ptr == &ev_tun) {
                     auto ipPkt = checkTun(&ev[i], &ipPackageFactory);
-
-
+//
+//                    if (ipPkt != nullptr) {
+//                        write(mTunFd, ipPkt->getPkt(), ipPkt->getPktLength());
+//
+//                    delete ipPkt;
+//                }
                 } else {
                     //task event
                 }
@@ -98,10 +102,11 @@ void proxyEngine::handleEvents() {
         }
 
     }
+
 }
 
 
-IpPackage *proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory) {
+IpHandler *proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory) {
     if (pEvent->events & EPOLLERR) {
         ALOGE("tun error %d: %s", errno, strerror(errno));
         return nullptr;
@@ -117,14 +122,18 @@ IpPackage *proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackag
                 // Retry later
                 return nullptr;
         } else if (length > 0) {
-            auto ipPkt = ipPackageFactory->createIpPackage(buffer, (size_t) length);
-            if (ipPkt == NULL) {
-                ALOGW("unhandled package IpPackage version %d", *buffer >> 4);
-            } else {
-                ipPkt->handlePackage();
-            }
 
-            return ipPkt;
+            write(mTunFd, buffer, static_cast<size_t>(length));
+            return nullptr;
+
+//            auto ipPkt = ipPackageFactory->createIpPackage(buffer, (size_t) length);
+//            if (ipPkt == NULL) {
+//                ALOGW("unhandled package IpHandler version %d", *buffer >> 4);
+//            } else {
+//                ipPkt->handlePackage();
+//            }
+//
+//            return ipPkt;
         } else {
             free(buffer);
             ALOGE("tun %d empty read", mTunFd);

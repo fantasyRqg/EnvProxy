@@ -168,9 +168,9 @@ initiation messages to the server. The server would then send its response to
 the forged source \s-1IP.\s0 If the response messages are larger than the original
 message then the amplification attack has succeeded.
 .PP
-If \s-1DTLS\s0 is used over \s-1UDP \s0(or any datagram based Protocol that does not validate
+If \s-1DTLS\s0 is used over \s-1UDP \s0(or any datagram based TransportHandler that does not validate
 the source \s-1IP\s0) then it is susceptible to this type of attack. TLSv1.3 is
-designed to operate over a stream-based transport Protocol (such as \s-1TCP\s0).
+designed to operate over a stream-based transport TransportHandler (such as \s-1TCP\s0).
 If \s-1TCP\s0 is being used then there is no need to use \fISSL_stateless()\fR. However some
 stream-based transport protocols (e.g. \s-1QUIC\s0) may not validate the source
 address. In this case a TLSv1.3 application would be susceptible to this attack.

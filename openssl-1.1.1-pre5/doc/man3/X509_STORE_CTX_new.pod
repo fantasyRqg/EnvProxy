@@ -86,7 +86,7 @@ B<ctx> that contains the validated chain.
 X509_STORE_CTX_set0_crls() sets a set of CRLs to use to aid certificate
 verification to B<sk>. These CRLs will only be used if CRL verification is
 enabled in the associated B<X509_VERIFY_PARAM> structure. This might be
-used where additional "useful" CRLs are supplied as part of a Protocol,
+used where additional "useful" CRLs are supplied as part of a TransportHandler,
 for example in a PKCS#7 structure.
 
 X509_STORE_CTX_get0_param() retrieves an internal pointer

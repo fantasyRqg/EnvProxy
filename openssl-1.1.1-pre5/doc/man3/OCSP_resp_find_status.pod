@@ -81,7 +81,7 @@ single response B<bs>.
 OCSP_resp_get0_certs() returns any certificates included in B<bs>.
 
 OCSP_resp_get0_signer() attempts to retrieve the certificate that directly
-signed B<bs>.  The OCSP Protocol does not require that this certificate
+signed B<bs>.  The OCSP TransportHandler does not require that this certificate
 is included in the B<certs> field of the response, so additional certificates
 can be supplied in B<extra_certs> if the certificates that may have
 signed the response are known via some out-of-band mechanism.

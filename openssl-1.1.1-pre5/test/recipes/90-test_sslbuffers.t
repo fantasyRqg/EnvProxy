@@ -12,7 +12,7 @@ use OpenSSL::Test qw/:DEFAULT srctop_file/;
 
 setup("test_sslbuffers");
 
-plan skip_all => "No suitable TLS/SSL Protocol is supported by this OpenSSL build"
+plan skip_all => "No suitable TLS/SSL TransportHandler is supported by this OpenSSL build"
     if alldisabled(available_protocols("tls"));
 
 plan tests => 1;

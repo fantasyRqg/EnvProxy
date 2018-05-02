@@ -55,7 +55,7 @@
 
 <p>SSL_CIPHER_get_bits() returns the number of secret bits used for <b>cipher</b>. If <b>cipher</b> is NULL, 0 is returned.</p>
 
-<p>SSL_CIPHER_get_version() returns string which indicates the SSL/TLS Protocol version that first defined the cipher. It returns &quot;(NONE)&quot; if <b>cipher</b> is NULL.</p>
+<p>SSL_CIPHER_get_version() returns string which indicates the SSL/TLS TransportHandler version that first defined the cipher. It returns &quot;(NONE)&quot; if <b>cipher</b> is NULL.</p>
 
 <p>SSL_CIPHER_get_cipher_nid() returns the cipher NID corresponding to <b>c</b>. If there is no cipher (e.g. for cipher suites with no encryption) then <b>NID_undef</b> is returned.</p>
 
@@ -82,7 +82,7 @@
 
 <p>SSL_CIPHER_get_id() returns the OpenSSL-specific ID of the given cipher <b>c</b>. That ID is not the same as the IANA-specific ID.</p>
 
-<p>SSL_CIPHER_get_protocol_id() returns the two-byte ID used in the TLS Protocol of the given cipher <b>c</b>.</p>
+<p>SSL_CIPHER_get_protocol_id() returns the two-byte ID used in the TLS TransportHandler of the given cipher <b>c</b>.</p>
 
 <p>SSL_CIPHER_description() returns a textual description of the cipher used into the buffer <b>buf</b> of length <b>len</b> provided. If <b>buf</b> is provided, it must be at least 128 bytes, otherwise a buffer will be allocated using OPENSSL_malloc(). If the provided buffer is too small, or the allocation fails, <b>NULL</b> is returned.</p>
 
@@ -96,10 +96,10 @@
 <p>Textual representation of the cipher name.</p>
 
 </dd>
-<dt id="Protocol-version">&lt;Protocol version&gt;</dt>
+<dt id="TransportHandler-version">&lt;TransportHandler version&gt;</dt>
 <dd>
 
-<p>Protocol version, such as <b>TLSv1.2</b>, when the cipher was first defined.</p>
+<p>TransportHandler version, such as <b>TLSv1.2</b>, when the cipher was first defined.</p>
 
 </dd>
 <dt id="Kx-key-exchange">Kx=&lt;key exchange&gt;</dt>
@@ -149,11 +149,11 @@
 
 <p>SSL_CIPHER_get_id() returns a 4-byte integer representing the OpenSSL-specific ID.</p>
 
-<p>SSL_CIPHER_get_protocol_id() returns a 2-byte integer representing the TLS Protocol-specific ID.</p>
+<p>SSL_CIPHER_get_protocol_id() returns a 2-byte integer representing the TLS TransportHandler-specific ID.</p>
 
 <h1 id="HISTORY">HISTORY</h1>
 
-<p>SSL_CIPHER_get_version() was updated to always return the correct Protocol string in OpenSSL 1.1.0.</p>
+<p>SSL_CIPHER_get_version() was updated to always return the correct TransportHandler string in OpenSSL 1.1.0.</p>
 
 <p>SSL_CIPHER_description() was changed to return <b>NULL</b> on error, rather than a fixed string, in OpenSSL 1.1.0.</p>
 

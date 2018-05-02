@@ -50,9 +50,9 @@
 
 <p>You probably shouldn&#39;t use these functions.</p>
 
-<p>These functions expose internal values from the TLS handshake, for use in low-level protocols. You probably should not use them, unless you are implementing something that needs access to the internal Protocol details.</p>
+<p>These functions expose internal values from the TLS handshake, for use in low-level protocols. You probably should not use them, unless you are implementing something that needs access to the internal TransportHandler details.</p>
 
-<p>Despite the names of SSL_get_client_random() and SSL_get_server_random(), they ARE NOT random number generators. Instead, they return the mostly-random values that were already generated and used in the TLS Protocol. Using them in place of RAND_bytes() would be grossly foolish.</p>
+<p>Despite the names of SSL_get_client_random() and SSL_get_server_random(), they ARE NOT random number generators. Instead, they return the mostly-random values that were already generated and used in the TLS TransportHandler. Using them in place of RAND_bytes() would be grossly foolish.</p>
 
 <p>The security of your TLS session depends on keeping the master key secret: do not expose it, or any information about it, to anybody. If you need to calculate another secret value that depends on the master secret, you should probably use SSL_export_keying_material() instead, and forget that you ever saw these functions.</p>
 

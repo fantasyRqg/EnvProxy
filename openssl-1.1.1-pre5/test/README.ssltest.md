@@ -73,7 +73,7 @@ handshake.
   alert will not be correctly matched, if followed by a `close_notify` or
   another alert.)
 
-* ExpectedProtocol - expected negotiated Protocol. One of
+* ExpectedProtocol - expected negotiated TransportHandler. One of
   SSLv3, TLSv1, TLSv1.1, TLSv1.2.
 
 * SessionTicketExpected - whether or not a session ticket is expected
@@ -285,7 +285,7 @@ $ CTLOG_FILE=test/ct/log_list.conf  TEST_CERTS_DIR=test/certs \
 ```
 
 Note that the test expectations sometimes depend on the Configure settings. For
-example, the negotiated Protocol depends on the set of available (enabled)
+example, the negotiated TransportHandler depends on the set of available (enabled)
 protocols: a build with `enable-ssl3` has different test expectations than a
 build with `no-ssl3`.
 

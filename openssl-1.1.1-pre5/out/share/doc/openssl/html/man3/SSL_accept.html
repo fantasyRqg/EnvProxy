@@ -52,7 +52,7 @@
 <dt id="pod0">0</dt>
 <dd>
 
-<p>The TLS/SSL handshake was not successful but was shut down controlled and by the specifications of the TLS/SSL Protocol. Call SSL_get_error() with the return value <b>ret</b> to find out the reason.</p>
+<p>The TLS/SSL handshake was not successful but was shut down controlled and by the specifications of the TLS/SSL TransportHandler. Call SSL_get_error() with the return value <b>ret</b> to find out the reason.</p>
 
 </dd>
 <dt id="pod1">1</dt>
@@ -64,7 +64,7 @@
 <dt id="pod01">&lt;0</dt>
 <dd>
 
-<p>The TLS/SSL handshake was not successful because a fatal error occurred either at the Protocol level or a connection failure occurred. The shutdown was not clean. It can also occur of action is need to continue the operation for non-blocking BIOs. Call SSL_get_error() with the return value <b>ret</b> to find out the reason.</p>
+<p>The TLS/SSL handshake was not successful because a fatal error occurred either at the TransportHandler level or a connection failure occurred. The shutdown was not clean. It can also occur of action is need to continue the operation for non-blocking BIOs. Call SSL_get_error() with the return value <b>ret</b> to find out the reason.</p>
 
 </dd>
 </dl>

@@ -12,3 +12,7 @@ IpHandler::IpHandler(proxyEngine *proxyEngine) {
 proxyEngine *IpHandler::getProxyEngine() const {
     return mProxyEngine;
 }
+
+IpHandler::~IpHandler() {
+
+}

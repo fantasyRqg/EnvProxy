@@ -26,7 +26,8 @@ public:
 private:
     proxyEngine *mProxyEngine;
 
-    IpHandler **pIpHandlers;
+    IpHandler *mIp4Handler;
+    IpHandler *mIp6Handler;
 
 
 };

@@ -13,6 +13,8 @@ class Ip6Handler : public IpHandler {
 public:
     Ip6Handler(proxyEngine *proxyEngine);
 
+    virtual ~Ip6Handler();
+
     IpPackage *handlePackage(uint8_t *pkt, size_t pktSize) override;
 
     int canHandlePackage(uint8_t *pkt, size_t pktSize) override;

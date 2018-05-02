@@ -13,6 +13,8 @@ public:
 
     Ip4Handler(proxyEngine *proxyEngine);
 
+    virtual ~Ip4Handler();
+
     IpPackage *handlePackage(uint8_t *pkt, size_t pktSize) override;
 
     int canHandlePackage(uint8_t *pkt, size_t pktSize) override;

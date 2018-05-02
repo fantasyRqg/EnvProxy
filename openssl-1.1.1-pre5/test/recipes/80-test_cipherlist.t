@@ -25,7 +25,7 @@ plan skip_all =>
 my $no_anytls = alldisabled(available_protocols("tls"));
 
 # If we have no protocols, then we also have no supported ciphers.
-plan skip_all => "No SSL/TLS Protocol is supported by this OpenSSL build."
+plan skip_all => "No SSL/TLS TransportHandler is supported by this OpenSSL build."
     if $no_anytls;
 
 simple_test("test_cipherlist", "cipherlist_test", "cipherlist");

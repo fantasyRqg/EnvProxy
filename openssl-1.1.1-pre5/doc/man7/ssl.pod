@@ -43,13 +43,13 @@ structures:
 =item B<SSL_METHOD> (SSL Method)
 
 This is a dispatch structure describing the internal B<ssl> library
-methods/functions which implement the various Protocol versions (SSLv3
+methods/functions which implement the various TransportHandler versions (SSLv3
 TLSv1, ...). It's needed to create an B<SSL_CTX>.
 
 =item B<SSL_CIPHER> (SSL Cipher)
 
 This structure holds the algorithm information for a particular cipher which
-are a core part of the SSL/TLS Protocol. The available ciphers are configured
+are a core part of the SSL/TLS TransportHandler. The available ciphers are configured
 on a B<SSL_CTX> basis and the actual ones used are then part of the
 B<SSL_SESSION>.
 
@@ -95,13 +95,13 @@ Unused. Present for backwards compatibility only.
 
 =item B<ssl3.h>
 
-This is the sub header file dealing with the SSLv3 Protocol only.
+This is the sub header file dealing with the SSLv3 TransportHandler only.
 I<Usually you don't have to include it explicitly because
 it's already included by ssl.h>.
 
 =item B<tls1.h>
 
-This is the sub header file dealing with the TLSv1 Protocol only.
+This is the sub header file dealing with the TLSv1 TransportHandler only.
 I<Usually you don't have to include it explicitly because
 it's already included by ssl.h>.
 
@@ -112,10 +112,10 @@ it's already included by ssl.h>.
 Currently the OpenSSL B<ssl> library exports 214 API functions.
 They are documented in the following:
 
-=head2 Dealing with Protocol Methods
+=head2 Dealing with TransportHandler Methods
 
 Here we document the various API functions which deal with the SSL/TLS
-Protocol methods defined in B<SSL_METHOD> structures.
+TransportHandler methods defined in B<SSL_METHOD> structures.
 
 =over 4
 
@@ -210,15 +210,15 @@ definitions in the header files.
 =item const char *B<SSL_CIPHER_get_version>(SSL_CIPHER *cipher);
 
 Returns a string like "C<SSLv3>" or "C<TLSv1.2>" which indicates the
-SSL/TLS Protocol version to which I<cipher> belongs (i.e. where it was defined
+SSL/TLS TransportHandler version to which I<cipher> belongs (i.e. where it was defined
 in the specification the first time).
 
 =back
 
-=head2 Dealing with Protocol Contexts
+=head2 Dealing with TransportHandler Contexts
 
 Here we document the various API functions which deal with the SSL/TLS
-Protocol context defined in the B<SSL_CTX> structure.
+TransportHandler context defined in the B<SSL_CTX> structure.
 
 =over 4
 

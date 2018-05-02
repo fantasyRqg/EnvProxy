@@ -36,7 +36,7 @@
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
-<p>SRTP is the Secure Real-Time Transport Protocol. OpenSSL implements support for the &quot;use_srtp&quot; DTLS extension defined in RFC5764. This provides a mechanism for establishing SRTP keying material, algorithms and parameters using DTLS. This capability may be used as part of an implementation that conforms to RFC5763. OpenSSL does not implement SRTP itself or RFC5763. Note that OpenSSL does not support the use of SRTP Master Key Identifiers (MKIs). Also note that this extension is only supported in DTLS. Any SRTP configuration will be ignored if a TLS connection is attempted.</p>
+<p>SRTP is the Secure Real-Time Transport TransportHandler. OpenSSL implements support for the &quot;use_srtp&quot; DTLS extension defined in RFC5764. This provides a mechanism for establishing SRTP keying material, algorithms and parameters using DTLS. This capability may be used as part of an implementation that conforms to RFC5763. OpenSSL does not implement SRTP itself or RFC5763. Note that OpenSSL does not support the use of SRTP Master Key Identifiers (MKIs). Also note that this extension is only supported in DTLS. Any SRTP configuration will be ignored if a TLS connection is attempted.</p>
 
 <p>An OpenSSL client wishing to send the &quot;use_srtp&quot; extension should call SSL_CTX_set_tlsext_use_srtp() to set its use for all SSL objects subsequently created from an SSL_CTX. Alternatively a client may call SSL_set_tlsext_use_srtp() to set its use for an individual SSL object. The <b>profiles</b> parameters should point to a NUL-terminated, colon delimited list of SRTP protection profile names.</p>
 

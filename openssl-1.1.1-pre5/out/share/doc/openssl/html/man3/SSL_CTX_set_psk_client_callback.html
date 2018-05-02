@@ -77,7 +77,7 @@
 <p>Only the handshake digest associated with the ciphersuite is relevant for the PSK (the server may go on to negotiate any ciphersuite which is compatible with the digest). The application can use any TLSv1.3 ciphersuite. If <b>md</b> is not NULL the handshake digest for the ciphersuite should be the same. The ciphersuite can be set via a call to &lt;SSL_SESSION_set_cipher(3)&gt;. The handshake digest of an SSL_CIPHER object can be checked using &lt;SSL_CIPHER_get_handshake_digest(3)&gt;.</p>
 
 </dd>
-<dt id="The-Protocol-version">The Protocol version</dt>
+<dt id="The-TransportHandler-version">The TransportHandler version</dt>
 <dd>
 
 <p>This can be set via a call to <a href="../man3/SSL_SESSION_set_protocol_version.html">SSL_SESSION_set_protocol_version(3)</a> and should be TLS1_3_VERSION.</p>

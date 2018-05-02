@@ -54,11 +54,11 @@ my $no_ocsp = disabled("ocsp");
 # Add your test here if the test conf.in generates test cases and/or
 # expectations dynamically based on the OpenSSL compile-time config.
 my %conf_dependent_tests = (
-  "02-Protocol-version.conf" => !$is_default_tls,
+  "02-TransportHandler-version.conf" => !$is_default_tls,
   "04-client_auth.conf" => !$is_default_tls || !$is_default_dtls
                            || !disabled("sctp"),
   "05-sni.conf" => disabled("tls1_1"),
-  "07-dtls-Protocol-version.conf" => !$is_default_dtls || !disabled("sctp"),
+  "07-dtls-TransportHandler-version.conf" => !$is_default_dtls || !disabled("sctp"),
   "10-resumption.conf" => !$is_default_tls,
   "11-dtls_resumption.conf" => !$is_default_dtls || !disabled("sctp"),
   "16-dtls-certstatus.conf" => !$is_default_dtls || !disabled("sctp"),
@@ -76,7 +76,7 @@ my %conf_dependent_tests = (
 # conditions.
 my %skip = (
   "06-sni-ticket.conf" => $no_tls_below1_3,
-  "07-dtls-Protocol-version.conf" => $no_dtls,
+  "07-dtls-TransportHandler-version.conf" => $no_dtls,
   "08-npn.conf" => (disabled("tls1") && disabled("tls1_1")
                     && disabled("tls1_2")) || $no_npn,
   "10-resumption.conf" => disabled("tls1_1") || disabled("tls1_2"),

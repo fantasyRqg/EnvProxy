@@ -23,7 +23,7 @@
 
 <h1 id="NAME">NAME</h1>
 
-<p>SSL_client_version, SSL_get_version, SSL_is_dtls, SSL_version - get the Protocol information of a connection</p>
+<p>SSL_client_version, SSL_get_version, SSL_is_dtls, SSL_version - get the TransportHandler information of a connection</p>
 
 <h1 id="SYNOPSIS">SYNOPSIS</h1>
 
@@ -39,13 +39,13 @@
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
-<p>SSL_client_version() returns the Protocol version used by the client when initiating the connection.</p>
+<p>SSL_client_version() returns the TransportHandler version used by the client when initiating the connection.</p>
 
-<p>SSL_get_version() returns the name of the Protocol used for the connection.</p>
+<p>SSL_get_version() returns the name of the TransportHandler used for the connection.</p>
 
 <p>SSL_is_dtls() returns one if the connection is using DTLS, zero if not.</p>
 
-<p>SSL_version() returns the Protocol version used for the connection.</p>
+<p>SSL_version() returns the TransportHandler version used for the connection.</p>
 
 <h1 id="RETURN-VALUES">RETURN VALUES</h1>
 
@@ -56,31 +56,31 @@
 <dt id="SSLv3">SSLv3</dt>
 <dd>
 
-<p>The connection uses the SSLv3 Protocol.</p>
+<p>The connection uses the SSLv3 TransportHandler.</p>
 
 </dd>
 <dt id="TLSv1">TLSv1</dt>
 <dd>
 
-<p>The connection uses the TLSv1.0 Protocol.</p>
+<p>The connection uses the TLSv1.0 TransportHandler.</p>
 
 </dd>
 <dt id="TLSv1.1">TLSv1.1</dt>
 <dd>
 
-<p>The connection uses the TLSv1.1 Protocol.</p>
+<p>The connection uses the TLSv1.1 TransportHandler.</p>
 
 </dd>
 <dt id="TLSv1.2">TLSv1.2</dt>
 <dd>
 
-<p>The connection uses the TLSv1.2 Protocol.</p>
+<p>The connection uses the TLSv1.2 TransportHandler.</p>
 
 </dd>
 <dt id="TLSv1.3">TLSv1.3</dt>
 <dd>
 
-<p>The connection uses the TLSv1.3 Protocol.</p>
+<p>The connection uses the TLSv1.3 TransportHandler.</p>
 
 </dd>
 <dt id="unknown">unknown</dt>
@@ -98,31 +98,31 @@
 <dt id="SSL3_VERSION">SSL3_VERSION</dt>
 <dd>
 
-<p>The connection uses the SSLv3 Protocol.</p>
+<p>The connection uses the SSLv3 TransportHandler.</p>
 
 </dd>
 <dt id="TLS1_VERSION">TLS1_VERSION</dt>
 <dd>
 
-<p>The connection uses the TLSv1.0 Protocol.</p>
+<p>The connection uses the TLSv1.0 TransportHandler.</p>
 
 </dd>
 <dt id="TLS1_1_VERSION">TLS1_1_VERSION</dt>
 <dd>
 
-<p>The connection uses the TLSv1.1 Protocol.</p>
+<p>The connection uses the TLSv1.1 TransportHandler.</p>
 
 </dd>
 <dt id="TLS1_2_VERSION">TLS1_2_VERSION</dt>
 <dd>
 
-<p>The connection uses the TLSv1.2 Protocol.</p>
+<p>The connection uses the TLSv1.2 TransportHandler.</p>
 
 </dd>
 <dt id="TLS1_3_VERSION">TLS1_3_VERSION</dt>
 <dd>
 
-<p>The connection uses the TLSv1.3 Protocol.</p>
+<p>The connection uses the TLSv1.3 TransportHandler.</p>
 
 </dd>
 </dl>

@@ -173,7 +173,7 @@ Expired sessions are removed from the internal session cache, whenever
 directly by the application or automatically (see
 \&\fISSL_CTX_set_session_cache_mode\fR\|(3))
 .PP
-The default value for session timeout is decided on a per Protocol
+The default value for session timeout is decided on a per TransportHandler
 basis, see \fISSL_get_default_timeout\fR\|(3).
 All currently supported protocols have the same default timeout value
 of 300 seconds.

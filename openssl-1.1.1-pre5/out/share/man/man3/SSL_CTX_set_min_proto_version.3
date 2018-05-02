@@ -143,7 +143,7 @@ SSL_CTX_set_min_proto_version, SSL_CTX_set_max_proto_version,
 SSL_CTX_get_min_proto_version, SSL_CTX_get_max_proto_version,
 SSL_set_min_proto_version, SSL_set_max_proto_version,
 SSL_get_min_proto_version, SSL_get_max_proto_version \- Get and set minimum
-and maximum supported Protocol version
+and maximum supported TransportHandler version
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 .Vb 1
@@ -161,14 +161,14 @@ and maximum supported Protocol version
 .Ve
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-The functions get or set the minimum and maximum supported Protocol versions
+The functions get or set the minimum and maximum supported TransportHandler versions
 for the \fBctx\fR or \fBssl\fR.
 This works in combination with the options set via
 \&\fISSL_CTX_set_options\fR\|(3) that also make it possible to disable
-specific Protocol versions.
-Use these functions instead of disabling specific Protocol versions.
+specific TransportHandler versions.
+Use these functions instead of disabling specific TransportHandler versions.
 .PP
-Setting the minimum or maximum version to 0, will enable Protocol
+Setting the minimum or maximum version to 0, will enable TransportHandler
 versions down to the lowest version, or up to the highest version
 supported by the library, respectively.
 .PP
@@ -182,7 +182,7 @@ Currently supported versions are \fB\s-1SSL3_VERSION\s0\fR, \fB\s-1TLS1_VERSION\
 .IX Header "RETURN VALUES"
 These setter functions return 1 on success and 0 on failure. The getter
 functions return the configured version or 0 for auto-configuration of
-lowest or highest Protocol, respectively.
+lowest or highest TransportHandler, respectively.
 .SH "NOTES"
 .IX Header "NOTES"
 All these functions are implemented using macros.

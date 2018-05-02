@@ -19,9 +19,9 @@
   <li><a href="#HEADER-FILES">HEADER FILES</a></li>
   <li><a href="#API-FUNCTIONS">API FUNCTIONS</a>
     <ul>
-      <li><a href="#Dealing-with-Protocol-Methods">Dealing with Protocol Methods</a></li>
+      <li><a href="#Dealing-with-TransportHandler-Methods">Dealing with TransportHandler Methods</a></li>
       <li><a href="#Dealing-with-Ciphers">Dealing with Ciphers</a></li>
-      <li><a href="#Dealing-with-Protocol-Contexts">Dealing with Protocol Contexts</a></li>
+      <li><a href="#Dealing-with-TransportHandler-Contexts">Dealing with TransportHandler Contexts</a></li>
       <li><a href="#Dealing-with-Sessions">Dealing with Sessions</a></li>
       <li><a href="#Dealing-with-Connections">Dealing with Connections</a></li>
     </ul>
@@ -59,13 +59,13 @@
 <dt id="SSL_METHOD-SSL-Method"><b>SSL_METHOD</b> (SSL Method)</dt>
 <dd>
 
-<p>This is a dispatch structure describing the internal <b>ssl</b> library methods/functions which implement the various Protocol versions (SSLv3 TLSv1, ...). It&#39;s needed to create an <b>SSL_CTX</b>.</p>
+<p>This is a dispatch structure describing the internal <b>ssl</b> library methods/functions which implement the various TransportHandler versions (SSLv3 TLSv1, ...). It&#39;s needed to create an <b>SSL_CTX</b>.</p>
 
 </dd>
 <dt id="SSL_CIPHER-SSL-Cipher"><b>SSL_CIPHER</b> (SSL Cipher)</dt>
 <dd>
 
-<p>This structure holds the algorithm information for a particular cipher which are a core part of the SSL/TLS Protocol. The available ciphers are configured on a <b>SSL_CTX</b> basis and the actual ones used are then part of the <b>SSL_SESSION</b>.</p>
+<p>This structure holds the algorithm information for a particular cipher which are a core part of the SSL/TLS TransportHandler. The available ciphers are configured on a <b>SSL_CTX</b> basis and the actual ones used are then part of the <b>SSL_SESSION</b>.</p>
 
 </dd>
 <dt id="SSL_CTX-SSL-Context"><b>SSL_CTX</b> (SSL Context)</dt>
@@ -109,13 +109,13 @@
 <dt id="ssl3.h"><b>ssl3.h</b></dt>
 <dd>
 
-<p>This is the sub header file dealing with the SSLv3 Protocol only. <i>Usually you don&#39;t have to include it explicitly because it&#39;s already included by ssl.h</i>.</p>
+<p>This is the sub header file dealing with the SSLv3 TransportHandler only. <i>Usually you don&#39;t have to include it explicitly because it&#39;s already included by ssl.h</i>.</p>
 
 </dd>
 <dt id="tls1.h"><b>tls1.h</b></dt>
 <dd>
 
-<p>This is the sub header file dealing with the TLSv1 Protocol only. <i>Usually you don&#39;t have to include it explicitly because it&#39;s already included by ssl.h</i>.</p>
+<p>This is the sub header file dealing with the TLSv1 TransportHandler only. <i>Usually you don&#39;t have to include it explicitly because it&#39;s already included by ssl.h</i>.</p>
 
 </dd>
 </dl>
@@ -124,9 +124,9 @@
 
 <p>Currently the OpenSSL <b>ssl</b> library exports 214 API functions. They are documented in the following:</p>
 
-<h2 id="Dealing-with-Protocol-Methods">Dealing with Protocol Methods</h2>
+<h2 id="Dealing-with-TransportHandler-Methods">Dealing with TransportHandler Methods</h2>
 
-<p>Here we document the various API functions which deal with the SSL/TLS Protocol methods defined in <b>SSL_METHOD</b> structures.</p>
+<p>Here we document the various API functions which deal with the SSL/TLS TransportHandler methods defined in <b>SSL_METHOD</b> structures.</p>
 
 <dl>
 
@@ -249,14 +249,14 @@
 <dt id="const-char-SSL_CIPHER_get_version-SSL_CIPHER-cipher">const char *<b>SSL_CIPHER_get_version</b>(SSL_CIPHER *cipher);</dt>
 <dd>
 
-<p>Returns a string like &quot;<code>SSLv3</code>&quot; or &quot;<code>TLSv1.2</code>&quot; which indicates the SSL/TLS Protocol version to which <i>cipher</i> belongs (i.e. where it was defined in the specification the first time).</p>
+<p>Returns a string like &quot;<code>SSLv3</code>&quot; or &quot;<code>TLSv1.2</code>&quot; which indicates the SSL/TLS TransportHandler version to which <i>cipher</i> belongs (i.e. where it was defined in the specification the first time).</p>
 
 </dd>
 </dl>
 
-<h2 id="Dealing-with-Protocol-Contexts">Dealing with Protocol Contexts</h2>
+<h2 id="Dealing-with-TransportHandler-Contexts">Dealing with TransportHandler Contexts</h2>
 
-<p>Here we document the various API functions which deal with the SSL/TLS Protocol context defined in the <b>SSL_CTX</b> structure.</p>
+<p>Here we document the various API functions which deal with the SSL/TLS TransportHandler context defined in the <b>SSL_CTX</b> structure.</p>
 
 <dl>
 

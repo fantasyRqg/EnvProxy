@@ -13,7 +13,7 @@ SSL_get_default_timeout - get default session timeout value
 =head1 DESCRIPTION
 
 SSL_get_default_timeout() returns the default timeout value assigned to
-SSL_SESSION objects negotiated for the Protocol valid for B<ssl>.
+SSL_SESSION objects negotiated for the TransportHandler valid for B<ssl>.
 
 =head1 NOTES
 
@@ -21,7 +21,7 @@ Whenever a new session is negotiated, it is assigned a timeout value,
 after which it will not be accepted for session reuse. If the timeout
 value was not explicitly set using
 L<SSL_CTX_set_timeout(3)>, the hardcoded default
-timeout for the Protocol will be used.
+timeout for the TransportHandler will be used.
 
 SSL_get_default_timeout() return this hardcoded value, which is 300 seconds
 for all currently supported protocols.

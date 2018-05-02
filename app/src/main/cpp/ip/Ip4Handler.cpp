@@ -7,7 +7,6 @@
 #include <netdb.h>
 
 #include "Ip4Handler.h"
-#include "../log.h"
 
 
 #define LOG_TAG "IPV4"
@@ -19,31 +18,17 @@ IpPackage *Ip4Handler::handlePackage(uint8_t *pkt, size_t pktSize) {
 
     IpPackage *p = new IpPackage();
 
-    p->ipHandler = this;
-    p->protocol = IPVERSION;
+    p->handler = this;
+    p->versoin = IPVERSION;
     p->dstAddr.ip4 = ip4hdr->daddr;
     p->srcAddr.ip4 = ip4hdr->saddr;
     p->pkt = pkt;
     p->pktSize = pktSize;
+    p->protocol = ip4hdr->protocol;
 
     uint8_t hdrSize = (uint8_t) (ip4hdr->ihl * 4);
     p->payload = pkt + hdrSize;
     p->payloadSize = pktSize - hdrSize;
-    char source[INET6_ADDRSTRLEN + 1];
-    char dest[INET6_ADDRSTRLEN + 1];
-
-
-    inet_ntop(AF_INET, &ip4hdr->saddr, source, sizeof(source));
-    inet_ntop(AF_INET, &ip4hdr->daddr, dest, sizeof(dest));
-
-    protoent *pp = getprotobynumber(ip4hdr->protocol);
-
-    if (pp != NULL) {
-        ALOGD("IPV4 from %s to %s , Protocol %s", source, dest, pp->p_name);
-    } else {
-        ALOGD("IPV4 from %s to %s , Protocol %d", source, dest, ip4hdr->protocol);
-    }
-
 
     return p;
 }
@@ -67,5 +52,9 @@ int Ip4Handler::canHandlePackage(uint8_t *pkt, size_t pktSize) {
     }
 
     return IP_HANDLE_SUCCESS;
+}
+
+Ip4Handler::~Ip4Handler() {
+
 }
 

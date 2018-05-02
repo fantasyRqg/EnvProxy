@@ -143,7 +143,7 @@ SSL_CTX_set_msg_callback,
 SSL_CTX_set_msg_callback_arg,
 SSL_set_msg_callback,
 SSL_set_msg_callback_arg
-\&\- install callback for observing Protocol messages
+\&\- install callback for observing TransportHandler messages
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 .Vb 1
@@ -165,7 +165,7 @@ SSL_set_msg_callback_arg
 .IX Header "DESCRIPTION"
 \&\fISSL_CTX_set_msg_callback()\fR or \fISSL_set_msg_callback()\fR can be used to
 define a message callback function \fIcb\fR for observing all \s-1SSL/TLS\s0
-Protocol messages (such as handshake messages) that are received or
+TransportHandler messages (such as handshake messages) that are received or
 sent, as well as other events that occur during processing.
 \&\fISSL_CTX_set_msg_callback_arg()\fR and \fISSL_set_msg_callback_arg()\fR
 can be used to set argument \fIarg\fR to the callback function, which is
@@ -181,24 +181,24 @@ When \fIcb\fR is called by the \s-1SSL/TLS\s0 library the function arguments hav
 following meaning:
 .IP "\fIwrite_p\fR" 4
 .IX Item "write_p"
-This flag is \fB0\fR when a Protocol message has been received and \fB1\fR
-when a Protocol message has been sent.
+This flag is \fB0\fR when a TransportHandler message has been received and \fB1\fR
+when a TransportHandler message has been sent.
 .IP "\fIversion\fR" 4
 .IX Item "version"
-The Protocol version according to which the Protocol message is
+The TransportHandler version according to which the TransportHandler message is
 interpreted by the library such as \fB\s-1TLS1_3_VERSION\s0\fR, \fB\s-1TLS1_2_VERSION\s0\fR etc.
 This is set to 0 for the \s-1SSL3_RT_HEADER\s0 pseudo content type (see \s-1NOTES\s0 below).
 .IP "\fIcontent_type\fR" 4
 .IX Item "content_type"
-This is one of the content type values defined in the Protocol specification
+This is one of the content type values defined in the TransportHandler specification
 (\fB\s-1SSL3_RT_CHANGE_CIPHER_SPEC\s0\fR, \fB\s-1SSL3_RT_ALERT\s0\fR, \fB\s-1SSL3_RT_HANDSHAKE\s0\fR; but never
-\&\fB\s-1SSL3_RT_APPLICATION_DATA\s0\fR because the callback will only be called for Protocol
+\&\fB\s-1SSL3_RT_APPLICATION_DATA\s0\fR because the callback will only be called for TransportHandler
 messages). Alternatively it may be a \*(L"pseudo\*(R" content type. These pseudo
 content types are used to signal some other event in the processing of data (see
 \&\s-1NOTES\s0 below).
 .IP "\fIbuf\fR, \fIlen\fR" 4
 .IX Item "buf, len"
-\&\fIbuf\fR points to a buffer containing the Protocol message or other data (in the
+\&\fIbuf\fR points to a buffer containing the TransportHandler message or other data (in the
 case of pseudo content types), which consists of \fIlen\fR bytes. The buffer is no
 longer valid after the callback function has returned.
 .IP "\fIssl\fR" 4
@@ -210,17 +210,17 @@ The user-defined argument optionally defined by
 \&\fISSL_CTX_set_msg_callback_arg()\fR or \fISSL_set_msg_callback_arg()\fR.
 .SH "NOTES"
 .IX Header "NOTES"
-Protocol messages are passed to the callback function after decryption
+TransportHandler messages are passed to the callback function after decryption
 and fragment collection where applicable. (Thus record boundaries are
 not visible.)
 .PP
-If processing a received Protocol message results in an error,
+If processing a received TransportHandler message results in an error,
 the callback function may not be called.  For example, the callback
 function will never see messages that are considered too large to be
 processed.
 .PP
-Due to automatic Protocol version negotiation, \fIversion\fR is not
-necessarily the Protocol version used by the sender of the message: If
+Due to automatic TransportHandler version negotiation, \fIversion\fR is not
+necessarily the TransportHandler version used by the sender of the message: If
 a \s-1TLS 1.0\s0 ClientHello message is received by an \s-1SSL 3\s0.0\-only server,
 \&\fIversion\fR will be \fB\s-1SSL3_VERSION\s0\fR.
 .PP

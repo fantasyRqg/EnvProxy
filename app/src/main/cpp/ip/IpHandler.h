@@ -37,13 +37,16 @@ struct IpPackage {
     uint8_t protocol;
     uint8_t *payload;
     size_t payloadSize;
-    IpHandler *ipHandler;
+    IpHandler *handler;
+    int versoin;
 };
 
 
 class IpHandler {
 public:
     IpHandler(proxyEngine *proxyEngine);
+
+    virtual ~IpHandler();
 
     proxyEngine *getProxyEngine() const;
 

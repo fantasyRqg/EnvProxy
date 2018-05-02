@@ -57,7 +57,7 @@
 
 <p>The TLS standard (or SSLv3) allows the integration of compression methods into the communication. The TLS RFC does however not specify compression methods or their corresponding identifiers, so there is currently no compatible way to integrate compression with unknown peers. It is therefore currently not recommended to integrate compression into applications. Applications for non-public use may agree on certain compression methods. Using different compression methods with the same identifier will lead to connection failure.</p>
 
-<p>An OpenSSL client speaking a Protocol that allows compression (SSLv3, TLSv1) will unconditionally send the list of all compression methods enabled with SSL_COMP_add_compression_method() to the server during the handshake. Unlike the mechanisms to set a cipher list, there is no method available to restrict the list of compression method on a per connection basis.</p>
+<p>An OpenSSL client speaking a TransportHandler that allows compression (SSLv3, TLSv1) will unconditionally send the list of all compression methods enabled with SSL_COMP_add_compression_method() to the server during the handshake. Unlike the mechanisms to set a cipher list, there is no method available to restrict the list of compression method on a per connection basis.</p>
 
 <p>An OpenSSL server will match the identifiers listed by a client against its own compression methods and will unconditionally activate compression when a matching identifier is found. There is no way to restrict the list of compression methods supported on a per connection basis.</p>
 

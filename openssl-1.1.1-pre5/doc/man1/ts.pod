@@ -86,10 +86,10 @@ I<verify options:>
 =head1 DESCRIPTION
 
 The B<ts> command is a basic Time Stamping Authority (TSA) client and server
-application as specified in RFC 3161 (Time-Stamp Protocol, TSP). A
+application as specified in RFC 3161 (Time-Stamp TransportHandler, TSP). A
 TSA can be part of a PKI deployment and its role is to provide long
 term proof of the existence of a certain datum before a particular
-time. Here is a brief description of the Protocol:
+time. Here is a brief description of the TransportHandler:
 
 =over 4
 
@@ -113,7 +113,7 @@ value that it had sent to the TSA.
 
 =back
 
-There is one DER encoded Protocol data unit defined for transporting a time
+There is one DER encoded TransportHandler data unit defined for transporting a time
 stamp request to the TSA and one for sending the time stamp response
 back to the client. The B<ts> command has three main functions:
 creating a time stamp request based on a data file,
@@ -629,7 +629,7 @@ No support for time stamps over SMTP, though it is quite easy
 to implement an automatic e-mail based TSA with L<procmail(1)>
 and L<perl(1)>. HTTP server support is provided in the form of
 a separate apache module. HTTP client support is provided by
-L<tsget(1)>. Pure TCP/IP Protocol is not supported.
+L<tsget(1)>. Pure TCP/IP TransportHandler is not supported.
 
 =item *
 

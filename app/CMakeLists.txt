@@ -24,11 +24,11 @@ add_library(libProxy
             src/main/cpp/ip/Ip6Handler.cpp
             src/main/cpp/ip/IpPackageFactory.cpp
             src/main/cpp/ip/IpHandler.cpp
-            src/main/cpp/protocol/IcmpHandler.cpp
-            src/main/cpp/protocol/TcpHandler.cpp
-            src/main/cpp/protocol/UdpHandler.cpp
-            src/main/cpp/protocol/ProtocolHandler.cpp
-            src/main/cpp/protocol/ProtocolFactory.cpp
+            src/main/cpp/transport/IcmpHandler.cpp
+            src/main/cpp/transport/TcpHandler.cpp
+            src/main/cpp/transport/UdpHandler.cpp
+            src/main/cpp/transport/TransportHandler.cpp
+            src/main/cpp/transport/TransportFactory.cpp
             src/main/cpp/task/Task.cpp
             src/main/cpp/task/TaskDNS.cpp
             src/main/cpp/task/TaskHttp.cpp

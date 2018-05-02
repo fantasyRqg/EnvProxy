@@ -39,7 +39,7 @@ BIO_f_ssl() returns the SSL BIO method. This is a filter BIO which
 is a wrapper round the OpenSSL SSL routines adding a BIO "flavour" to
 SSL I/O.
 
-I/O performed on an SSL BIO communicates using the SSL Protocol with
+I/O performed on an SSL BIO communicates using the SSL TransportHandler with
 the SSLs read and write BIOs. If an SSL connection is not established
 then an attempt is made to establish one on the first I/O call.
 

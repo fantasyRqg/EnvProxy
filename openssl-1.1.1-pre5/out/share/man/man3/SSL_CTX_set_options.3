@@ -185,7 +185,7 @@ The options are coded as bitmasks and can be combined by a bitwise \fBor\fR
 operation (|).
 .PP
 \&\fISSL_CTX_set_options()\fR and \fISSL_set_options()\fR affect the (external)
-Protocol behaviour of the \s-1SSL\s0 library. The (internal) behaviour of
+TransportHandler behaviour of the \s-1SSL\s0 library. The (internal) behaviour of
 the \s-1API\s0 can be changed by using the similar
 \&\fISSL_CTX_set_mode\fR\|(3) and \fISSL_set_mode()\fR functions.
 .PP
@@ -201,7 +201,7 @@ Don't prefer ECDHE-ECDSA ciphers when the client appears to be Safari on \s-1OS 
 OS X 10.8..10.8.3\s0 has broken support for ECDHE-ECDSA ciphers.
 .IP "\s-1SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS\s0" 4
 .IX Item "SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS"
-Disables a countermeasure against a \s-1SSL 3.0/TLS 1.0\s0 Protocol
+Disables a countermeasure against a \s-1SSL 3.0/TLS 1.0\s0 TransportHandler
 vulnerability affecting \s-1CBC\s0 ciphers, which cannot be handled by some
 broken \s-1SSL\s0 implementations.  This option has no effect for connections
 using other ciphers.
@@ -225,7 +225,7 @@ The following \fBmodifying\fR options are available:
 Disable version rollback attack detection.
 .Sp
 During the client key exchange, the client must send the same information
-about acceptable \s-1SSL/TLS\s0 Protocol levels as during the first hello. Some
+about acceptable \s-1SSL/TLS\s0 TransportHandler levels as during the first hello. Some
 clients violate this rule by adapting to the server's answer. (Example:
 the client sends a SSLv2 hello and accepts up to SSLv3.1=TLSv1, the server
 only understands up to SSLv3. In this case the client must still use the
@@ -239,7 +239,7 @@ preferences. When set, the \s-1SSL/TLS\s0 server will choose following its
 own preferences.
 .IP "SSL_OP_NO_SSLv3, SSL_OP_NO_TLSv1, SSL_OP_NO_TLSv1_1, SSL_OP_NO_TLSv1_2, SSL_OP_NO_TLSv1_3, SSL_OP_NO_DTLSv1, SSL_OP_NO_DTLSv1_2" 4
 .IX Item "SSL_OP_NO_SSLv3, SSL_OP_NO_TLSv1, SSL_OP_NO_TLSv1_1, SSL_OP_NO_TLSv1_2, SSL_OP_NO_TLSv1_3, SSL_OP_NO_DTLSv1, SSL_OP_NO_DTLSv1_2"
-These options turn off the SSLv3, TLSv1, TLSv1.1, TLSv1.2 or TLSv1.3 Protocol
+These options turn off the SSLv3, TLSv1, TLSv1.1, TLSv1.2 or TLSv1.3 TransportHandler
 versions with \s-1TLS\s0 or the DTLSv1, DTLSv1.2 versions with \s-1DTLS,\s0
 respectively.
 As of OpenSSL 1.1.0, these options are deprecated, use

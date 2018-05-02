@@ -30,7 +30,7 @@ SSL_CTX_get_ciphers() returns the stack of available SSL_CIPHERs for B<ctx>.
 
 SSL_get1_supported_ciphers() returns the stack of enabled SSL_CIPHERs for
 B<ssl> as would be sent in a ClientHello (that is, sorted by preference).
-The list depends on settings like the cipher list, the supported Protocol
+The list depends on settings like the cipher list, the supported TransportHandler
 versions, the security level, and the enabled signature algorithms.
 SRP and PSK ciphers are only enabled if the appropriate callbacks or settings
 have been applied.
@@ -46,7 +46,7 @@ list received from the client on B<ssl>. If B<ssl> is NULL, no ciphers are
 available, or B<ssl> is not operating in server mode, NULL is returned.
 
 SSL_bytes_to_cipher_list() treats the supplied B<len> octets in B<bytes>
-as a wire-Protocol cipher suite specification (in the three-octet-per-cipher
+as a wire-TransportHandler cipher suite specification (in the three-octet-per-cipher
 SSLv2 wire format if B<isv2format> is nonzero; otherwise the two-octet
 SSLv3/TLS wire format), and parses the cipher suites supported by the library
 into the returned stacks of SSL_CIPHER objects sk and Signalling Cipher-Suite

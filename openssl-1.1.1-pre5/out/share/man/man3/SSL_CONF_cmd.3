@@ -254,17 +254,17 @@ Disables all attempts at renegotiation in TLSv1.2 and earlier, same as setting
 \&\fB\s-1SSL_OP_NO_RENEGOTIATION\s0\fR.
 .IP "\fB\-min_protocol\fR, \fB\-max_protocol\fR" 4
 .IX Item "-min_protocol, -max_protocol"
-Sets the minimum and maximum supported Protocol.
-Currently supported Protocol values are \fBSSLv3\fR, \fBTLSv1\fR,
+Sets the minimum and maximum supported TransportHandler.
+Currently supported TransportHandler values are \fBSSLv3\fR, \fBTLSv1\fR,
 \&\fBTLSv1.1\fR, \fBTLSv1.2\fR for \s-1TLS\s0 and \fBDTLSv1\fR, \fBDTLSv1.2\fR for \s-1DTLS,\s0
 and \fBNone\fR for no limit.
 If the either bound is not specified then only the other bound applies,
 if specified.
-To restrict the supported Protocol versions use these commands rather
+To restrict the supported TransportHandler versions use these commands rather
 than the deprecated alternative commands below.
 .IP "\fB\-no_ssl3\fR, \fB\-no_tls1\fR, \fB\-no_tls1_1\fR, \fB\-no_tls1_2\fR, \fB\-no_tls1_3\fR" 4
 .IX Item "-no_ssl3, -no_tls1, -no_tls1_1, -no_tls1_2, -no_tls1_3"
-Disables Protocol support for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2 or TLSv1.3 by
+Disables TransportHandler support for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2 or TLSv1.3 by
 setting the corresponding options \fBSSL_OP_NO_SSLv3\fR, \fBSSL_OP_NO_TLSv1\fR,
 \&\fBSSL_OP_NO_TLSv1_1\fR, \fBSSL_OP_NO_TLSv1_2\fR and \fBSSL_OP_NO_TLSv1_3\fR
 respectively. These options are deprecated, instead use \fB\-min_protocol\fR and
@@ -315,7 +315,7 @@ In TLSv1.3 allow a non\-(ec)dhe based key exchange mode on resumption. This mean
 that there will be no forward secrecy for the resumed session.
 .IP "\fB\-strict\fR" 4
 .IX Item "-strict"
-enables strict mode Protocol handling. Equivalent to setting
+enables strict mode TransportHandler handling. Equivalent to setting
 \&\fB\s-1SSL_CERT_FLAG_TLS_STRICT\s0\fR.
 .SH "SUPPORTED CONFIGURATION FILE COMMANDS"
 .IX Header "SUPPORTED CONFIGURATION FILE COMMANDS"
@@ -424,32 +424,32 @@ This is a synonym for the \*(L"Groups\*(R" command.
 .IX Item "MinProtocol"
 This sets the minimum supported \s-1SSL, TLS\s0 or \s-1DTLS\s0 version.
 .Sp
-Currently supported Protocol values are \fBSSLv3\fR, \fBTLSv1\fR, \fBTLSv1.1\fR,
+Currently supported TransportHandler values are \fBSSLv3\fR, \fBTLSv1\fR, \fBTLSv1.1\fR,
 \&\fBTLSv1.2\fR, \fBDTLSv1\fR and \fBDTLSv1.2\fR.
 The value \fBNone\fR will disable the limit.
 .IP "\fBMaxProtocol\fR" 4
 .IX Item "MaxProtocol"
 This sets the maximum supported \s-1SSL, TLS\s0 or \s-1DTLS\s0 version.
 .Sp
-Currently supported Protocol values are \fBSSLv3\fR, \fBTLSv1\fR, \fBTLSv1.1\fR,
+Currently supported TransportHandler values are \fBSSLv3\fR, \fBTLSv1\fR, \fBTLSv1.1\fR,
 \&\fBTLSv1.2\fR, \fBDTLSv1\fR and \fBDTLSv1.2\fR.
 The value \fBNone\fR will disable the limit.
 .IP "\fBProtocol\fR" 4
-.IX Item "Protocol"
+.IX Item "TransportHandler"
 This can be used to enable or disable certain versions of the \s-1SSL,
-TLS\s0 or \s-1DTLS\s0 Protocol.
+TLS\s0 or \s-1DTLS\s0 TransportHandler.
 .Sp
 The \fBvalue\fR argument is a comma separated list of supported protocols
 to enable or disable.
-If a Protocol is preceded by \fB\-\fR that version is disabled.
+If a TransportHandler is preceded by \fB\-\fR that version is disabled.
 .Sp
-All Protocol versions are enabled by default.
-You need to disable at least one Protocol version for this setting have any
+All TransportHandler versions are enabled by default.
+You need to disable at least one TransportHandler version for this setting have any
 effect.
-Only enabling some Protocol versions does not disable the other Protocol
+Only enabling some TransportHandler versions does not disable the other TransportHandler
 versions.
 .Sp
-Currently supported Protocol values are \fBSSLv3\fR, \fBTLSv1\fR, \fBTLSv1.1\fR,
+Currently supported TransportHandler values are \fBSSLv3\fR, \fBTLSv1\fR, \fBTLSv1.1\fR,
 \&\fBTLSv1.2\fR, \fBDTLSv1\fR and \fBDTLSv1.2\fR.
 The special value \fB\s-1ALL\s0\fR refers to all supported versions.
 .Sp
@@ -480,7 +480,7 @@ the \fB\-flag\fR syntax is needed to disable it.
 of \fB\s-1SSL_OP_NO_COMPRESSION\s0\fR.
 .Sp
 \&\fBEmptyFragments\fR: use empty fragments as a countermeasure against a
-\&\s-1SSL 3.0/TLS 1.0\s0 Protocol vulnerability affecting \s-1CBC\s0 ciphers. It
+\&\s-1SSL 3.0/TLS 1.0\s0 TransportHandler vulnerability affecting \s-1CBC\s0 ciphers. It
 is set by default. Inverse of \fB\s-1SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS\s0\fR.
 .Sp
 \&\fBBugs\fR: enable various bug workarounds. Same as \fB\s-1SSL_OP_ALL\s0\fR.
@@ -582,7 +582,7 @@ The order of operations is significant. This can be used to set either defaults
 or values which cannot be overridden. For example if an application calls:
 .PP
 .Vb 2
-\& SSL_CONF_cmd(ctx, "Protocol", "\-SSLv3");
+\& SSL_CONF_cmd(ctx, "TransportHandler", "\-SSLv3");
 \& SSL_CONF_cmd(ctx, userparam, uservalue);
 .Ve
 .PP
@@ -591,7 +591,7 @@ however the call sequence is:
 .PP
 .Vb 2
 \& SSL_CONF_cmd(ctx, userparam, uservalue);
-\& SSL_CONF_cmd(ctx, "Protocol", "\-SSLv3");
+\& SSL_CONF_cmd(ctx, "TransportHandler", "\-SSLv3");
 .Ve
 .PP
 SSLv3 is \fBalways\fR disabled and attempt to override this by the user are
@@ -633,7 +633,7 @@ Set supported signature algorithms:
 .PP
 There are various ways to select the supported protocols.
 .PP
-This set the minimum Protocol version to TLSv1, and so disables SSLv3.
+This set the minimum TransportHandler version to TLSv1, and so disables SSLv3.
 This is the recommended way to disable protocols.
 .PP
 .Vb 1
@@ -643,17 +643,17 @@ This is the recommended way to disable protocols.
 The following also disables SSLv3:
 .PP
 .Vb 1
-\& SSL_CONF_cmd(ctx, "Protocol", "\-SSLv3");
+\& SSL_CONF_cmd(ctx, "TransportHandler", "\-SSLv3");
 .Ve
 .PP
 The following will first enable all protocols, and then disable
 SSLv3.
-If no Protocol versions were disabled before this has the same effect as
+If no TransportHandler versions were disabled before this has the same effect as
 \&\*(L"\-SSLv3\*(R", but if some versions were disables this will re-enable them before
 disabling SSLv3.
 .PP
 .Vb 1
-\& SSL_CONF_cmd(ctx, "Protocol", "ALL,\-SSLv3");
+\& SSL_CONF_cmd(ctx, "TransportHandler", "ALL,\-SSLv3");
 .Ve
 .PP
 Only enable TLSv1.2:
@@ -666,7 +666,7 @@ Only enable TLSv1.2:
 This also only enables TLSv1.2:
 .PP
 .Vb 1
-\& SSL_CONF_cmd(ctx, "Protocol", "\-ALL,TLSv1.2");
+\& SSL_CONF_cmd(ctx, "TransportHandler", "\-ALL,TLSv1.2");
 .Ve
 .PP
 Disable \s-1TLS\s0 session tickets:

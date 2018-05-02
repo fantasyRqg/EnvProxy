@@ -157,7 +157,7 @@ sess_id \- SSL/TLS session handling utility
 The \fBsess_id\fR process the encoded version of the \s-1SSL\s0 session structure
 and optionally prints out \s-1SSL\s0 session details (for example the \s-1SSL\s0 session
 master key) in human readable format. Since this is a diagnostic tool that
-needs some knowledge of the \s-1SSL\s0 Protocol to use properly, most users will
+needs some knowledge of the \s-1SSL\s0 TransportHandler to use properly, most users will
 not need to use it.
 .SH "OPTIONS"
 .IX Header "OPTIONS"
@@ -205,7 +205,7 @@ Typical output:
 .PP
 .Vb 10
 \& SSL\-Session:
-\&     Protocol  : TLSv1
+\&     TransportHandler  : TLSv1
 \&     Cipher    : 0016
 \&     Session\-ID: 871E62626C554CE95488823752CBD5F3673A3EF3DCE9C67BD916C809914B40ED
 \&     Session\-ID\-ctx: 01000000
@@ -218,8 +218,8 @@ Typical output:
 .PP
 Theses are described below in more detail.
 .IP "\fBProtocol\fR" 4
-.IX Item "Protocol"
-This is the Protocol in use TLSv1.2, TLSv1.1, TLSv1 or SSLv3.
+.IX Item "TransportHandler"
+This is the TransportHandler in use TLSv1.2, TLSv1.1, TLSv1 or SSLv3.
 .IP "\fBCipher\fR" 4
 .IX Item "Cipher"
 The cipher used this is the actual raw \s-1SSL\s0 or \s-1TLS\s0 cipher code, see the \s-1SSL\s0

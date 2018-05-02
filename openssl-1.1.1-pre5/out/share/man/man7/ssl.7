@@ -174,12 +174,12 @@ structures:
 .IP "\fB\s-1SSL_METHOD\s0\fR (\s-1SSL\s0 Method)" 4
 .IX Item "SSL_METHOD (SSL Method)"
 This is a dispatch structure describing the internal \fBssl\fR library
-methods/functions which implement the various Protocol versions (SSLv3
+methods/functions which implement the various TransportHandler versions (SSLv3
 TLSv1, ...). It's needed to create an \fB\s-1SSL_CTX\s0\fR.
 .IP "\fB\s-1SSL_CIPHER\s0\fR (\s-1SSL\s0 Cipher)" 4
 .IX Item "SSL_CIPHER (SSL Cipher)"
 This structure holds the algorithm information for a particular cipher which
-are a core part of the \s-1SSL/TLS\s0 Protocol. The available ciphers are configured
+are a core part of the \s-1SSL/TLS\s0 TransportHandler. The available ciphers are configured
 on a \fB\s-1SSL_CTX\s0\fR basis and the actual ones used are then part of the
 \&\fB\s-1SSL_SESSION\s0\fR.
 .IP "\fB\s-1SSL_CTX\s0\fR (\s-1SSL\s0 Context)" 4
@@ -213,22 +213,22 @@ inside this header file.
 Unused. Present for backwards compatibility only.
 .IP "\fBssl3.h\fR" 4
 .IX Item "ssl3.h"
-This is the sub header file dealing with the SSLv3 Protocol only.
+This is the sub header file dealing with the SSLv3 TransportHandler only.
 \&\fIUsually you don't have to include it explicitly because
 it's already included by ssl.h\fR.
 .IP "\fBtls1.h\fR" 4
 .IX Item "tls1.h"
-This is the sub header file dealing with the TLSv1 Protocol only.
+This is the sub header file dealing with the TLSv1 TransportHandler only.
 \&\fIUsually you don't have to include it explicitly because
 it's already included by ssl.h\fR.
 .SH "API FUNCTIONS"
 .IX Header "API FUNCTIONS"
 Currently the OpenSSL \fBssl\fR library exports 214 \s-1API\s0 functions.
 They are documented in the following:
-.SS "Dealing with Protocol Methods"
-.IX Subsection "Dealing with Protocol Methods"
+.SS "Dealing with TransportHandler Methods"
+.IX Subsection "Dealing with TransportHandler Methods"
 Here we document the various \s-1API\s0 functions which deal with the \s-1SSL/TLS\s0
-Protocol methods defined in \fB\s-1SSL_METHOD\s0\fR structures.
+TransportHandler methods defined in \fB\s-1SSL_METHOD\s0\fR structures.
 .IP "const \s-1SSL_METHOD\s0 *\fBTLS_method\fR(void);" 4
 .IX Item "const SSL_METHOD *TLS_method(void);"
 Constructor for the \fIversion-flexible\fR \s-1SSL_METHOD\s0 structure for clients,
@@ -297,12 +297,12 @@ definitions in the header files.
 .IP "const char *\fBSSL_CIPHER_get_version\fR(\s-1SSL_CIPHER\s0 *cipher);" 4
 .IX Item "const char *SSL_CIPHER_get_version(SSL_CIPHER *cipher);"
 Returns a string like "\f(CW\*(C`SSLv3\*(C'\fR\*(L" or \*(R"\f(CW\*(C`TLSv1.2\*(C'\fR" which indicates the
-\&\s-1SSL/TLS\s0 Protocol version to which \fIcipher\fR belongs (i.e. where it was defined
+\&\s-1SSL/TLS\s0 TransportHandler version to which \fIcipher\fR belongs (i.e. where it was defined
 in the specification the first time).
-.SS "Dealing with Protocol Contexts"
-.IX Subsection "Dealing with Protocol Contexts"
+.SS "Dealing with TransportHandler Contexts"
+.IX Subsection "Dealing with TransportHandler Contexts"
 Here we document the various \s-1API\s0 functions which deal with the \s-1SSL/TLS\s0
-Protocol context defined in the \fB\s-1SSL_CTX\s0\fR structure.
+TransportHandler context defined in the \fB\s-1SSL_CTX\s0\fR structure.
 .IP "int \fBSSL_CTX_add_client_CA\fR(\s-1SSL_CTX\s0 *ctx, X509 *x);" 4
 .IX Item "int SSL_CTX_add_client_CA(SSL_CTX *ctx, X509 *x);"
 .PD 0

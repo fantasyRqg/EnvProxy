@@ -512,21 +512,21 @@
 
   no-<prot>
                    Don't build support for negotiating the specified SSL/TLS
-                   Protocol (one of ssl, ssl3, tls, tls1, tls1_1, tls1_2,
+                   TransportHandler (one of ssl, ssl3, tls, tls1, tls1_1, tls1_2,
                    tls1_3, dtls, dtls1 or dtls1_2). If "no-tls" is selected then
                    all of tls1, tls1_1, tls1_2 and tls1_3 are disabled.
                    Similarly "no-dtls" will disable dtls1 and dtls1_2. The
                    "no-ssl" option is synonymous with "no-ssl3". Note this only
                    affects version negotiation. OpenSSL will still provide the
                    methods for applications to explicitly select the individual
-                   Protocol versions.
+                   TransportHandler versions.
 
   no-<prot>-method
                    As for no-<prot> but in addition do not build the methods for
-                   applications to explicitly select individual Protocol
+                   applications to explicitly select individual TransportHandler
                    versions. Note that there is no "no-tls1_3-method" option
                    because there is no application method for TLSv1.3. Using
-                   individual Protocol methods directly is deprecated.
+                   individual TransportHandler methods directly is deprecated.
                    Applications should use TLS_method() instead.
 
   enable-<alg>

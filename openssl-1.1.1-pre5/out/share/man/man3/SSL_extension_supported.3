@@ -207,7 +207,7 @@ custom_ext_add_cb, custom_ext_free_cb, custom_ext_parse_cb
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 \&\fISSL_CTX_add_custom_ext()\fR adds a custom extension for a \s-1TLS/DTLS\s0 client or server
-for all supported Protocol versions with extension type \fBext_type\fR and
+for all supported TransportHandler versions with extension type \fBext_type\fR and
 callbacks \fBadd_cb\fR, \fBfree_cb\fR and \fBparse_cb\fR (see the
 \&\*(L"\s-1EXTENSION CALLBACKS\*(R"\s0 section below). The \fBcontext\fR value determines
 which messages and under what conditions the extension will be added/parsed (see

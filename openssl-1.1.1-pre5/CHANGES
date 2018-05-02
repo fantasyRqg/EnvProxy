@@ -1124,12 +1124,12 @@
      of just the undeprecated features of either release.
      [Viktor Dukhovni]
 
-  *) Add support for setting the minimum and maximum supported Protocol.
+  *) Add support for setting the minimum and maximum supported TransportHandler.
      It can bet set via the SSL_set_min_proto_version() and
      SSL_set_max_proto_version(), or via the SSL_CONF's MinProtocol and
      MaxProtocol.  It's recommended to use the new APIs to disable
      protocols instead of disabling individual protocols using
-     SSL_set_options() or SSL_CONF's Protocol.  This change also
+     SSL_set_options() or SSL_CONF's TransportHandler.  This change also
      removes support for disabling TLS 1.2 in the OpenSSL TLS
      client at compile time by defining OPENSSL_NO_TLS1_2_CLIENT.
      [Kurt Roeckx]
@@ -1689,7 +1689,7 @@
      for use by SSL/TLS servers; the callback function will be called whenever a
      new session is created, and gets to decide whether the session may be
      cached to make it resumable (return 0) or not (return 1).  (As by the
-     SSL/TLS Protocol specifications, the session_id sent by the server will be
+     SSL/TLS TransportHandler specifications, the session_id sent by the server will be
      empty to indicate that the session is not resumable; also, the server will
      not generate RFC 4507 (RFC 5077) session tickets.)
 
@@ -2000,7 +2000,7 @@
 
      A malicious client can negotiate SSLv2 ciphers that have been disabled on
      the server and complete SSLv2 handshakes even if all SSLv2 ciphers have
-     been disabled, provided that the SSLv2 Protocol was not also disabled via
+     been disabled, provided that the SSLv2 TransportHandler was not also disabled via
      SSL_OP_NO_SSLv2.
 
      This issue was reported to OpenSSL on 26th December 2015 by Nimrod Aviram
@@ -2282,7 +2282,7 @@
      with an unseeded PRNG. The conditions are:
      - The client is on a platform where the PRNG has not been seeded
      automatically, and the user has not seeded manually
-     - A Protocol specific client method version has been used (i.e. not
+     - A TransportHandler specific client method version has been used (i.e. not
      SSL_client_methodv23)
      - A ciphersuite is used that does not require additional random data from
      the PRNG beyond the initial ClientHello client random (e.g. PSK-RC4-SHA).
@@ -2767,7 +2767,7 @@
       (CVE-2014-3570)
       [Andy Polyakov]
 
-   *) Do not resume sessions on the server if the negotiated Protocol
+   *) Do not resume sessions on the server if the negotiated TransportHandler
       version does not match the session's version. Resuming with a different
       version, while not strictly forbidden by the RFC, is of questionable
       sanity and breaks all known clients.
@@ -2852,10 +2852,10 @@
      [Steve Henson]
 
   *) A flaw in the OpenSSL SSL/TLS server code causes the server to negotiate
-     TLS 1.0 instead of higher Protocol versions when the ClientHello message
+     TLS 1.0 instead of higher TransportHandler versions when the ClientHello message
      is badly fragmented. This allows a man-in-the-middle attacker to force a
      downgrade to TLS 1.0 even if both the server and the client support a
-     higher Protocol version, by modifying the client's TLS records.
+     higher TransportHandler version, by modifying the client's TLS records.
 
      Thanks to David Benjamin and Adam Langley (Google) for discovering and
      researching this issue.
@@ -3101,7 +3101,7 @@
      [Steve Henson]
 
   *) In order to ensure interoperability SSL_OP_NO_protocolX does not
-     disable just Protocol X, but all protocols above X *if* there are
+     disable just TransportHandler X, but all protocols above X *if* there are
      protocols *below* X still enabled. In more practical terms it means
      that if application wants to disable TLS1.0 in favor of TLS1.1 and
      above, it's not sufficient to pass SSL_OP_NO_TLSv1, one has to pass
@@ -3190,7 +3190,7 @@
   *) Add DTLS-SRTP negotiation from RFC 5764.
      [Eric Rescorla]
 
-  *) Add Next Protocol Negotiation,
+  *) Add Next TransportHandler Negotiation,
      http://tools.ietf.org/html/draft-agl-tls-nextprotoneg-00. Can be
      disabled with a no-npn flag to config or Configure. Code donated
      by Google.
@@ -4126,7 +4126,7 @@
      certificates, use of ECDH certificates is now considered ECDH
      authentication, not RSA or ECDSA authentication (the latter is
      merely the CA's signing algorithm and not actively used in the
-     Protocol).
+     TransportHandler).
 
      The temporary ciphersuite alias "ECCdraft" is no longer
      available, and ECC ciphersuites are no longer excluded from "ALL"
@@ -5070,9 +5070,9 @@
      [Bodo Moeller]
 
   *) Have SSL/TLS server implementation tolerate "mismatched" record
-     Protocol version while receiving ClientHello even if the
+     TransportHandler version while receiving ClientHello even if the
      ClientHello is fragmented.  (The server can't insist on the
-     particular Protocol version it has chosen before the ServerHello
+     particular TransportHandler version it has chosen before the ServerHello
      message has informed the client about his choice.)
      [Bodo Moeller]
 
@@ -5084,7 +5084,7 @@
      Improve header file function name parsing.
      [Steve Henson]
 
-  *) extend SMTP and IMAP Protocol emulation in s_client to use EHLO
+  *) extend SMTP and IMAP TransportHandler emulation in s_client to use EHLO
      or CAPABILITY handshake as required by RFCs.
      [Goetz Babin-Ebell]
 
@@ -5116,7 +5116,7 @@
 
      So we change the selection algorithm again: Naming an explicit
      ciphersuite selects this one ciphersuite, and any other similar
-     ciphersuite (same bitmap) from *other* Protocol versions.
+     ciphersuite (same bitmap) from *other* TransportHandler versions.
      Thus, "RC4-MD5" again will properly select both the SSL 2.0
      ciphersuite and the SSL 3.0/TLS 1.0 ciphersuite.
 
@@ -5237,7 +5237,7 @@
 
   *) Remove the functionality of SSL_OP_MSIE_SSLV2_RSA_PADDING
      (part of SSL_OP_ALL).  This option used to disable the
-     countermeasure against man-in-the-middle Protocol-version
+     countermeasure against man-in-the-middle TransportHandler-version
      rollback in the SSL 2.0 server implementation, which is a bad
      idea.  (CVE-2005-2969)
 
@@ -6123,9 +6123,9 @@
      [Steve Henson]
 
   *) Have SSL/TLS server implementation tolerate "mismatched" record
-     Protocol version while receiving ClientHello even if the
+     TransportHandler version while receiving ClientHello even if the
      ClientHello is fragmented.  (The server can't insist on the
-     particular Protocol version it has chosen before the ServerHello
+     particular TransportHandler version it has chosen before the ServerHello
      message has informed the client about his choice.)
      [Bodo Moeller]
 
@@ -6152,7 +6152,7 @@
   *) Change ciphersuite string processing so that an explicit
      ciphersuite selects this one ciphersuite (so that "AES256-SHA"
      will no longer include "AES128-SHA"), and any other similar
-     ciphersuite (same bitmap) from *other* Protocol versions (so that
+     ciphersuite (same bitmap) from *other* TransportHandler versions (so that
      "RC4-MD5" will still include both the SSL 2.0 ciphersuite and the
      SSL 3.0/TLS 1.0 ciphersuite).  This is a backport combining
      changes from 0.9.8b and 0.9.8d.
@@ -6215,7 +6215,7 @@
 
   *) Remove the functionality of SSL_OP_MSIE_SSLV2_RSA_PADDING
      (part of SSL_OP_ALL).  This option used to disable the
-     countermeasure against man-in-the-middle Protocol-version
+     countermeasure against man-in-the-middle TransportHandler-version
      rollback in the SSL 2.0 server implementation, which is a bad
      idea.  (CVE-2005-2969)
 
@@ -6479,7 +6479,7 @@
 
   *) Countermeasure against the Klima-Pokorny-Rosa extension of
      Bleichbacher's attack on PKCS #1 v1.5 padding: treat
-     a Protocol version number mismatch like a decryption error
+     a TransportHandler version number mismatch like a decryption error
      in ssl3_get_client_key_exchange (ssl/s3_srvr.c).
      [Bodo Moeller]
 
@@ -6731,7 +6731,7 @@
   *) Change from security patch (see 0.9.6e below) that did not affect
      the 0.9.6 release series:
 
-     Remote buffer overflow in SSL3 Protocol - an attacker could
+     Remote buffer overflow in SSL3 TransportHandler - an attacker could
      supply an oversized master key in Kerberos-enabled versions.
      (CVE-2002-0657)
      [Ben Laurie (CHATS)]
@@ -6967,19 +6967,19 @@
           void cb(int write_p, int version, int content_type,
                   const void *buf, size_t len, SSL *ssl, void *arg)
 
-     whenever a Protocol message has been completely received
+     whenever a TransportHandler message has been completely received
      (write_p == 0) or sent (write_p == 1).  Here 'version' is the
-     Protocol version  according to which the SSL library interprets
-     the current Protocol message (SSL2_VERSION, SSL3_VERSION, or
+     TransportHandler version  according to which the SSL library interprets
+     the current TransportHandler message (SSL2_VERSION, SSL3_VERSION, or
      TLS1_VERSION).  'content_type' is 0 in the case of SSL 2.0, or
-     the content type as defined in the SSL 3.0/TLS 1.0 Protocol
+     the content type as defined in the SSL 3.0/TLS 1.0 TransportHandler
      specification (change_cipher_spec(20), alert(21), handshake(22)).
      'buf' and 'len' point to the actual message, 'ssl' to the
      SSL object, and 'arg' is the application-defined value set by
      SSL[_CTX]_set_msg_callback_arg().
 
      'openssl s_client' and 'openssl s_server' have new '-msg' options
-     to enable a callback that displays all Protocol messages.
+     to enable a callback that displays all TransportHandler messages.
      [Bodo Moeller]
 
   *) Change the shared library support so shared libraries are built as
@@ -7070,7 +7070,7 @@
      [Steve Henson]
 
   *) Change ssl3_get_message (ssl/s3_both.c) and the functions using it
-     so that complete 'Handshake' Protocol structures are kept in memory
+     so that complete 'Handshake' TransportHandler structures are kept in memory
      instead of overwriting 'msg_type' and 'length' with 'body' data.
      [Bodo Moeller]
 
@@ -8458,7 +8458,7 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
 
   *) Countermeasure against the Klima-Pokorny-Rosa extension of
      Bleichbacher's attack on PKCS #1 v1.5 padding: treat
-     a Protocol version number mismatch like a decryption error
+     a TransportHandler version number mismatch like a decryption error
      in ssl3_get_client_key_exchange (ssl/s3_srvr.c).
      [Bodo Moeller]
 
@@ -8629,11 +8629,11 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
      too small for 64 bit platforms. (CVE-2002-0655)
      [Matthew Byng-Maddick <mbm@aldigital.co.uk> and Ben Laurie (CHATS)>
 
-  *) Remote buffer overflow in SSL3 Protocol - an attacker could
+  *) Remote buffer overflow in SSL3 TransportHandler - an attacker could
      supply an oversized session ID to a client. (CVE-2002-0656)
      [Ben Laurie (CHATS)]
 
-  *) Remote buffer overflow in SSL2 Protocol - an attacker could
+  *) Remote buffer overflow in SSL2 TransportHandler - an attacker could
      supply an oversized client master key. (CVE-2002-0656)
      [Ben Laurie (CHATS)]
 
@@ -8826,7 +8826,7 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
   *) Change ssl23_get_client_hello (ssl/s23_srvr.c) behaviour when
      faced with a pathologically small ClientHello fragment that does
      not contain client_version: Instead of aborting with an error,
-     simply choose the highest available Protocol version (i.e.,
+     simply choose the highest available TransportHandler version (i.e.,
      TLS 1.0 unless it is disabled).  In practice, ClientHello
      messages are never sent like this, but this change gives us
      strictly correct behaviour at least for TLS.
@@ -8839,7 +8839,7 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
 
   *) In ssl3_get_client_hello (ssl/s3_srvr.c), generate a fatal alert
      (sent using the client's version number) if client_version is
-     smaller than the Protocol version in use.  Also change
+     smaller than the TransportHandler version in use.  Also change
      ssl23_get_client_hello (ssl/s23_srvr.c) to select TLS 1.0 if
      the client demanded SSL 3.0 but only TLS 1.0 is enabled; then
      the client will at least see that alert.
@@ -9401,7 +9401,7 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
      first two bytes of the ClientHello message, i.e. client_version.
      (Note that this is a pathologic case that probably has never happened
      in real life.)  The previous approach was to use the version number
-     from the record header as a substitute; but our Protocol choice
+     from the record header as a substitute; but our TransportHandler choice
      should not depend on that one because it is not authenticated
      by the Finished messages.
      [Bodo Moeller]
@@ -9696,13 +9696,13 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
 
   *) Fix SSL 2.0 rollback checking: Due to an off-by-one error in
      RSA_padding_check_SSLv23(), special padding was never detected
-     and thus the SSL 3.0/TLS 1.0 countermeasure against Protocol
+     and thus the SSL 3.0/TLS 1.0 countermeasure against TransportHandler
      version rollback attacks was not effective.
 
      In s23_clnt.c, don't use special rollback-attack detection padding
-     (RSA_SSLV23_PADDING) if SSL 2.0 is the only Protocol enabled in the
+     (RSA_SSLV23_PADDING) if SSL 2.0 is the only TransportHandler enabled in the
      client; similarly, in s23_srvr.c, don't do the rollback check if
-     SSL 2.0 is the only Protocol enabled in the server.
+     SSL 2.0 is the only TransportHandler enabled in the server.
      [Bodo Moeller]
 
   *) Make it possible to get hexdumps of unprintable data with 'openssl
@@ -9944,7 +9944,7 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
 
   *) Implement SSL_OP_TLS_ROLLBACK_BUG: In ssl3_get_client_key_exchange, if
      this option is set, tolerate broken clients that send the negotiated
-     Protocol version number instead of the requested Protocol version
+     TransportHandler version number instead of the requested TransportHandler version
      number.
      [Bodo Moeller]
 
@@ -10312,7 +10312,7 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
 
   *) Work around for Netscape hang bug. This sends certificate request
      and server done in one record. Since this is perfectly legal in the
-     SSL/TLS Protocol it isn't a "bug" option and is on by default. See
+     SSL/TLS TransportHandler it isn't a "bug" option and is on by default. See
      the bugs/SSLv3 entry for more info.
      [Steve Henson]
 
@@ -10593,7 +10593,7 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
      SSL_get_peer_finished to allow applications to obtain the latest
      Finished messages sent to the peer or expected from the peer,
      respectively.  (SSL_get_peer_finished is usually the Finished message
-     actually received from the peer, otherwise the Protocol will be aborted.)
+     actually received from the peer, otherwise the TransportHandler will be aborted.)
 
      As the Finished message are message digests of the complete handshake
      (with a total of 192 bits for TLS 1.0 and more for SSL 3.0), they can
@@ -10610,7 +10610,7 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
      [Andy Polyakov]
 
   *) Add support for MS "fast SGC". This is arguably a violation of the
-     SSL3/TLS Protocol. Netscape SGC does two handshakes: the first with
+     SSL3/TLS TransportHandler. Netscape SGC does two handshakes: the first with
      weak crypto and after checking the certificate is SGC a second one
      with strong crypto. MS SGC stops the first handshake after receiving
      the server certificate message and sends a second client hello. Since
@@ -11201,7 +11201,7 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
      UTF8 strings a character at a time.
      [Steve Henson]
 
-  *) Use client_version from client hello to select the Protocol
+  *) Use client_version from client hello to select the TransportHandler
      (s23_srvr.c) and for RSA client key exchange verification
      (s3_srvr.c), as required by the SSL 3.0/TLS 1.0 specifications.
      [Bodo Moeller]
@@ -11459,7 +11459,7 @@ des-cbc           3624.96k     5258.21k     5530.91k     5624.30k     5628.26k
 
   *) Introduce "mode" for SSL structures (with defaults in SSL_CTX),
      which largely parallels "options", but is for changing API behaviour,
-     whereas "options" are about Protocol behaviour.
+     whereas "options" are about TransportHandler behaviour.
      Initial "mode" flags are:
 
      SSL_MODE_ENABLE_PARTIAL_WRITE   Allow SSL_write to report success when

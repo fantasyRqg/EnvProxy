@@ -25,6 +25,7 @@
 #include "log.h"
 #include "ip/IpPackageFactory.h"
 #include "ip/IpHandler.h"
+#include "transport/TransportFactory.h"
 
 #define LOG_TAG "proxyEngine"
 
@@ -65,7 +66,7 @@ void proxyEngine::handleEvents() {
 
     //ip package factory
     IpPackageFactory ipPackageFactory(this);
-
+    TransportFactory transportFactory;
 
     //monitor tun event
     struct epoll_event ev_tun;
@@ -88,11 +89,33 @@ void proxyEngine::handleEvents() {
             if (ev[i].data.ptr == &ev_tun) {
                 //tun event
                 auto ipPkt = checkTun(&ev[i], &ipPackageFactory);
-                if (ipPkt != nullptr) {
-                    delete ipPkt;
-                } else {
+                if (ipPkt == nullptr) continue;
 
+                auto tPkt = transportFactory.handleIpPkt(ipPkt);
+
+
+                char source[INET6_ADDRSTRLEN + 1];
+                char dest[INET6_ADDRSTRLEN + 1];
+
+                if (ipPkt->versoin == IPVERSION) {
+                    inet_ntop(AF_INET, &ipPkt->srcAddr.ip4, source, sizeof(source));
+                    inet_ntop(AF_INET, &ipPkt->dstAddr.ip4, dest, sizeof(dest));
+                } else if (ipPkt->versoin == IPV6_VERSION) {
+                    inet_ntop(AF_INET6, &ipPkt->srcAddr.ip6, source, sizeof(source));
+                    inet_ntop(AF_INET6, &ipPkt->dstAddr.ip6, dest, sizeof(dest));
                 }
+
+
+                ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6lu, dPort = %6lu, pkt_size = %6lu ,payload_size = %6lu",
+                      source, dest,
+                      ipPkt->protocol,
+                      tPkt->sPort, tPkt->dPort,
+                      ipPkt->pktSize,
+                      ipPkt->payloadSize
+                );
+
+                delete ipPkt;
+
             } else if (ev[i].data.ptr != nullptr) {
                 //task event
 

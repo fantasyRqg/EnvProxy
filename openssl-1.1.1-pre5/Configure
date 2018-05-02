@@ -496,7 +496,7 @@ my @disable_cascades = (
     sub { !$disabled{"msan"} } => [ "asm" ],
     );
 
-# Avoid Protocol support holes.  Also disable all versions below N, if version
+# Avoid TransportHandler support holes.  Also disable all versions below N, if version
 # N is disabled while N+1 is enabled.
 #
 my @list = (reverse @tls);

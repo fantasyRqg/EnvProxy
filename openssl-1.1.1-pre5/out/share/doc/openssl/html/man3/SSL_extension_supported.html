@@ -88,7 +88,7 @@
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
-<p>SSL_CTX_add_custom_ext() adds a custom extension for a TLS/DTLS client or server for all supported Protocol versions with extension type <b>ext_type</b> and callbacks <b>add_cb</b>, <b>free_cb</b> and <b>parse_cb</b> (see the <a href="#EXTENSION-CALLBACKS">&quot;EXTENSION CALLBACKS&quot;</a> section below). The <b>context</b> value determines which messages and under what conditions the extension will be added/parsed (see the <a href="#EXTENSION-CONTEXTS">&quot;EXTENSION CONTEXTS&quot;</a> section below).</p>
+<p>SSL_CTX_add_custom_ext() adds a custom extension for a TLS/DTLS client or server for all supported TransportHandler versions with extension type <b>ext_type</b> and callbacks <b>add_cb</b>, <b>free_cb</b> and <b>parse_cb</b> (see the <a href="#EXTENSION-CALLBACKS">&quot;EXTENSION CALLBACKS&quot;</a> section below). The <b>context</b> value determines which messages and under what conditions the extension will be added/parsed (see the <a href="#EXTENSION-CONTEXTS">&quot;EXTENSION CONTEXTS&quot;</a> section below).</p>
 
 <p>SSL_CTX_add_client_custom_ext() adds a custom extension for a TLS/DTLS client with extension type <b>ext_type</b> and callbacks <b>add_cb</b>, <b>free_cb</b> and <b>parse_cb</b>. This function is similar to SSL_CTX_add_custom_ext() except it only applies to clients, uses the older style of callbacks, and implicitly sets the <b>context</b> value to:</p>
 

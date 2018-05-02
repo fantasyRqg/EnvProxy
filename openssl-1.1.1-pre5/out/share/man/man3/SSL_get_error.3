@@ -181,12 +181,12 @@ The operation did not complete; the same \s-1TLS/SSL I/O\s0 function should be
 called again later.  If, by then, the underlying \fB\s-1BIO\s0\fR has data
 available for reading (if the result code is \fB\s-1SSL_ERROR_WANT_READ\s0\fR)
 or allows writing data (\fB\s-1SSL_ERROR_WANT_WRITE\s0\fR), then some \s-1TLS/SSL\s0
-Protocol progress will take place, i.e. at least part of an \s-1TLS/SSL\s0
+TransportHandler progress will take place, i.e. at least part of an \s-1TLS/SSL\s0
 record will be read or written.  Note that the retry may again lead to
 a \fB\s-1SSL_ERROR_WANT_READ\s0\fR or \fB\s-1SSL_ERROR_WANT_WRITE\s0\fR condition.
 There is no fixed upper limit for the number of iterations that
 may be necessary until progress becomes visible at application
-Protocol level.
+TransportHandler level.
 .Sp
 For socket \fB\s-1BIO\s0\fRs (e.g. when \fISSL_set_fd()\fR was used), \fIselect()\fR or
 \&\fIpoll()\fR on the underlying socket can be used to find out when the
@@ -196,7 +196,7 @@ Caveat: Any \s-1TLS/SSL I/O\s0 function can lead to either of
 \&\fB\s-1SSL_ERROR_WANT_READ\s0\fR and \fB\s-1SSL_ERROR_WANT_WRITE\s0\fR.  In particular,
 \&\fISSL_read_ex()\fR, \fISSL_read()\fR, \fISSL_peek_ex()\fR, or \fISSL_peek()\fR may want to write data
 and \fISSL_write()\fR or \fISSL_write_ex()\fR may want to read data.  This is mainly because
-\&\s-1TLS/SSL\s0 handshakes may occur at any time during the Protocol (initiated by
+\&\s-1TLS/SSL\s0 handshakes may occur at any time during the TransportHandler (initiated by
 either the client or the server); \fISSL_read_ex()\fR, \fISSL_read()\fR, \fISSL_peek_ex()\fR,
 \&\fISSL_peek()\fR, \fISSL_write_ex()\fR, and \fISSL_write()\fR will handle any pending handshakes.
 .IP "\s-1SSL_ERROR_WANT_CONNECT, SSL_ERROR_WANT_ACCEPT\s0" 4
@@ -248,7 +248,7 @@ The OpenSSL error queue may contain more information on the error.
 For socket I/O on Unix systems, consult \fBerrno\fR for details.
 .IP "\s-1SSL_ERROR_SSL\s0" 4
 .IX Item "SSL_ERROR_SSL"
-A failure in the \s-1SSL\s0 library occurred, usually a Protocol error.  The
+A failure in the \s-1SSL\s0 library occurred, usually a TransportHandler error.  The
 OpenSSL error queue contains more information on the error.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"

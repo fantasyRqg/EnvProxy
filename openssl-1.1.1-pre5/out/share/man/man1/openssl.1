@@ -282,7 +282,7 @@ Generation of \s-1RSA\s0 Private Key. Superseded by \fBgenpkey\fR.
 Create or examine a Netscape certificate sequence.
 .IP "\fBocsp\fR" 4
 .IX Item "ocsp"
-Online Certificate Status Protocol utility.
+Online Certificate Status TransportHandler utility.
 .IP "\fBpasswd\fR" 4
 .IX Item "passwd"
 Generation of hashed passwords.
@@ -335,7 +335,7 @@ This implements a generic \s-1SSL/TLS\s0 server which accepts connections from r
 clients speaking \s-1SSL/TLS.\s0 It's intended for testing purposes only and provides
 only rudimentary interface functionality but internally uses mostly all
 functionality of the OpenSSL \fBssl\fR library.  It provides both an own command
-line oriented Protocol for testing \s-1SSL\s0 functions and a simple \s-1HTTP\s0 response
+line oriented TransportHandler for testing \s-1SSL\s0 functions and a simple \s-1HTTP\s0 response
 facility to emulate an SSL/TLS\-aware webserver.
 .IP "\fBs_time\fR" 4
 .IX Item "s_time"

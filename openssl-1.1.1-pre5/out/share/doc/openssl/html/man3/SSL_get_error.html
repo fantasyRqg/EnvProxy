@@ -58,11 +58,11 @@
 <dt id="SSL_ERROR_WANT_READ-SSL_ERROR_WANT_WRITE">SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE</dt>
 <dd>
 
-<p>The operation did not complete; the same TLS/SSL I/O function should be called again later. If, by then, the underlying <b>BIO</b> has data available for reading (if the result code is <b>SSL_ERROR_WANT_READ</b>) or allows writing data (<b>SSL_ERROR_WANT_WRITE</b>), then some TLS/SSL Protocol progress will take place, i.e. at least part of an TLS/SSL record will be read or written. Note that the retry may again lead to a <b>SSL_ERROR_WANT_READ</b> or <b>SSL_ERROR_WANT_WRITE</b> condition. There is no fixed upper limit for the number of iterations that may be necessary until progress becomes visible at application Protocol level.</p>
+<p>The operation did not complete; the same TLS/SSL I/O function should be called again later. If, by then, the underlying <b>BIO</b> has data available for reading (if the result code is <b>SSL_ERROR_WANT_READ</b>) or allows writing data (<b>SSL_ERROR_WANT_WRITE</b>), then some TLS/SSL TransportHandler progress will take place, i.e. at least part of an TLS/SSL record will be read or written. Note that the retry may again lead to a <b>SSL_ERROR_WANT_READ</b> or <b>SSL_ERROR_WANT_WRITE</b> condition. There is no fixed upper limit for the number of iterations that may be necessary until progress becomes visible at application TransportHandler level.</p>
 
 <p>For socket <b>BIO</b>s (e.g. when SSL_set_fd() was used), select() or poll() on the underlying socket can be used to find out when the TLS/SSL I/O function should be retried.</p>
 
-<p>Caveat: Any TLS/SSL I/O function can lead to either of <b>SSL_ERROR_WANT_READ</b> and <b>SSL_ERROR_WANT_WRITE</b>. In particular, SSL_read_ex(), SSL_read(), SSL_peek_ex(), or SSL_peek() may want to write data and SSL_write() or SSL_write_ex() may want to read data. This is mainly because TLS/SSL handshakes may occur at any time during the Protocol (initiated by either the client or the server); SSL_read_ex(), SSL_read(), SSL_peek_ex(), SSL_peek(), SSL_write_ex(), and SSL_write() will handle any pending handshakes.</p>
+<p>Caveat: Any TLS/SSL I/O function can lead to either of <b>SSL_ERROR_WANT_READ</b> and <b>SSL_ERROR_WANT_WRITE</b>. In particular, SSL_read_ex(), SSL_read(), SSL_peek_ex(), or SSL_peek() may want to write data and SSL_write() or SSL_write_ex() may want to read data. This is mainly because TLS/SSL handshakes may occur at any time during the TransportHandler (initiated by either the client or the server); SSL_read_ex(), SSL_read(), SSL_peek_ex(), SSL_peek(), SSL_write_ex(), and SSL_write() will handle any pending handshakes.</p>
 
 </dd>
 <dt id="SSL_ERROR_WANT_CONNECT-SSL_ERROR_WANT_ACCEPT">SSL_ERROR_WANT_CONNECT, SSL_ERROR_WANT_ACCEPT</dt>
@@ -104,7 +104,7 @@
 <dt id="SSL_ERROR_SSL">SSL_ERROR_SSL</dt>
 <dd>
 
-<p>A failure in the SSL library occurred, usually a Protocol error. The OpenSSL error queue contains more information on the error.</p>
+<p>A failure in the SSL library occurred, usually a TransportHandler error. The OpenSSL error queue contains more information on the error.</p>
 
 </dd>
 </dl>

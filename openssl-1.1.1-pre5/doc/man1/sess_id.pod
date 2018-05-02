@@ -22,7 +22,7 @@ B<openssl> B<sess_id>
 The B<sess_id> process the encoded version of the SSL session structure
 and optionally prints out SSL session details (for example the SSL session
 master key) in human readable format. Since this is a diagnostic tool that
-needs some knowledge of the SSL Protocol to use properly, most users will
+needs some knowledge of the SSL TransportHandler to use properly, most users will
 not need to use it.
 
 =head1 OPTIONS
@@ -83,7 +83,7 @@ be used.
 Typical output:
 
  SSL-Session:
-     Protocol  : TLSv1
+     TransportHandler  : TLSv1
      Cipher    : 0016
      Session-ID: 871E62626C554CE95488823752CBD5F3673A3EF3DCE9C67BD916C809914B40ED
      Session-ID-ctx: 01000000
@@ -97,9 +97,9 @@ Theses are described below in more detail.
 
 =over 4
 
-=item B<Protocol>
+=item B<TransportHandler>
 
-This is the Protocol in use TLSv1.2, TLSv1.1, TLSv1 or SSLv3.
+This is the TransportHandler in use TLSv1.2, TLSv1.1, TLSv1 or SSLv3.
 
 =item B<Cipher>
 

@@ -153,7 +153,7 @@ SSL_get_peer_certificate \- get the X509 certificate of the peer
 peer presented. If the peer did not present a certificate, \s-1NULL\s0 is returned.
 .SH "NOTES"
 .IX Header "NOTES"
-Due to the Protocol definition, a \s-1TLS/SSL\s0 server will always send a
+Due to the TransportHandler definition, a \s-1TLS/SSL\s0 server will always send a
 certificate, if present. A client will only send a certificate when
 explicitly requested to do so by the server (see
 \&\fISSL_CTX_set_verify\fR\|(3)). If an anonymous cipher

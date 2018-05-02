@@ -6,7 +6,7 @@ SSL_CTX_set_msg_callback,
 SSL_CTX_set_msg_callback_arg,
 SSL_set_msg_callback,
 SSL_set_msg_callback_arg
-- install callback for observing Protocol messages
+- install callback for observing TransportHandler messages
 
 =head1 SYNOPSIS
 
@@ -28,7 +28,7 @@ SSL_set_msg_callback_arg
 
 SSL_CTX_set_msg_callback() or SSL_set_msg_callback() can be used to
 define a message callback function I<cb> for observing all SSL/TLS
-Protocol messages (such as handshake messages) that are received or
+TransportHandler messages (such as handshake messages) that are received or
 sent, as well as other events that occur during processing.
 SSL_CTX_set_msg_callback_arg() and SSL_set_msg_callback_arg()
 can be used to set argument I<arg> to the callback function, which is
@@ -47,27 +47,27 @@ following meaning:
 
 =item I<write_p>
 
-This flag is B<0> when a Protocol message has been received and B<1>
-when a Protocol message has been sent.
+This flag is B<0> when a TransportHandler message has been received and B<1>
+when a TransportHandler message has been sent.
 
 =item I<version>
 
-The Protocol version according to which the Protocol message is
+The TransportHandler version according to which the TransportHandler message is
 interpreted by the library such as B<TLS1_3_VERSION>, B<TLS1_2_VERSION> etc.
 This is set to 0 for the SSL3_RT_HEADER pseudo content type (see NOTES below).
 
 =item I<content_type>
 
-This is one of the content type values defined in the Protocol specification
+This is one of the content type values defined in the TransportHandler specification
 (B<SSL3_RT_CHANGE_CIPHER_SPEC>, B<SSL3_RT_ALERT>, B<SSL3_RT_HANDSHAKE>; but never
-B<SSL3_RT_APPLICATION_DATA> because the callback will only be called for Protocol
+B<SSL3_RT_APPLICATION_DATA> because the callback will only be called for TransportHandler
 messages). Alternatively it may be a "pseudo" content type. These pseudo
 content types are used to signal some other event in the processing of data (see
 NOTES below).
 
 =item I<buf>, I<len>
 
-I<buf> points to a buffer containing the Protocol message or other data (in the
+I<buf> points to a buffer containing the TransportHandler message or other data (in the
 case of pseudo content types), which consists of I<len> bytes. The buffer is no
 longer valid after the callback function has returned.
 
@@ -84,17 +84,17 @@ SSL_CTX_set_msg_callback_arg() or SSL_set_msg_callback_arg().
 
 =head1 NOTES
 
-Protocol messages are passed to the callback function after decryption
+TransportHandler messages are passed to the callback function after decryption
 and fragment collection where applicable. (Thus record boundaries are
 not visible.)
 
-If processing a received Protocol message results in an error,
+If processing a received TransportHandler message results in an error,
 the callback function may not be called.  For example, the callback
 function will never see messages that are considered too large to be
 processed.
 
-Due to automatic Protocol version negotiation, I<version> is not
-necessarily the Protocol version used by the sender of the message: If
+Due to automatic TransportHandler version negotiation, I<version> is not
+necessarily the TransportHandler version used by the sender of the message: If
 a TLS 1.0 ClientHello message is received by an SSL 3.0-only server,
 I<version> will be B<SSL3_VERSION>.
 

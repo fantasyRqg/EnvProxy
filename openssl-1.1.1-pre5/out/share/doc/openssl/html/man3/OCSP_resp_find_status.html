@@ -78,7 +78,7 @@
 
 <p>OCSP_resp_get0_certs() returns any certificates included in <b>bs</b>.</p>
 
-<p>OCSP_resp_get0_signer() attempts to retrieve the certificate that directly signed <b>bs</b>. The OCSP Protocol does not require that this certificate is included in the <b>certs</b> field of the response, so additional certificates can be supplied in <b>extra_certs</b> if the certificates that may have signed the response are known via some out-of-band mechanism.</p>
+<p>OCSP_resp_get0_signer() attempts to retrieve the certificate that directly signed <b>bs</b>. The OCSP TransportHandler does not require that this certificate is included in the <b>certs</b> field of the response, so additional certificates can be supplied in <b>extra_certs</b> if the certificates that may have signed the response are known via some out-of-band mechanism.</p>
 
 <p>OCSP_resp_get0_id() gets the responder id of <b>bs</b>. If the responder ID is a name then &lt;*pname&gt; is set to the name and <b>*pid</b> is set to NULL. If the responder ID is by key ID then <b>*pid</b> is set to the key ID and <b>*pname</b> is set to NULL. OCSP_resp_get1_id() leaves ownership of <b>*pid</b> and <b>*pname</b> with the caller, who is responsible for freeing them. Both functions return 1 in case of success and 0 in case of failure. If OCSP_resp_get1_id() returns 0, no freeing of the results is necessary.</p>
 

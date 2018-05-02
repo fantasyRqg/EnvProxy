@@ -159,7 +159,7 @@ read by the application via a call to \fISSL_read_ex\fR\|(3) or \fISSL_read\fR\|
 and are available inside \fBssl\fR for immediate read.
 .PP
 If the \fB\s-1SSL\s0\fR object's \fIread_ahead\fR flag is set (see
-\&\fISSL_CTX_set_read_ahead\fR\|(3)), additional Protocol bytes (beyond the current
+\&\fISSL_CTX_set_read_ahead\fR\|(3)), additional TransportHandler bytes (beyond the current
 record) may have been read containing more \s-1TLS/SSL\s0 records. This also applies to
 \&\s-1DTLS\s0 and pipelining (see \fISSL_CTX_set_split_send_fragment\fR\|(3)). These
 additional bytes will be buffered by OpenSSL but will remain unprocessed until

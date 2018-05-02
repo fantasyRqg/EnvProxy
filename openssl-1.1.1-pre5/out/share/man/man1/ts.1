@@ -221,10 +221,10 @@ ts \- Time Stamping Authority tool (client/server)
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 The \fBts\fR command is a basic Time Stamping Authority (\s-1TSA\s0) client and server
-application as specified in \s-1RFC 3161 \s0(Time-Stamp Protocol, \s-1TSP\s0). A
+application as specified in \s-1RFC 3161 \s0(Time-Stamp TransportHandler, \s-1TSP\s0). A
 \&\s-1TSA\s0 can be part of a \s-1PKI\s0 deployment and its role is to provide long
 term proof of the existence of a certain datum before a particular
-time. Here is a brief description of the Protocol:
+time. Here is a brief description of the TransportHandler:
 .IP "1." 4
 The \s-1TSA\s0 client computes a one-way hash value for a data file and sends
 the hash to the \s-1TSA.\s0
@@ -238,7 +238,7 @@ The \s-1TSA\s0 client receives the time stamp token and verifies the
 signature on it. It also checks if the token contains the same hash
 value that it had sent to the \s-1TSA.\s0
 .PP
-There is one \s-1DER\s0 encoded Protocol data unit defined for transporting a time
+There is one \s-1DER\s0 encoded TransportHandler data unit defined for transporting a time
 stamp request to the \s-1TSA\s0 and one for sending the time stamp response
 back to the client. The \fBts\fR command has three main functions:
 creating a time stamp request based on a data file,
@@ -694,7 +694,7 @@ No support for time stamps over \s-1SMTP,\s0 though it is quite easy
 to implement an automatic e\-mail based \s-1TSA\s0 with \fIprocmail\fR\|(1)
 and \fIperl\fR\|(1). \s-1HTTP\s0 server support is provided in the form of
 a separate apache module. \s-1HTTP\s0 client support is provided by
-\&\fItsget\fR\|(1). Pure \s-1TCP/IP\s0 Protocol is not supported.
+\&\fItsget\fR\|(1). Pure \s-1TCP/IP\s0 TransportHandler is not supported.
 .IP "\(bu" 2
 The file containing the last serial number of the \s-1TSA\s0 is not
 locked when being read or written. This is a problem if more than one

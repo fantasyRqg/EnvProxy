@@ -20,7 +20,7 @@ SSL_get_selected_srtp_profile
 
 =head1 DESCRIPTION
 
-SRTP is the Secure Real-Time Transport Protocol. OpenSSL implements support for
+SRTP is the Secure Real-Time Transport TransportHandler. OpenSSL implements support for
 the "use_srtp" DTLS extension defined in RFC5764. This provides a mechanism for
 establishing SRTP keying material, algorithms and parameters using DTLS. This
 capability may be used as part of an implementation that conforms to RFC5763.

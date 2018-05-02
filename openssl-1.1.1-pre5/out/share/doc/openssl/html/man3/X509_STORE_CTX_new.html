@@ -75,7 +75,7 @@
 
 <p>X509_STORE_CTX_set0_verified_chain() sets the validated chain used by <b>ctx</b> to be <b>chain</b>. Ownership of the chain is transferred to <b>ctx</b> and should not be free&#39;d by the caller. X509_STORE_CTX_get0_chain() returns a the internal pointer used by the <b>ctx</b> that contains the validated chain.</p>
 
-<p>X509_STORE_CTX_set0_crls() sets a set of CRLs to use to aid certificate verification to <b>sk</b>. These CRLs will only be used if CRL verification is enabled in the associated <b>X509_VERIFY_PARAM</b> structure. This might be used where additional &quot;useful&quot; CRLs are supplied as part of a Protocol, for example in a PKCS#7 structure.</p>
+<p>X509_STORE_CTX_set0_crls() sets a set of CRLs to use to aid certificate verification to <b>sk</b>. These CRLs will only be used if CRL verification is enabled in the associated <b>X509_VERIFY_PARAM</b> structure. This might be used where additional &quot;useful&quot; CRLs are supplied as part of a TransportHandler, for example in a PKCS#7 structure.</p>
 
 <p>X509_STORE_CTX_get0_param() retrieves an internal pointer to the verification parameters associated with <b>ctx</b>.</p>
 

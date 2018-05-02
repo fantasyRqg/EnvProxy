@@ -63,4 +63,8 @@ int Ip6Handler::canHandlePackage(uint8_t *pkt, size_t pktSize) {
     return IP_HANDLE_SUCCESS;
 }
 
+Ip6Handler::~Ip6Handler() {
+
+}
+
 

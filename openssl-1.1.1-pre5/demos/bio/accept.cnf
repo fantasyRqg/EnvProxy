@@ -2,7 +2,7 @@
 # Port to listen on
 Port = 4433
 # Disable TLS v1.2 for test.
-# Protocol = ALL, -TLSv1.2
+# TransportHandler = ALL, -TLSv1.2
 # Only support 3 curves
 Curves = P-521:P-384:P-256
 # Restricted signature algorithms

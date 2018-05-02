@@ -48,7 +48,7 @@ recommended to integrate compression into applications. Applications for
 non-public use may agree on certain compression methods. Using different
 compression methods with the same identifier will lead to connection failure.
 
-An OpenSSL client speaking a Protocol that allows compression (SSLv3, TLSv1)
+An OpenSSL client speaking a TransportHandler that allows compression (SSLv3, TLSv1)
 will unconditionally send the list of all compression methods enabled with
 SSL_COMP_add_compression_method() to the server during the handshake.
 Unlike the mechanisms to set a cipher list, there is no method available to

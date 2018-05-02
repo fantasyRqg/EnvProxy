@@ -30,7 +30,7 @@
 
 <pre><code> #include &lt;openssl/bio.h&gt;
 
- int BIO_socket(int domain, int socktype, int Protocol, int options);
+ int BIO_socket(int domain, int socktype, int TransportHandler, int options);
  int BIO_bind(int sock, const BIO_ADDR *addr, int options);
  int BIO_connect(int sock, const BIO_ADDR *addr, int options);
  int BIO_listen(int sock, const BIO_ADDR *addr, int options);
@@ -39,7 +39,7 @@
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
-<p>BIO_socket() creates a socket in the domain <b>domain</b>, of type <b>socktype</b> and <b>Protocol</b>. Socket <b>options</b> are currently unused, but is present for future use.</p>
+<p>BIO_socket() creates a socket in the domain <b>domain</b>, of type <b>socktype</b> and <b>TransportHandler</b>. Socket <b>options</b> are currently unused, but is present for future use.</p>
 
 <p>BIO_bind() binds the source address and service to a socket and may be useful before calling BIO_connect(). The options may include <b>BIO_SOCK_REUSADDR</b>, which is described in <a href="#FLAGS">&quot;FLAGS&quot;</a> below.</p>
 

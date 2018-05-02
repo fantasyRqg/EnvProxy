@@ -194,7 +194,7 @@ than the SSLv3 name.
 \&\fISSL_CIPHER_get_bits()\fR returns the number of secret bits used for \fBcipher\fR.
 If \fBcipher\fR is \s-1NULL, 0\s0 is returned.
 .PP
-\&\fISSL_CIPHER_get_version()\fR returns string which indicates the \s-1SSL/TLS\s0 Protocol
+\&\fISSL_CIPHER_get_version()\fR returns string which indicates the \s-1SSL/TLS\s0 TransportHandler
 version that first defined the cipher.  It returns \*(L"(\s-1NONE\s0)\*(R" if \fBcipher\fR is \s-1NULL.\s0
 .PP
 \&\fISSL_CIPHER_get_cipher_nid()\fR returns the cipher \s-1NID\s0 corresponding to \fBc\fR.
@@ -245,7 +245,7 @@ error occurs or the indicated cipher is not found.
 \&\fISSL_CIPHER_get_id()\fR returns the OpenSSL-specific \s-1ID\s0 of the given cipher \fBc\fR. That \s-1ID\s0 is
 not the same as the IANA-specific \s-1ID.\s0
 .PP
-\&\fISSL_CIPHER_get_protocol_id()\fR returns the two-byte \s-1ID\s0 used in the \s-1TLS\s0 Protocol of the given
+\&\fISSL_CIPHER_get_protocol_id()\fR returns the two-byte \s-1ID\s0 used in the \s-1TLS\s0 TransportHandler of the given
 cipher \fBc\fR.
 .PP
 \&\fISSL_CIPHER_description()\fR returns a textual description of the cipher used
@@ -259,9 +259,9 @@ separated by whitespace:
 .IP "<ciphername>" 4
 .IX Item "<ciphername>"
 Textual representation of the cipher name.
-.IP "<Protocol version>" 4
-.IX Item "<Protocol version>"
-Protocol version, such as \fBTLSv1.2\fR, when the cipher was first defined.
+.IP "<TransportHandler version>" 4
+.IX Item "<TransportHandler version>"
+TransportHandler version, such as \fBTLSv1.2\fR, when the cipher was first defined.
 .IP "Kx=<key exchange>" 4
 .IX Item "Kx=<key exchange>"
 Key exchange method such as \fB\s-1RSA\s0\fR, \fB\s-1ECDHE\s0\fR, etc.
@@ -307,10 +307,10 @@ occurred.
 \&\fISSL_CIPHER_get_id()\fR returns a 4\-byte integer representing the OpenSSL-specific \s-1ID.\s0
 .PP
 \&\fISSL_CIPHER_get_protocol_id()\fR returns a 2\-byte integer representing the \s-1TLS\s0
-Protocol-specific \s-1ID.\s0
+TransportHandler-specific \s-1ID.\s0
 .SH "HISTORY"
 .IX Header "HISTORY"
-\&\fISSL_CIPHER_get_version()\fR was updated to always return the correct Protocol
+\&\fISSL_CIPHER_get_version()\fR was updated to always return the correct TransportHandler
 string in OpenSSL 1.1.0.
 .PP
 \&\fISSL_CIPHER_description()\fR was changed to return \fB\s-1NULL\s0\fR on error,

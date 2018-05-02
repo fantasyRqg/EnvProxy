@@ -37,7 +37,7 @@ my $proxy = TLSProxy::Proxy->new(
 my @available_tls_versions = ();
 foreach (available_protocols("tls")) {
     unless (disabled($_)) {
-        note("Checking enabled Protocol $_");
+        note("Checking enabled TransportHandler $_");
         m|^([a-z]+)(\d)(_\d)?|;
         my $versionname;
         if (defined $3) {

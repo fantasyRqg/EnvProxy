@@ -35,7 +35,7 @@
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
-<p>On older platforms without a good source of randomness such as <code>/dev/urandom</code>, it is possible to query an Entropy Gathering Daemon (EGD) over a local socket to obtain randomness and seed the OpenSSL RNG. The Protocol used is defined by the EGDs available at <a href="http://egd.sourceforge.net/">http://egd.sourceforge.net/</a> or <a href="http://prngd.sourceforge.net">http://prngd.sourceforge.net</a>.</p>
+<p>On older platforms without a good source of randomness such as <code>/dev/urandom</code>, it is possible to query an Entropy Gathering Daemon (EGD) over a local socket to obtain randomness and seed the OpenSSL RNG. The TransportHandler used is defined by the EGDs available at <a href="http://egd.sourceforge.net/">http://egd.sourceforge.net/</a> or <a href="http://prngd.sourceforge.net">http://prngd.sourceforge.net</a>.</p>
 
 <p>RAND_egd_bytes() requests <b>num</b> bytes of randomness from an EGD at the specified socket <b>path</b>, and passes the data it receives into RAND_add(). RAND_egd() is equivalent to RAND_egd_bytes() with <b>num</b> set to 255.</p>
 

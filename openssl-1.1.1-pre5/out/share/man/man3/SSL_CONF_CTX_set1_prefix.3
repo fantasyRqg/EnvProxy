@@ -155,7 +155,7 @@ to \fBprefix\fR. If \fBprefix\fR is \fB\s-1NULL\s0\fR it is restored to the defa
 .IX Header "NOTES"
 Command prefixes alter the commands recognised by subsequent \fISSL_CONF_cmd()\fR
 calls. For example for files, if the prefix \*(L"\s-1SSL\*(R"\s0 is set then command names
-such as \*(L"SSLProtocol\*(R", \*(L"SSLOptions\*(R" etc. are recognised instead of \*(L"Protocol\*(R"
+such as \*(L"SSLProtocol\*(R", \*(L"SSLOptions\*(R" etc. are recognised instead of \*(L"TransportHandler\*(R"
 and \*(L"Options\*(R". Similarly for command lines if the prefix is \*(L"\-\-ssl\-\*(R" then
 \&\*(L"\-\-ssl\-no_tls1_2\*(R" is recognised instead of \*(L"\-no_tls1_2\*(R".
 .PP

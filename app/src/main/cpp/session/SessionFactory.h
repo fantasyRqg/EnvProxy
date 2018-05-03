@@ -6,7 +6,7 @@
 #define ENVPROXY_TASKFACTORY_H
 
 
-class TaskFactory {
+class SessionFactory {
 
 };
 

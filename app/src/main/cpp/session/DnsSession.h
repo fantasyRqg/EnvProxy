@@ -6,7 +6,7 @@
 #define ENVPROXY_TASKDNS_H
 
 
-class TaskDNS {
+class DnsSession {
 
 };
 

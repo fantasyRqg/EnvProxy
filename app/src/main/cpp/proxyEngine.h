@@ -17,7 +17,6 @@ class IpPackageFactory;
 
 struct IpPackage;
 
-
 class proxyEngine {
 public:
     proxyEngine(size_t mtu);

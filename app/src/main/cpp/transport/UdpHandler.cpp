@@ -3,9 +3,13 @@
 //
 
 #include <netinet/udp.h>
+#include <linux/in.h>
+#include <endian.h>
 
 #include "UdpHandler.h"
 #include "../ip/IpHandler.h"
+#include "../proxyTypes.h"
+
 
 UdpHandler::UdpHandler() {}
 

@@ -14,18 +14,19 @@ struct IpPackage;
 
 class proxyEngine;
 
+struct ProxyContext;
+
 class IpPackageFactory {
 public:
 
-    IpPackageFactory(proxyEngine *proxyEngine);
+    IpPackageFactory(ProxyContext *proxyContext);
 
     IpPackage *createIpPackage(uint8_t *pkt, size_t pktSize);
 
     virtual ~IpPackageFactory();
 
 private:
-    proxyEngine *mProxyEngine;
-
+    ProxyContext *mProxyContext;
     IpHandler *mIp4Handler;
     IpHandler *mIp6Handler;
 

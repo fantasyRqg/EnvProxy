@@ -5,8 +5,9 @@
 #ifndef ENVPROXY_TASKICMP_H
 #define ENVPROXY_TASKICMP_H
 
+#include "Session.h"
 
-class TaskICMP {
+class IcmpSession : Session {
 
 };
 

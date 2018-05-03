@@ -2,11 +2,13 @@
 // Created by Rqg on 24/04/2018.
 //
 
+#include <linux/in.h>
 #include "TransportFactory.h"
 #include "TcpHandler.h"
 #include "UdpHandler.h"
 #include "IcmpHandler.h"
 #include "../ip/IpHandler.h"
+#include "../proxyTypes.h"
 
 TransportFactory::TransportFactory() {
     mHandlerMap.insert(std::pair<int, TransportHandler *>(IPPROTO_ICMP, new IcmpHandler()));

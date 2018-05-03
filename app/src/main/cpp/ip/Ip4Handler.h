@@ -11,7 +11,8 @@
 class Ip4Handler : public IpHandler {
 public:
 
-    Ip4Handler(proxyEngine *proxyEngine);
+
+    Ip4Handler(ProxyContext *proxyContext);
 
     virtual ~Ip4Handler();
 

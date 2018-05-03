@@ -7,7 +7,6 @@
 #include <errno.h>
 #include <cstring>
 #include <sys/resource.h>
-#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <poll.h>
 #include <unistd.h>
@@ -26,8 +25,11 @@
 #include "ip/IpPackageFactory.h"
 #include "ip/IpHandler.h"
 #include "transport/TransportFactory.h"
+#include "proxyTypes.h"
 
 #define LOG_TAG "proxyEngine"
+
+typedef struct ProxyContext proxyContext;
 
 proxyEngine::proxyEngine(size_t mtu) {
     mMTU = mtu;
@@ -64,8 +66,13 @@ void proxyEngine::handleEvents() {
         return;
     }
 
+    proxyContext context = {
+            mTunFd,
+            epoll_fd
+    };
+
     //ip package factory
-    IpPackageFactory ipPackageFactory(this);
+    IpPackageFactory ipPackageFactory(&context);
     TransportFactory transportFactory;
 
     //monitor tun event

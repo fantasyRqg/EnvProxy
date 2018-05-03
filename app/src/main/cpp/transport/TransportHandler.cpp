@@ -5,7 +5,8 @@
 #include <stdlib.h>
 
 #include "TransportHandler.h"
-#include "../ip/IpHandler.h"
+#include "../proxyTypes.h"
+
 
 TransportHandler::TransportHandler() {
 

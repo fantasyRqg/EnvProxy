@@ -3,15 +3,16 @@
 //
 
 #include <malloc.h>
-#include "../proxyEngine.h"
 #include "IpHandler.h"
+#include "../proxyTypes.h"
 
-IpHandler::IpHandler(proxyEngine *proxyEngine) {
-    mProxyEngine = proxyEngine;
+
+IpHandler::IpHandler(ProxyContext *proxyContext) {
+    mProxyContext = proxyContext;
 }
 
-proxyEngine *IpHandler::getProxyEngine() const {
-    return mProxyEngine;
+ProxyContext *IpHandler::getProxyEngine() const {
+    return mProxyContext;
 }
 
 IpHandler::~IpHandler() {

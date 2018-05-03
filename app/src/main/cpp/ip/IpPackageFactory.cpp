@@ -10,12 +10,12 @@
 
 #include "Ip4Handler.h"
 #include "Ip6Handler.h"
+#include "../proxyTypes.h"
 
-
-IpPackageFactory::IpPackageFactory(proxyEngine *proxyEngine)
-        : mProxyEngine(proxyEngine),
-          mIp4Handler(new Ip4Handler(proxyEngine)),
-          mIp6Handler(new Ip6Handler(proxyEngine)) {
+IpPackageFactory::IpPackageFactory(ProxyContext *proxyContext)
+        : mProxyContext(proxyContext),
+          mIp4Handler(new Ip4Handler(proxyContext)),
+          mIp6Handler(new Ip6Handler(proxyContext)) {
 }
 
 IpPackageFactory::~IpPackageFactory() {

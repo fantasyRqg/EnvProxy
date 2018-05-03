@@ -11,7 +11,8 @@
 
 class Ip6Handler : public IpHandler {
 public:
-    Ip6Handler(proxyEngine *proxyEngine);
+
+    Ip6Handler(ProxyContext *proxyContext);
 
     virtual ~Ip6Handler();
 

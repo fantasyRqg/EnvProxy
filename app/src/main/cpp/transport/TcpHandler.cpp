@@ -3,9 +3,13 @@
 //
 
 #include <netinet/tcp.h>
+#include <linux/in.h>
+#include <endian.h>
 
 #include "TcpHandler.h"
 #include "../ip/IpHandler.h"
+#include "../proxyTypes.h"
+
 
 TcpHandler::TcpHandler() {}
 

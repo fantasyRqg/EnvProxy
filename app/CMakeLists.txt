@@ -29,14 +29,14 @@ add_library(libProxy
             src/main/cpp/transport/UdpHandler.cpp
             src/main/cpp/transport/TransportHandler.cpp
             src/main/cpp/transport/TransportFactory.cpp
-            src/main/cpp/task/Task.cpp
-            src/main/cpp/task/TaskDNS.cpp
-            src/main/cpp/task/TaskHttp.cpp
-            src/main/cpp/task/TaskHttps.cpp
-            src/main/cpp/task/TaskICMP.cpp
-            src/main/cpp/task/TaskTCP.cpp
-            src/main/cpp/task/TaskUDP.cpp
-            src/main/cpp/task/TaskFactory.cpp
+            src/main/cpp/session/Session.cpp
+            src/main/cpp/session/DnsSession.cpp
+            src/main/cpp/session/HttpSession.cpp
+            src/main/cpp/session/HttpsSession.cpp
+            src/main/cpp/session/IcmpSession.cpp
+            src/main/cpp/session/TcpSession.cpp
+            src/main/cpp/session/UdpSession.cpp
+            src/main/cpp/session/SessionFactory.cpp
             )
 
 # add to target_include_directories

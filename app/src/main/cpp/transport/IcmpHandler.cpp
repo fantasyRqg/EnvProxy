@@ -7,6 +7,8 @@
 
 #include "IcmpHandler.h"
 #include "../ip/IpHandler.h"
+#include "../proxyTypes.h"
+
 
 IcmpHandler::IcmpHandler() {}
 

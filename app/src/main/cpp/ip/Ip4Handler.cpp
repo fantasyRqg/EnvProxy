@@ -7,11 +7,12 @@
 #include <netdb.h>
 
 #include "Ip4Handler.h"
+#include "../proxyTypes.h"
 
 
 #define LOG_TAG "IPV4"
 
-Ip4Handler::Ip4Handler(proxyEngine *proxyEngine) : IpHandler(proxyEngine) {}
+Ip4Handler::Ip4Handler(ProxyContext *proxyContext) : IpHandler(proxyContext) {}
 
 IpPackage *Ip4Handler::handlePackage(uint8_t *pkt, size_t pktSize) {
     struct iphdr *ip4hdr = (struct iphdr *) pkt;

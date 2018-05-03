@@ -6,7 +6,7 @@
 #define ENVPROXY_TASKHTTP_H
 
 
-class TaskHttp {
+class HttpSession {
 
 };
 

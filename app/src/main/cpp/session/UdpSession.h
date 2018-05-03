@@ -6,7 +6,7 @@
 #define ENVPROXY_TASKUDP_H
 
 
-class TaskUDP {
+class UdpSession {
 
 };
 

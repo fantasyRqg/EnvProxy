@@ -7,11 +7,12 @@
 #include <netinet/ip.h>
 
 #include "Ip6Handler.h"
+#include "../proxyTypes.h"
 
 
 #define LOG_TAG "IPV6"
 
-Ip6Handler::Ip6Handler(proxyEngine *proxyEngine) : IpHandler(proxyEngine) {}
+Ip6Handler::Ip6Handler(ProxyContext *proxyContext) : IpHandler(proxyContext) {}
 
 /**
  *  not implement

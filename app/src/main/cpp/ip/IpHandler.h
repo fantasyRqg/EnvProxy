@@ -6,12 +6,6 @@
 #define ENVPROXY_IPPACKAGE_H
 
 
-#include <stdint.h>
-#include <linux/in6.h>
-#include <netinet/ip.h>
-#include <netinet/ip6.h>
-
-
 #define IP_HANDLE_SUCCESS 0
 #define IP_HANDLE_VERSION_NOT_MATCH 1
 #define IP_HANDLE_HDR_LEN_INVALID 2
@@ -22,33 +16,17 @@
 
 class proxyEngine;
 
-union IpAddr {
-    in6_addr ip6;
-    int32_t ip4;
-};
+struct IpPackage;
 
-class IpHandler;
-
-struct IpPackage {
-    uint8_t *pkt;
-    size_t pktSize;
-    IpAddr srcAddr;
-    IpAddr dstAddr;
-    uint8_t protocol;
-    uint8_t *payload;
-    size_t payloadSize;
-    IpHandler *handler;
-    int versoin;
-};
-
+struct ProxyContext;
 
 class IpHandler {
 public:
-    IpHandler(proxyEngine *proxyEngine);
+    IpHandler(ProxyContext *proxyContext);
 
     virtual ~IpHandler();
 
-    proxyEngine *getProxyEngine() const;
+    ProxyContext *getProxyEngine() const;
 
     virtual IpPackage *handlePackage(uint8_t *pkt, size_t pktSize) = 0;
 
@@ -57,7 +35,7 @@ public:
     void freeIpPkt(IpPackage *pkt);
 
 protected:
-    proxyEngine *mProxyEngine;
+    ProxyContext *mProxyContext;
 };
 
 #endif //ENVPROXY_IPPACKAGE_H

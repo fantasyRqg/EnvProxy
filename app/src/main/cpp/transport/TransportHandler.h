@@ -11,16 +11,7 @@ class IpHandler;
 
 struct IpPackage;
 
-class TransportHandler;
-
-struct TransportPkt {
-    IpPackage *ipPackage;
-    uint8_t *payload;
-    size_t payloadSize;
-    uint16_t sPort;
-    uint16_t dPort;
-    TransportHandler *handler;
-};
+struct TransportPkt;
 
 class TransportHandler {
 

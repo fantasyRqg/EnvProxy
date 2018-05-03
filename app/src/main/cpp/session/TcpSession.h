@@ -6,7 +6,7 @@
 #define ENVPROXY_TASKTCP_H
 
 
-class TaskTCP {
+class TcpSession {
 
 };
 

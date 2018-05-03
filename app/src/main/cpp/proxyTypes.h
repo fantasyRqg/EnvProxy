@@ -11,14 +11,18 @@
 #include <ctime>
 #include <malloc.h>
 
+
 union IpAddr {
     in6_addr ip6;
     int32_t ip4;
 };
 
+class BufferPool;
+
 struct ProxyContext {
     int tunFd;
     int epollFd;
+    BufferPool *bufferPool;
 };
 
 class IpHandler;
@@ -36,12 +40,7 @@ public:
     int versoin;
 
 public:
-    virtual ~IpPackage() {
-        if (pkt != nullptr) {
-            free(pkt);
-            pkt = nullptr;
-        }
-    }
+    ~IpPackage();
 };
 
 
@@ -57,12 +56,7 @@ public:
     TransportHandler *handler;
 
 public:
-    virtual ~TransportPkt() {
-        if (ipPackage != nullptr) {
-            delete ipPackage;
-            ipPackage = nullptr;
-        }
-    }
+    ~TransportPkt();
 };
 
 

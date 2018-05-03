@@ -22,7 +22,6 @@ public:
 
     virtual TransportPkt *handleIpPkt(IpPackage *pkt) = 0;
 
-    void freePkt(TransportPkt *pkt);
 };
 
 

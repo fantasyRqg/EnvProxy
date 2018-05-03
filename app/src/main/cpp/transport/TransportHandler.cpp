@@ -15,7 +15,3 @@ TransportHandler::TransportHandler() {
 TransportHandler::~TransportHandler() {
 
 }
-
-void TransportHandler::freePkt(TransportPkt *pkt) {
-
-}

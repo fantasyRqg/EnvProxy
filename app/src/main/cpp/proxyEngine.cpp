@@ -27,6 +27,7 @@
 #include "transport/TransportFactory.h"
 #include "proxyTypes.h"
 #include "session/SessionFactory.h"
+#include "BufferPool.h"
 
 #define LOG_TAG "proxyEngine"
 
@@ -67,9 +68,13 @@ void proxyEngine::handleEvents() {
         return;
     }
 
+
+    BufferPool bufferPool(8, static_cast<size_t>(mMTU * 1.5));
+
     proxyContext context = {
             mTunFd,
-            epoll_fd
+            epoll_fd,
+            &bufferPool
     };
     //ip package factory
     IpPackageFactory ipPackageFactory(&context);
@@ -96,13 +101,14 @@ void proxyEngine::handleEvents() {
         for (int i = 0; i < ready; ++i) {
             if (ev[i].data.ptr == &ev_tun) {
                 //tun event
-                auto ipPkt = checkTun(&ev[i], &ipPackageFactory);
+                auto ipPkt = checkTun(&context, &ev[i], &ipPackageFactory);
                 if (ipPkt == nullptr) continue;
 
 
                 auto tPkt = transportFactory.handleIpPkt(ipPkt);
                 if (tPkt == nullptr) {
                     ALOGW("create transport pkt error, protocol = %d ", ipPkt->protocol);
+                    delete (ipPkt);
                     continue;
                 }
 
@@ -125,8 +131,7 @@ void proxyEngine::handleEvents() {
                       ipPkt->payloadSize
                 );
 
-                tPkt->handler->freePkt(tPkt);
-
+                delete tPkt;
             } else if (ev[i].data.ptr != nullptr) {
                 //task event
 
@@ -137,14 +142,21 @@ void proxyEngine::handleEvents() {
 }
 
 
-IpPackage *proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackageFactory) {
+IpPackage *proxyEngine::checkTun(ProxyContext *context, epoll_event *pEvent,
+                                 IpPackageFactory *ipPackageFactory) {
     if (pEvent->events & EPOLLERR) {
         ALOGE("tun error %d: %s", errno, strerror(errno));
         return nullptr;
     }
 
     if (pEvent->events & EPOLLIN) {
-        uint8_t *buffer = static_cast<uint8_t *>(malloc(mMTU));
+        uint8_t *buffer = static_cast<uint8_t *>(context->bufferPool->allocBuffer());
+
+        if (buffer == nullptr) {
+            ALOGW("buffer allocate failure, remain buffer %lu",
+                  context->bufferPool->getRemainBufCount());
+            return nullptr;
+        }
 
         auto length = read(mTunFd, buffer, mMTU);
         if (length < 0) {

@@ -91,8 +91,13 @@ void proxyEngine::handleEvents() {
                 auto ipPkt = checkTun(&ev[i], &ipPackageFactory);
                 if (ipPkt == nullptr) continue;
 
-                auto tPkt = transportFactory.handleIpPkt(ipPkt);
 
+                auto tPkt = transportFactory.handleIpPkt(ipPkt);
+                if (tPkt == nullptr) {
+                    ALOGW("create transport pkt error, protocol = %d ", ipPkt->protocol);
+                    ipPkt->handler->freeIpPkt(ipPkt);
+                    continue;
+                }
 
                 char source[INET6_ADDRSTRLEN + 1];
                 char dest[INET6_ADDRSTRLEN + 1];
@@ -105,7 +110,6 @@ void proxyEngine::handleEvents() {
                     inet_ntop(AF_INET6, &ipPkt->dstAddr.ip6, dest, sizeof(dest));
                 }
 
-
                 ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6lu, dPort = %6lu, pkt_size = %6lu ,payload_size = %6lu",
                       source, dest,
                       ipPkt->protocol,
@@ -114,7 +118,7 @@ void proxyEngine::handleEvents() {
                       ipPkt->payloadSize
                 );
 
-                delete ipPkt;
+                tPkt->handler->freePkt(tPkt);
 
             } else if (ev[i].data.ptr != nullptr) {
                 //task event
@@ -142,10 +146,9 @@ IpPackage *proxyEngine::checkTun(epoll_event *pEvent, IpPackageFactory *ipPackag
                 // Retry later
                 return nullptr;
         } else if (length > 0) {
-
-            auto ipPkt = ipPackageFactory->createIpPackage(buffer, (size_t) length);
+            auto ipPkt = ipPackageFactory->createIpPackage(buffer, static_cast<size_t>(length));
             if (ipPkt == NULL) {
-                ALOGW("unhandled package IpHandler version %d", *buffer >> 4);
+                ALOGW("unhandled package ip_version %d", *buffer >> 4);
             }
             return ipPkt;
         } else {

@@ -22,8 +22,8 @@ TransportPkt *TcpHandler::handleIpPkt(IpPackage *pkt) {
     struct TransportPkt *tPkt = new TransportPkt();
     tPkt->ipPackage = pkt;
     tPkt->handler = this;
-    tPkt->sPort = tcphdr->source;
-    tPkt->dPort = tcphdr->dest;
+    tPkt->sPort = ntohs(tcphdr->source);
+    tPkt->dPort = ntohs(tcphdr->dest);
     size_t tcpHdrSize = sizeof(struct tcphdr);
     tPkt->payloadSize = pkt->payloadSize - tcpHdrSize;
     tPkt->payload = pkt->payload + tcpHdrSize;

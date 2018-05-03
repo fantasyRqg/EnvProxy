@@ -54,6 +54,7 @@ public:
 
     virtual int canHandlePackage(uint8_t *pkt, size_t pktSize) = 0;
 
+    void freeIpPkt(IpPackage *pkt);
 
 protected:
     proxyEngine *mProxyEngine;

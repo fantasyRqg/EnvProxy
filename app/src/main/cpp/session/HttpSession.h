@@ -6,7 +6,13 @@
 #define ENVPROXY_TASKHTTP_H
 
 
-class HttpSession {
+#include "Session.h"
+
+class HttpSession: Session {
+public:
+    HttpSession();
+
+    virtual ~HttpSession();
 
 };
 

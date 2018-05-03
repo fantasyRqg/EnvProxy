@@ -6,8 +6,25 @@
 #define ENVPROXY_TASKFACTORY_H
 
 
-class SessionFactory {
+struct SessionInfo;
 
+class TransportPkt;
+
+class SessionFactory {
+public:
+
+    SessionFactory(int maxSessionSize);
+
+    struct SessionInfo *findOrCreateSession(TransportPkt *pkt);
+
+    virtual ~SessionFactory();
+
+private:
+    struct SessionInfo *createSession(TransportPkt *pkt);
+
+private:
+    int mMaxSessionSize;
+    SessionInfo *mSessions;
 };
 
 

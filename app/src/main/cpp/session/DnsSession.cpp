@@ -3,3 +3,9 @@
 //
 
 #include "DnsSession.h"
+
+DnsSession::DnsSession() {}
+
+DnsSession::~DnsSession() {
+
+}

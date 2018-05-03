@@ -10,18 +10,22 @@
 
 
 struct SessionInfo;
-struct TransportPkt;
+
+class TransportPkt;
 
 
 class Session {
 public:
     Session();
 
-    virtual int onReceive(uint8_t *data) = 0;
+    virtual ~Session();
+
+//    virtual int onTunDown(uint8_t *data);
 
 
 public:
     Session *next;
+    Session *prev;
 };
 
 

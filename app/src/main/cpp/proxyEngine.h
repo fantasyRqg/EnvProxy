@@ -15,7 +15,7 @@
 
 class IpPackageFactory;
 
-struct IpPackage;
+class IpPackage;
 
 class proxyEngine {
 public:

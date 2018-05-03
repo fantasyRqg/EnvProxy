@@ -8,6 +8,10 @@
 #include "Session.h"
 
 class IcmpSession : Session {
+public:
+    IcmpSession();
+
+    virtual ~IcmpSession();
 
 };
 

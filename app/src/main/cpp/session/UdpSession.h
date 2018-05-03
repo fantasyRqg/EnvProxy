@@ -6,8 +6,13 @@
 #define ENVPROXY_TASKUDP_H
 
 
-class UdpSession {
+#include "Session.h"
 
+class UdpSession: Session {
+public:
+    UdpSession();
+
+    virtual ~UdpSession();
 };
 
 

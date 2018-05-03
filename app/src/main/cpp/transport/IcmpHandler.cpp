@@ -21,7 +21,7 @@ TransportPkt *IcmpHandler::handleIpPkt(IpPackage *pkt) {
         return nullptr;
 
     struct icmp *icmp = reinterpret_cast<struct icmp *>(pkt->payload);
-    struct TransportPkt *tPkt = new TransportPkt();
+    TransportPkt *tPkt = new TransportPkt();
     tPkt->handler = this;
     tPkt->ipPackage = pkt;
     tPkt->sPort = ntohs(icmp->icmp_id);

@@ -24,7 +24,7 @@ IpPackageFactory::~IpPackageFactory() {
 }
 
 IpPackage *IpPackageFactory::createIpPackage(uint8_t *pkt, size_t pktSize) {
-    struct IpPackage *p = nullptr;
+    IpPackage *p = nullptr;
 
     if (mIp4Handler->canHandlePackage(pkt, pktSize) == IP_HANDLE_SUCCESS) {
         p = mIp4Handler->handlePackage(pkt, pktSize);

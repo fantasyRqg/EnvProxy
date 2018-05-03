@@ -3,3 +3,9 @@
 //
 
 #include "HttpSession.h"
+
+HttpSession::HttpSession() {}
+
+HttpSession::~HttpSession() {
+
+}

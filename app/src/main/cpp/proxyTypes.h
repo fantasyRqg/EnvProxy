@@ -9,6 +9,7 @@
 #include <linux/in6.h>
 #include <cstdint>
 #include <ctime>
+#include <malloc.h>
 
 union IpAddr {
     in6_addr ip6;
@@ -22,7 +23,8 @@ struct ProxyContext {
 
 class IpHandler;
 
-struct IpPackage {
+class IpPackage {
+public:
     uint8_t *pkt;
     size_t pktSize;
     IpAddr srcAddr;
@@ -32,18 +34,35 @@ struct IpPackage {
     size_t payloadSize;
     IpHandler *handler;
     int versoin;
+
+public:
+    virtual ~IpPackage() {
+        if (pkt != nullptr) {
+            free(pkt);
+            pkt = nullptr;
+        }
+    }
 };
 
 
 class TransportHandler;
 
-struct TransportPkt {
+class TransportPkt {
+public:
     IpPackage *ipPackage;
     uint8_t *payload;
     size_t payloadSize;
     uint16_t sPort;
     uint16_t dPort;
     TransportHandler *handler;
+
+public:
+    virtual ~TransportPkt() {
+        if (ipPackage != nullptr) {
+            delete ipPackage;
+            ipPackage = nullptr;
+        }
+    }
 };
 
 
@@ -60,6 +79,8 @@ struct SessionInfo {
     int ipVersoin;
     Session *session;
     time_t lastActive;
+    ProxyContext *context;
+    SessionInfo *next;
 };
 
 #endif //ENVPROXY_PROXYTYPES_H

@@ -23,7 +23,7 @@ TransportPkt *TcpHandler::handleIpPkt(IpPackage *pkt) {
 
     struct tcphdr *tcphdr = reinterpret_cast<struct tcphdr *>(pkt->payload);
 
-    struct TransportPkt *tPkt = new TransportPkt();
+    TransportPkt *tPkt = new TransportPkt();
     tPkt->ipPackage = pkt;
     tPkt->handler = this;
     tPkt->sPort = ntohs(tcphdr->source);

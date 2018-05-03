@@ -9,9 +9,9 @@
 
 class IpHandler;
 
-struct IpPackage;
+class IpPackage;
 
-struct TransportPkt;
+class TransportPkt;
 
 class TransportHandler {
 

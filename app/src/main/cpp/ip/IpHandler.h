@@ -16,7 +16,7 @@
 
 class proxyEngine;
 
-struct IpPackage;
+class IpPackage;
 
 struct ProxyContext;
 
@@ -26,13 +26,11 @@ public:
 
     virtual ~IpHandler();
 
-    ProxyContext *getProxyEngine() const;
-
     virtual IpPackage *handlePackage(uint8_t *pkt, size_t pktSize) = 0;
 
     virtual int canHandlePackage(uint8_t *pkt, size_t pktSize) = 0;
 
-    void freeIpPkt(IpPackage *pkt);
+    ProxyContext *getProxyContext() const;
 
 protected:
     ProxyContext *mProxyContext;

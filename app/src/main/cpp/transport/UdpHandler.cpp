@@ -22,7 +22,7 @@ TransportPkt *UdpHandler::handleIpPkt(IpPackage *pkt) {
         return nullptr;
 
     struct udphdr *udphdr = reinterpret_cast<struct udphdr *>(pkt->payload);
-    struct TransportPkt *tPkt = new TransportPkt();
+    TransportPkt *tPkt = new TransportPkt();
     tPkt->handler = this;
     tPkt->ipPackage = pkt;
     tPkt->sPort = ntohs(udphdr->source);

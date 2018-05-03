@@ -10,7 +10,7 @@
 
 class IpHandler;
 
-struct IpPackage;
+class IpPackage;
 
 class proxyEngine;
 

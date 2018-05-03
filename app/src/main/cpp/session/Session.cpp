@@ -4,6 +4,10 @@
 
 #include "Session.h"
 
-Session::Session() : next(nullptr) {
+Session::Session() : next(nullptr), prev(nullptr) {
+
+}
+
+Session::~Session() {
 
 }

@@ -6,7 +6,13 @@
 #define ENVPROXY_TASKDNS_H
 
 
-class DnsSession {
+#include "Session.h"
+
+class DnsSession : Session {
+public:
+    DnsSession();
+
+    virtual ~DnsSession();
 
 };
 

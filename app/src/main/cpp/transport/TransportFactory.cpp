@@ -7,7 +7,6 @@
 #include "TcpHandler.h"
 #include "UdpHandler.h"
 #include "IcmpHandler.h"
-#include "../ip/IpHandler.h"
 #include "../proxyTypes.h"
 
 TransportFactory::TransportFactory() {
@@ -26,12 +25,14 @@ TransportPkt *TransportFactory::handleIpPkt(IpPackage *pkt) {
     if (pkt == nullptr)
         return nullptr;
 
+
+    TransportPkt *p = nullptr;
     auto handler = mHandlerMap[pkt->protocol];
     if (handler != nullptr) {
-        return handler->handleIpPkt(pkt);
+        p = handler->handleIpPkt(pkt);
     }
 
-    return nullptr;
+    return p;
 }
 
 

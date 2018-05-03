@@ -17,7 +17,7 @@ Ip4Handler::Ip4Handler(ProxyContext *proxyContext) : IpHandler(proxyContext) {}
 IpPackage *Ip4Handler::handlePackage(uint8_t *pkt, size_t pktSize) {
     struct iphdr *ip4hdr = (struct iphdr *) pkt;
 
-    struct IpPackage *p = new IpPackage();
+    IpPackage *p = new IpPackage();
 
     p->handler = this;
     p->versoin = IPVERSION;

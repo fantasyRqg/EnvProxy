@@ -3,3 +3,9 @@
 //
 
 #include "IcmpSession.h"
+
+IcmpSession::IcmpSession() {}
+
+IcmpSession::~IcmpSession() {
+
+}

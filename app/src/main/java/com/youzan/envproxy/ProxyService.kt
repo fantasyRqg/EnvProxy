@@ -56,7 +56,6 @@ class ProxyService : VpnService() {
 
     private fun stopProxy() {
         proxyNative.stopProxy()
-        proxyNative.vpnFileDescriptor?.close()
     }
 
     override fun onRevoke() {
@@ -70,6 +69,8 @@ class ProxyService : VpnService() {
         proxyNative.vpnFileDescriptor = fileDp
         Thread {
             proxyNative.startProxy()
+
+            proxyNative.vpnFileDescriptor?.close()
         }.start()
     }
 

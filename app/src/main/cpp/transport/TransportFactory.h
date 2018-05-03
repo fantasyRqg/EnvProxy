@@ -5,13 +5,13 @@
 #ifndef ENVPROXY_PROTOCOLFACTORY_H
 #define ENVPROXY_PROTOCOLFACTORY_H
 
-#include "TransportHandler.h"
-
 #include <map>
+
+#include "TransportHandler.h"
 
 class TransportHandler;
 
-struct TransportPkt;
+class TransportPkt;
 
 class IpPackage;
 

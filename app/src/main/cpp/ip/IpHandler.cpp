@@ -11,20 +11,11 @@ IpHandler::IpHandler(ProxyContext *proxyContext) {
     mProxyContext = proxyContext;
 }
 
-ProxyContext *IpHandler::getProxyEngine() const {
-    return mProxyContext;
-}
-
 IpHandler::~IpHandler() {
 
 }
 
-void IpHandler::freeIpPkt(IpPackage *pkt) {
-    if (pkt != nullptr) {
-        if (pkt->pkt != nullptr) {
-            free(pkt->pkt);
-        }
 
-        delete pkt;
-    }
+ProxyContext *IpHandler::getProxyContext() const {
+    return mProxyContext;
 }

@@ -6,7 +6,13 @@
 #define ENVPROXY_TASKTCP_H
 
 
-class TcpSession {
+#include "Session.h"
+
+class TcpSession : Session {
+public:
+    TcpSession();
+
+    virtual ~TcpSession();
 
 };
 

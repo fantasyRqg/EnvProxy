@@ -26,6 +26,7 @@
 #include "ip/IpHandler.h"
 #include "transport/TransportFactory.h"
 #include "proxyTypes.h"
+#include "session/SessionFactory.h"
 
 #define LOG_TAG "proxyEngine"
 
@@ -70,10 +71,10 @@ void proxyEngine::handleEvents() {
             mTunFd,
             epoll_fd
     };
-
     //ip package factory
     IpPackageFactory ipPackageFactory(&context);
     TransportFactory transportFactory;
+    SessionFactory sessionFactory(maxsessions);
 
     //monitor tun event
     struct epoll_event ev_tun;
@@ -102,7 +103,6 @@ void proxyEngine::handleEvents() {
                 auto tPkt = transportFactory.handleIpPkt(ipPkt);
                 if (tPkt == nullptr) {
                     ALOGW("create transport pkt error, protocol = %d ", ipPkt->protocol);
-                    ipPkt->handler->freeIpPkt(ipPkt);
                     continue;
                 }
 
@@ -117,7 +117,7 @@ void proxyEngine::handleEvents() {
                     inet_ntop(AF_INET6, &ipPkt->dstAddr.ip6, dest, sizeof(dest));
                 }
 
-                ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6lu, dPort = %6lu, pkt_size = %6lu ,payload_size = %6lu",
+                ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6d, dPort = %6d, pkt_size = %6u ,payload_size = %6u",
                       source, dest,
                       ipPkt->protocol,
                       tPkt->sPort, tPkt->dPort,

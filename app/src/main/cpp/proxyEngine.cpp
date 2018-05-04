@@ -69,7 +69,7 @@ void proxyEngine::handleEvents() {
     }
 
 
-    BufferPool bufferPool(8, static_cast<size_t>(mMTU * 1.5));
+    BufferPool bufferPool(8, mMTU);
 
     proxyContext context = {
             mTunFd,
@@ -108,7 +108,7 @@ void proxyEngine::handleEvents() {
                 auto tPkt = transportFactory.handleIpPkt(ipPkt);
                 if (tPkt == nullptr) {
                     ALOGW("create transport pkt error, protocol = %d ", ipPkt->protocol);
-                    delete (ipPkt);
+                    delete ipPkt;
                     continue;
                 }
 
@@ -158,8 +158,9 @@ IpPackage *proxyEngine::checkTun(ProxyContext *context, epoll_event *pEvent,
             return nullptr;
         }
 
-        auto length = read(mTunFd, buffer, mMTU);
+        auto length = read(mTunFd, buffer, context->bufferPool->getMaxBufSize());
         if (length < 0) {
+            context->bufferPool->freeBuffer(buffer);
             ALOGE("tun %d read error %d: %s", mTunFd, errno, strerror(errno));
             if (errno == EINTR || errno == EAGAIN)
                 // Retry later
@@ -171,7 +172,7 @@ IpPackage *proxyEngine::checkTun(ProxyContext *context, epoll_event *pEvent,
             }
             return ipPkt;
         } else {
-            free(buffer);
+            context->bufferPool->freeBuffer(buffer);
             ALOGE("tun %d empty read", mTunFd);
             return nullptr;
         }

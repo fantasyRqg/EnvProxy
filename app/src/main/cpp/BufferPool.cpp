@@ -7,27 +7,36 @@
 #include <stdlib.h>
 
 #include "BufferPool.h"
+#include "log.h"
 
+#define LOG_TAG "BufferPool"
 
 #define BUFFER_POOL_IDLE 1
 #define BUFFER_POOL_IN_USE 2
 
 
 BufferPool::BufferPool(size_t bufCount, size_t maxBufBytesSize) : mBufCount(bufCount),
-                                                                  mMaxBufSize(maxBufBytesSize) {
-    mBufArray = static_cast<void **>(malloc(sizeof(void *) * mBufCount));
-    mBufUsage = static_cast<short *>(malloc(sizeof(short) * mBufCount));
-    for (int i = 0; i < mMaxBufSize; ++i) {
+                                                                  mMaxBufSize(maxBufBytesSize),
+                                                                  mBufArray(nullptr),
+                                                                  mBufUsage(nullptr) {
+    mBufArray = reinterpret_cast<void **>(malloc(sizeof(void *) * mBufCount));
+    mBufUsage = reinterpret_cast<short *>(malloc(sizeof(short) * mBufCount));
+    for (int i = 0; i < mBufCount; ++i) {
         mBufArray[i] = malloc(mMaxBufSize);
         mBufUsage[i] = BUFFER_POOL_IDLE;
     }
 }
 
 BufferPool::~BufferPool() {
-    for (int i = 0; i < mMaxBufSize; ++i) {
-        free(mBufArray[i]);
+    ALOGI("destructor call");
+    for (int i = 0; i < mBufCount; ++i) {
+        if (mBufArray[i] != nullptr)
+            free(mBufArray[i]);
     }
-    free(mBufArray);
+    if (mBufArray != nullptr)
+        free(mBufArray);
+    if (mBufUsage != nullptr)
+        free(mBufUsage);
 }
 
 size_t BufferPool::getBufCount() const {

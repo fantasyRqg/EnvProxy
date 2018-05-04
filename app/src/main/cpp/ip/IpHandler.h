@@ -6,6 +6,8 @@
 #define ENVPROXY_IPPACKAGE_H
 
 
+#include <cstdint>
+
 #define IP_HANDLE_SUCCESS 0
 #define IP_HANDLE_VERSION_NOT_MATCH 1
 #define IP_HANDLE_HDR_LEN_INVALID 2

@@ -8,7 +8,7 @@
 
 #include "Session.h"
 
-class TlsSession: Session {
+class TlsSession : public Session {
 public:
     TlsSession();
 

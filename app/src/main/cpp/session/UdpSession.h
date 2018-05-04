@@ -8,7 +8,7 @@
 
 #include "Session.h"
 
-class UdpSession: Session {
+class UdpSession : public Session {
 public:
     UdpSession();
 

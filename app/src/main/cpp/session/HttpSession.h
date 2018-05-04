@@ -8,7 +8,7 @@
 
 #include "Session.h"
 
-class HttpSession: Session {
+class HttpSession : public Session {
 public:
     HttpSession();
 

@@ -8,7 +8,7 @@
 
 #include "Session.h"
 
-class TcpSession : Session {
+class TcpSession : public Session {
 public:
     TcpSession();
 

@@ -7,11 +7,12 @@
 
 #include "Session.h"
 
-class IcmpSession : Session {
+class IcmpSession : public Session {
 public:
     IcmpSession();
 
     virtual ~IcmpSession();
+
 
 };
 

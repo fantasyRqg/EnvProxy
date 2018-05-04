@@ -10,6 +10,9 @@
 #include "../proxyTypes.h"
 #include "Session.h"
 #include "../ip/IpHandler.h"
+#include "IcmpSession.h"
+#include "TcpSession.h"
+#include "UdpSession.h"
 
 
 SessionFactory::SessionFactory(int maxSessionSize) : mMaxSessionSize(maxSessionSize),
@@ -85,15 +88,15 @@ struct SessionInfo *SessionFactory::findOrCreateSession(TransportPkt *pkt) {
 static void buildSessionProcess(SessionInfo *si) {
     switch (si->protocol) {
         case IPPROTO_ICMP: {
-//            si->session = new IcmpSession();
+            si->session = new IcmpSession();
         }
             break;
         case IPPROTO_TCP: {
-//            si->session = new TcpSession();
+            si->session = new TcpSession();
         }
             break;
         case IPPROTO_UDP: {
-//            si->session = new UdpSession();
+            si->session = new UdpSession();
         }
             break;
 

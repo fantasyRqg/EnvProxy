@@ -12,6 +12,7 @@
 #define EPOLL_EVENTS 20
 
 #include <sys/epoll.h>
+#include "proxyTypes.h"
 
 class IpPackageFactory;
 
@@ -40,7 +41,7 @@ private:
     IpPackage *
     checkTun(ProxyContext *context, epoll_event *pEvent, IpPackageFactory *ipPackageFactory);
 
-
+    void logPkt(const IpPackage *ipPkt, const TransportPkt *tPkt) const;
 };
 
 

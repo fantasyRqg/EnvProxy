@@ -8,7 +8,7 @@
 
 #include "Session.h"
 
-class DnsSession : Session {
+class DnsSession : public Session {
 public:
     DnsSession();
 

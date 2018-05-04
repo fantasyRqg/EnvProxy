@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <ctime>
 #include <malloc.h>
+#include <jni.h>
 
 
 union IpAddr {
@@ -19,7 +20,10 @@ union IpAddr {
 
 class BufferPool;
 
+class proxyEngine;
+
 struct ProxyContext {
+    proxyEngine *engine;
     int tunFd;
     int epollFd;
     BufferPool *bufferPool;
@@ -75,6 +79,7 @@ struct SessionInfo {
     time_t lastActive;
     ProxyContext *context;
     SessionInfo *next;
+    void *tData;
 };
 
 #endif //ENVPROXY_PROXYTYPES_H

@@ -13,6 +13,10 @@ class IpPackage;
 
 class TransportPkt;
 
+struct ProxyContext;
+
+struct SessionInfo;
+
 class TransportHandler {
 
 public:
@@ -22,6 +26,11 @@ public:
 
     virtual TransportPkt *handleIpPkt(IpPackage *pkt) = 0;
 
+    virtual void processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt) = 0;
+
+    virtual void *createStatusData(SessionInfo *sessionInfo) = 0;
+
+    virtual void freeStatusData(void *data) = 0;
 };
 
 

@@ -16,6 +16,12 @@ public:
     virtual ~TcpHandler();
 
     TransportPkt *handleIpPkt(IpPackage *pkt) override;
+
+    void processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt) override;
+
+    void *createStatusData(SessionInfo *sessionInfo) override;
+
+    void freeStatusData(void *data) override;
 };
 
 

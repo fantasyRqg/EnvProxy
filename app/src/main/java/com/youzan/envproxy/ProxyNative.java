@@ -14,9 +14,10 @@ public class ProxyNative {
 
     private ParcelFileDescriptor mVpnFd = null;
 
-    public ProxyNative() {
-        initNative();
+    public ProxyNative(ProxyService proxyService) {
+        initNative(proxyService);
     }
+
 
     public void setVpnFileDescriptor(ParcelFileDescriptor fd) {
         mVpnFd = fd;
@@ -64,7 +65,7 @@ public class ProxyNative {
         return mNativeHandler;
     }
 
-    private native void initNative();
+    private native void initNative(ProxyService proxyService);
 
     private native void destroyNative();
 

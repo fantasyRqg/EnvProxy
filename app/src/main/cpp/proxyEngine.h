@@ -32,10 +32,22 @@ public:
 
     bool isProxyRunning();
 
+
 public:
     int mTunFd = -1;
     bool mRunning = false;
     size_t mMTU = 1000;
+
+
+public:
+    void setJniEnv(JNIEnv *env, jobject proxyService);
+
+    bool protectSocket(int socket);
+
+private:
+    JNIEnv *mJniEnv;
+    jobject mProxyService;
+    jmethodID mProtectMid;
 
 private:
     IpPackage *

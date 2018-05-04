@@ -34,3 +34,14 @@ TransportPkt *TcpHandler::handleIpPkt(IpPackage *pkt) {
 
     return tPkt;
 }
+
+void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt) {
+
+}
+
+void *TcpHandler::createStatusData(SessionInfo *sessionInfo) {
+    return nullptr;
+}
+
+void TcpHandler::freeStatusData(void *data) {
+}

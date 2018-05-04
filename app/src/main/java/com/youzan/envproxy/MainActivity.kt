@@ -30,7 +30,7 @@ class MainActivity : Activity() {
         unknown_count.text = getString(R.string.tcp_count, 0)
 
 
-        vpn_switch.setOnCheckedChangeListener { buttonView, isChecked ->
+        vpn_switch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 startProxy()
             } else {

@@ -72,6 +72,7 @@ void proxyEngine::handleEvents() {
     BufferPool bufferPool(8, mMTU);
 
     proxyContext context = {
+            this,
             mTunFd,
             epoll_fd,
             &bufferPool
@@ -113,6 +114,10 @@ void proxyEngine::handleEvents() {
                 }
 
                 logPkt(ipPkt, tPkt);
+
+                auto sessionInfo = sessionFactory.findOrCreateSession(tPkt);
+                if (sessionInfo != nullptr)
+                    sessionInfo->transportHandler->processTransportPkt(sessionInfo, tPkt);
 
                 delete tPkt;
             } else if (ev[i].data.ptr != nullptr) {
@@ -195,4 +200,38 @@ bool proxyEngine::isProxyRunning() {
     return mRunning;
 }
 
+void proxyEngine::setJniEnv(JNIEnv *env, jobject proxyService) {
+    mJniEnv = env;
+    mProxyService = proxyService;
 
+
+    jclass cls = mJniEnv->GetObjectClass(mProxyService);
+    if (cls == NULL) {
+        ALOGE("protect socket failed to get class");
+        mJniEnv = nullptr;
+        mProxyService = nullptr;
+        return;
+    }
+
+//    mProtectMid = jniGetMethodID(ctx->env, cls, "protect", "(I)Z");
+    mProtectMid = mJniEnv->GetMethodID(cls, "protect", "(I)Z");
+    if (mProtectMid == NULL) {
+        ALOGE("protect socket failed to get method");
+        mJniEnv = nullptr;
+        mProxyService = nullptr;
+        return;
+    }
+}
+
+bool proxyEngine::protectSocket(int socket) {
+    if (mJniEnv == nullptr)
+        return false;
+
+    jboolean isProtected = mJniEnv->CallBooleanMethod(mProxyService, mProtectMid, socket);
+
+    if (!isProtected) {
+        ALOGE("protect socket failed");
+        return false;
+    }
+    return true;
+}

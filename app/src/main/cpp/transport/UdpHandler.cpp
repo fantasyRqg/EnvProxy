@@ -33,3 +33,15 @@ TransportPkt *UdpHandler::handleIpPkt(IpPackage *pkt) {
 
     return tPkt;
 }
+
+void UdpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt) {
+
+}
+
+void *UdpHandler::createStatusData(SessionInfo *sessionInfo) {
+    return nullptr;
+}
+
+
+void UdpHandler::freeStatusData(void *data) {
+}

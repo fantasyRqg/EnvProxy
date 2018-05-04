@@ -19,12 +19,15 @@ public:
 
     virtual ~SessionFactory();
 
+    void freeSession(SessionInfo *si);
+
 private:
     struct SessionInfo *createSession(TransportPkt *pkt);
 
 private:
     int mMaxSessionSize;
     SessionInfo *mSessions;
+    int mSessionCount;
 };
 
 

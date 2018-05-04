@@ -34,7 +34,7 @@ class ProxyService : VpnService() {
         const val NOTIFICATION_CHANNEL = "EnvProxy"
     }
 
-    val proxyNative = ProxyNative()
+    val proxyNative = ProxyNative(this)
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

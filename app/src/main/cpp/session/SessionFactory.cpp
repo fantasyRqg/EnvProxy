@@ -2,6 +2,8 @@
 // Created by Rqg on 24/04/2018.
 //
 
+#define LOG_TAG "SessionFactory"
+
 #include <netinet/ip.h>
 #include <cstring>
 #include <netinet/ip6.h>
@@ -13,10 +15,13 @@
 #include "IcmpSession.h"
 #include "TcpSession.h"
 #include "UdpSession.h"
+#include "../transport/TransportHandler.h"
+#include "../log.h"
 
 
 SessionFactory::SessionFactory(int maxSessionSize) : mMaxSessionSize(maxSessionSize),
-                                                     mSessions(nullptr) {
+                                                     mSessions(nullptr),
+                                                     mSessionCount(0) {
 
 }
 
@@ -73,14 +78,12 @@ struct SessionInfo *SessionFactory::findOrCreateSession(TransportPkt *pkt) {
             curr = s;
             break;
         }
-
         s = s->next;
     }
 
     if (curr == nullptr) {
         curr = createSession(pkt);
     }
-
     return curr;
 }
 
@@ -107,6 +110,11 @@ static void buildSessionProcess(SessionInfo *si) {
 
 
 struct SessionInfo *SessionFactory::createSession(TransportPkt *pkt) {
+    if (mSessionCount >= mMaxSessionSize) {
+        ALOGW("reach max session size limit, can not create session");
+        return nullptr;
+    }
+
     struct SessionInfo *s = new SessionInfo();
     s->next = mSessions;
     mSessions = s;
@@ -125,8 +133,22 @@ struct SessionInfo *SessionFactory::createSession(TransportPkt *pkt) {
     s->transportHandler = pkt->handler;
 
     s->lastActive = time(nullptr);
-
+    s->tData = s->transportHandler->createStatusData(s);
 
     buildSessionProcess(s);
+
+    mSessionCount++;
     return s;
+}
+
+void SessionFactory::freeSession(SessionInfo *si) {
+    if (si != nullptr) {
+        if (si->tData != nullptr && si->transportHandler != nullptr) {
+            si->transportHandler->freeStatusData(si->tData);
+            si->tData = nullptr;
+        }
+        delete si;
+    }
+
+    mSessionCount--;
 }

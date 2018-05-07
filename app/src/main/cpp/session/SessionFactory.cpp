@@ -133,7 +133,7 @@ struct SessionInfo *SessionFactory::createSession(TransportPkt *pkt) {
     s->transportHandler = pkt->handler;
 
     s->lastActive = time(nullptr);
-    s->tData = s->transportHandler->createStatusData(s);
+    s->tData = s->transportHandler->createStatusData(s,pkt);
 
     buildSessionProcess(s);
 

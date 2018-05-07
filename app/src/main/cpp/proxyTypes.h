@@ -27,6 +27,7 @@ struct ProxyContext {
     int tunFd;
     int epollFd;
     BufferPool *bufferPool;
+    size_t mtu;
 };
 
 class IpHandler;

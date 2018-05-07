@@ -19,7 +19,7 @@ public:
 
     void processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt) override;
 
-    void *createStatusData(SessionInfo *sessionInfo) override;
+    void *createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) override;
 
     void freeStatusData(void *data) override;
 };

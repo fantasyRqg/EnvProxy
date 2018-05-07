@@ -75,7 +75,8 @@ void proxyEngine::handleEvents() {
             this,
             mTunFd,
             epoll_fd,
-            &bufferPool
+            &bufferPool,
+            mMTU
     };
     //ip package factory
     IpPackageFactory ipPackageFactory(&context);
@@ -130,16 +131,7 @@ void proxyEngine::handleEvents() {
 }
 
 void proxyEngine::logPkt(const IpPackage *ipPkt, const TransportPkt *tPkt) const {
-    char source[INET6_ADDRSTRLEN + 1];
-    char dest[INET6_ADDRSTRLEN + 1];
-
-    if (ipPkt->versoin == IPVERSION) {
-        inet_ntop(AF_INET, &ipPkt->srcAddr.ip4, source, sizeof(source));
-        inet_ntop(AF_INET, &ipPkt->dstAddr.ip4, dest, sizeof(dest));
-    } else if (ipPkt->versoin == IPV6_VERSION) {
-        inet_ntop(AF_INET6, &ipPkt->srcAddr.ip6, source, sizeof(source));
-        inet_ntop(AF_INET6, &ipPkt->dstAddr.ip6, dest, sizeof(dest));
-    }
+    ADDR_TO_STR(ipPkt);
 
     ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6d, dPort = %6d, pkt_size = %6u ,payload_size = %6u",
           source, dest,

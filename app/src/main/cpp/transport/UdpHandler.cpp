@@ -38,7 +38,7 @@ void UdpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
 
 }
 
-void *UdpHandler::createStatusData(SessionInfo *sessionInfo) {
+void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) {
     return nullptr;
 }
 

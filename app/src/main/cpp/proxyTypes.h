@@ -14,6 +14,18 @@
 #include <sys/epoll.h>
 
 
+#define ICMP4_MAXMSG (IP_MAXPACKET - 20 - 8) // bytes (socket)
+#define ICMP6_MAXMSG (IPV6_MAXPACKET - 40 - 8) // bytes (socket)
+#define UDP4_MAXMSG (IP_MAXPACKET - 20 - 8) // bytes (socket)
+#define UDP6_MAXMSG (IPV6_MAXPACKET - 40 - 8) // bytes (socket)
+
+
+#define UDP_ACTIVE 0
+#define UDP_FINISHING 1
+#define UDP_CLOSED 2
+#define UDP_BLOCKED 3
+
+
 union IpAddr {
     in6_addr ip6;
     int32_t ip4;

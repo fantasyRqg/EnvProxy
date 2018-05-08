@@ -15,6 +15,7 @@
 #include "../proxyTypes.h"
 #include "../proxyEngine.h"
 #include "../log.h"
+#include "../util.h"
 
 
 #define LOG_TAG "IcmpHandler"
@@ -59,7 +60,7 @@ TransportPkt *IcmpHandler::handleIpPkt(IpPackage *pkt) {
 
 
 void IcmpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt) {
-    struct icmp *icmp = reinterpret_cast<icmp *>(pkt->ipPackage->payload);
+    struct icmp *icmp = reinterpret_cast<struct icmp *>(pkt->ipPackage->payload);
     struct IcmpStatus *status = static_cast<IcmpStatus *>(sessionInfo->tData);
 
     // Modify ID
@@ -102,7 +103,8 @@ void IcmpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pk
 
     // Send raw ICMP message
     if (sendto(status->socket, icmp, pkt->payloadSize, MSG_NOSIGNAL,
-               static_cast<const sockaddr *>(isIp4 ? &server4 : &server6),
+               isIp4 ? reinterpret_cast<const struct sockaddr *>(&server4 )
+                     : reinterpret_cast<const struct sockaddr *>(&server6),
                (socklen_t) (isIp4 ? sizeof(server4) : sizeof(server6)))
         != pkt->payloadSize) {
         ALOGE("ICMP sendto error %d: %s", errno, strerror(errno));

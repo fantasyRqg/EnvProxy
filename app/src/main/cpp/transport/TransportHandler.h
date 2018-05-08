@@ -31,8 +31,6 @@ public:
     virtual void *createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) = 0;
 
     virtual void freeStatusData(void *data) = 0;
-
-    uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length);
 };
 
 

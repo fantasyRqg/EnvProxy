@@ -133,7 +133,7 @@ void proxyEngine::handleEvents() {
 void proxyEngine::logPkt(const IpPackage *ipPkt, const TransportPkt *tPkt) const {
     ADDR_TO_STR(ipPkt);
 
-    ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6d, dPort = %6d, pkt_size = %6u ,payload_size = %6u",
+    ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6d, dPort = %6d, pkt_size = %6lu ,payload_size = %6lu",
           source, dest,
           ipPkt->protocol,
           tPkt->sPort, tPkt->dPort,

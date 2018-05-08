@@ -11,6 +11,7 @@
 #include <ctime>
 #include <malloc.h>
 #include <jni.h>
+#include <sys/epoll.h>
 
 
 union IpAddr {
@@ -81,6 +82,7 @@ struct SessionInfo {
     ProxyContext *context;
     SessionInfo *next;
     void *tData;
+    epoll_event ev;
 };
 
 #endif //ENVPROXY_PROXYTYPES_H

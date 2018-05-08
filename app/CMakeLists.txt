@@ -19,6 +19,7 @@ add_library(libProxy
             SHARED
 
             src/main/cpp/libProxy.cpp
+            src/main/cpp/util.cpp
             src/main/cpp/BufferPool.cpp
             src/main/cpp/proxyTypes.cpp
             src/main/cpp/proxyEngine.cpp

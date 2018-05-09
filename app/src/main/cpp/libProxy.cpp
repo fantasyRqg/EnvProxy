@@ -25,9 +25,8 @@ jint getMTU(JNIEnv *, jclass) {
     return SOCKT_MTU;
 }
 
-void initNative(JNIEnv *env, jobject thiz, jobject proxyService) {
+void initNative(JNIEnv *env, jobject thiz) {
     auto p = new proxyEngine(SOCKT_MTU);
-    p->setJniEnv(env, proxyService);
     env->SetLongField(thiz, nativeHandlerField, reinterpret_cast<jlong>(p));
 }
 
@@ -40,10 +39,10 @@ void setVpnFd(JNIEnv *env, jobject thiz, jint fd) {
     getProxyEngine(env, thiz)->mTunFd = fd;
 }
 
-
 void startProxy(JNIEnv *env, jobject thiz) {
     getProxyEngine(env, thiz)->handleEvents();
 }
+
 
 void stopProxy(JNIEnv *env, jobject thiz) {
     getProxyEngine(env, thiz)->stopHandleEvents();
@@ -51,6 +50,10 @@ void stopProxy(JNIEnv *env, jobject thiz) {
 
 jboolean isProxyRunning(JNIEnv *env, jobject thiz) {
     return (jboolean) (getProxyEngine(env, thiz)->isProxyRunning());
+}
+
+void setProxyService(JNIEnv *env, jobject thiz, jobject proxyService) {
+    getProxyEngine(env, thiz)->setJniEnv(env, proxyService);
 }
 
 
@@ -91,13 +94,14 @@ jboolean isProxyRunning(JNIEnv *env, jobject thiz) {
 static const char *classPathName = "com/youzan/envproxy/ProxyNative";
 static JNINativeMethod methods[] = {
         {"getMTU",                "()I",                                   (void *) getMTU},
-        {"initNative",            "(Lcom/youzan/envproxy/ProxyService;)V", (void *) initNative},
+        {"initNative",            "()V",                                   (void *) initNative},
         {"initClass",             "()V",                                   (void *) initClass},
         {"destroyNative",         "()V",                                   (void *) destroyNative},
         {"setVpnFd",              "(I)V",                                  (void *) setVpnFd},
         {"startProxy_Native",     "()V",                                   (void *) startProxy},
         {"stopProxy_Native",      "()V",                                   (void *) stopProxy},
         {"isProxyRunning_Native", "()Z",                                   (void *) isProxyRunning},
+        {"setProxyService",       "(Lcom/youzan/envproxy/ProxyService;)V", (void *) setProxyService},
 };
 
 /*

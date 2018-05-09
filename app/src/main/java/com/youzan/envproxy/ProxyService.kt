@@ -83,6 +83,11 @@ class ProxyService : VpnService() {
         }
     }
 
+    override fun protect(socket: Int): Boolean {
+        val protect = super.protect(socket)
+        return protect
+    }
+
     override fun onCreate() {
         super.onCreate()
         LocalBroadcastManager.getInstance(this)

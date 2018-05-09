@@ -21,6 +21,8 @@ public:
 
     void freeSession(SessionInfo *si);
 
+    SessionInfo *getSessions() const;
+
 private:
     struct SessionInfo *createSession(TransportPkt *pkt);
 

@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <netinet/ip6.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include "IcmpHandler.h"
 #include "../ip/IpHandler.h"
@@ -113,7 +114,171 @@ void IcmpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pk
             return;
         }
     }
+}
 
+
+ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
+                   uint8_t *data, size_t datalen) {
+    size_t len;
+    u_int8_t *buffer;
+    struct icmp *icmp = (struct icmp *) data;
+    char source[INET6_ADDRSTRLEN + 1];
+    char dest[INET6_ADDRSTRLEN + 1];
+
+    // Build packet
+//    if (cur->version == 4) {
+    len = sizeof(struct iphdr) + datalen;
+    buffer = static_cast<u_int8_t *>(malloc(len));
+    struct iphdr *ip4 = (struct iphdr *) buffer;
+    if (datalen)
+        memcpy(buffer + sizeof(struct iphdr), data, datalen);
+
+    // Build IP4 header
+    memset(ip4, 0, sizeof(struct iphdr));
+    ip4->version = 4;
+    ip4->ihl = sizeof(struct iphdr) >> 2;
+    ip4->tot_len = htons(len);
+    ip4->ttl = IPDEFTTL;
+    ip4->protocol = IPPROTO_ICMP;
+    ip4->saddr = sessionInfo->dstAddr.ip4;
+    ip4->daddr = sessionInfo->srcAddr.ip4;
+
+    // Calculate IP4 checksum
+    ip4->check = ~calc_checksum(0, (uint8_t *) ip4, sizeof(struct iphdr));
+//    } else {
+//        len = sizeof(struct ip6_hdr) + datalen;
+//        buffer = malloc(len);
+//        struct ip6_hdr *ip6 = (struct ip6_hdr *) buffer;
+//        if (datalen)
+//            memcpy(buffer + sizeof(struct ip6_hdr), data, datalen);
+//
+//        // Build IP6 header
+//        memset(ip6, 0, sizeof(struct ip6_hdr));
+//        ip6->ip6_ctlun.ip6_un1.ip6_un1_flow = 0;
+//        ip6->ip6_ctlun.ip6_un1.ip6_un1_plen = htons(len - sizeof(struct ip6_hdr));
+//        ip6->ip6_ctlun.ip6_un1.ip6_un1_nxt = IPPROTO_ICMPV6;
+//        ip6->ip6_ctlun.ip6_un1.ip6_un1_hlim = IPDEFTTL;
+//        ip6->ip6_ctlun.ip6_un2_vfc = IPV6_VERSION;
+//        memcpy(&(ip6->ip6_src), &cur->daddr.ip6, 16);
+//        memcpy(&(ip6->ip6_dst), &sessionInfo->srcAddr.ip6, 16);
+//    }
+
+    bool isIP4 = sessionInfo->ipVersoin == IPVERSION;
+    inet_ntop(isIP4 ? AF_INET : AF_INET6,
+              isIP4 ? (const void *) &sessionInfo->srcAddr.ip4
+                    : (const void *) &sessionInfo->srcAddr.ip6,
+              source, sizeof(source));
+    inet_ntop(isIP4 ? AF_INET : AF_INET6,
+              isIP4 ? (const void *) &sessionInfo->dstAddr.ip4
+                    : (const void *) &sessionInfo->dstAddr.ip6,
+              dest, sizeof(dest));
+
+    // Send raw ICMP message
+    ALOGW("ICMP sending to tun %d from %s to %s data %lu type %d code %d id %x seq %d",
+          sessionInfo->context->tunFd, dest, source, datalen,
+          icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq);
+
+    ssize_t res = write(sessionInfo->context->tunFd, buffer, len);
+
+    // Write PCAP record
+    if (res < 0) {
+        ALOGW("ICMP write error %d: %s", errno, strerror(errno));
+    }
+    free(buffer);
+
+    if (res != len) {
+        ALOGE("write %ld/%ld", res, len);
+        return -1;
+    }
+
+    return res;
+}
+
+
+void IcmpHandler::onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev) {
+    IcmpStatus *status = static_cast<IcmpStatus *>(sessionInfo->tData);
+
+    // Check socket error
+    if (ev->events & EPOLLERR) {
+        sessionInfo->lastActive = time(NULL);
+
+        int serr = 0;
+        socklen_t optlen = sizeof(int);
+        int err = getsockopt(status->socket, SOL_SOCKET, SO_ERROR, &serr, &optlen);
+        if (err < 0)
+            ALOGE("ICMP getsockopt error %d: %s", errno, strerror(errno));
+        else if (serr)
+            ALOGE("ICMP SO_ERROR %d: %s", serr, strerror(serr));
+
+        status->stop = true;
+    } else {
+        // Check socket read
+        if (ev->events & EPOLLIN) {
+            sessionInfo->lastActive = time(NULL);
+
+            uint16_t blen = (uint16_t) (sessionInfo->ipVersoin == IPVERSION ? ICMP4_MAXMSG
+                                                                            : ICMP6_MAXMSG);
+            uint8_t *buffer = static_cast<uint8_t *>(malloc(blen));
+            ssize_t bytes = recv(status->socket, buffer, blen, 0);
+            if (bytes < 0) {
+                // Socket error
+                ALOGW("ICMP recv error %d: %s", errno, strerror(errno));
+
+                if (errno != EINTR && errno != EAGAIN)
+                    status->stop = 1;
+            } else if (bytes == 0) {
+                ALOGW("ICMP recv eof");
+                status->stop = 1;
+
+            } else {
+                // Socket read data
+                char dest[INET6_ADDRSTRLEN + 1];
+                if (sessionInfo->ipVersoin == IPVERSION)
+                    inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
+                else
+                    inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
+
+                // status->id should be equal to icmp->icmp_id
+                // but for some unexplained reason this is not the case
+                // some bits seems to be set extra
+                struct icmp *icmp = (struct icmp *) buffer;
+
+                if (status->id == icmp->icmp_id) {
+                    ALOGI("ICMP recv bytes %ld from %s for tun type %d code %d id %x/%x seq %d",
+                          bytes, dest,
+                          icmp->icmp_type, icmp->icmp_code,
+                          status->id, icmp->icmp_id, icmp->icmp_seq);
+                } else {
+                    ALOGW("ICMP recv bytes %ld from %s for tun type %d code %d id %x/%x seq %d",
+                          bytes, dest,
+                          icmp->icmp_type, icmp->icmp_code,
+                          status->id, icmp->icmp_id, icmp->icmp_seq);
+                }
+
+                // restore original ID
+                icmp->icmp_id = status->id;
+                uint16_t csum = 0;
+//                if (status->version == 6) {
+//                    // Untested
+//                    struct ip6_hdr_pseudo pseudo;
+//                    memset(&pseudo, 0, sizeof(struct ip6_hdr_pseudo));
+//                    memcpy(&pseudo.ip6ph_src, &status->daddr.ip6, 16);
+//                    memcpy(&pseudo.ip6ph_dst, &status->saddr.ip6, 16);
+//                    pseudo.ip6ph_len = bytes - sizeof(struct ip6_hdr);
+//                    pseudo.ip6ph_nxt = IPPROTO_ICMPV6;
+//                    csum = calc_checksum(
+//                            0, (uint8_t *) &pseudo, sizeof(struct ip6_hdr_pseudo));
+//                }
+                icmp->icmp_cksum = 0;
+                icmp->icmp_cksum = ~calc_checksum(csum, buffer, (size_t) bytes);
+
+                // Forward to tun
+                if (write_icmp(sessionInfo, status, buffer, (size_t) bytes) < 0)
+                    status->stop = 1;
+            }
+            free(buffer);
+        }
+    }
 }
 
 
@@ -125,16 +290,37 @@ void *IcmpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firs
     s->stop = false;
 
     auto success = sessionInfo->context->engine->protectSocket(s->socket);
-
-    if (success) {
-        return s;
-    } else {
-        freeStatusData(s);
-        return nullptr;
+    if (!success) {
+        s->stop = true;
+        goto createFail;
     }
+
+
+    ALOGD("ICMP socket %d id %x", s->socket, s->id);
+
+    // Monitor events
+    memset(&sessionInfo->ev, 0, sizeof(struct epoll_event));
+    sessionInfo->ev.events = EPOLLIN | EPOLLERR;
+    sessionInfo->ev.data.ptr = s;
+    if (epoll_ctl(sessionInfo->context->epollFd, EPOLL_CTL_ADD, s->socket, &sessionInfo->ev))
+        ALOGE("epoll add icmp error %d: %s", errno, strerror(errno));
+
+
+    createFail:
+    return s;
+
 }
 
 void IcmpHandler::freeStatusData(void *data) {
     if (data != nullptr)
         free(data);
+}
+
+bool IcmpHandler::isActive(SessionInfo *sessionInfo) {
+    IcmpStatus *status = static_cast<IcmpStatus *>(sessionInfo->tData);
+    return !status->stop;
+}
+
+bool IcmpHandler::monitorSession(SessionInfo *sessionInfo) {
+    return true;
 }

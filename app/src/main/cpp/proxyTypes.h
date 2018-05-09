@@ -20,6 +20,10 @@
 #define UDP6_MAXMSG (IPV6_MAXPACKET - 40 - 8) // bytes (socket)
 
 
+#define EPOLL_TIMEOUT 3600 // seconds
+#define EPOLL_EVENTS 20
+#define EPOLL_MIN_CHECK 100 // milliseconds
+
 #define UDP_ACTIVE 0
 #define UDP_FINISHING 1
 #define UDP_CLOSED 2

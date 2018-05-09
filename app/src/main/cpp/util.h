@@ -9,7 +9,6 @@
 
 uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length);
 
-
-
+long long get_ms();
 
 #endif //ENVPROXY_UTIL_H

@@ -13,9 +13,11 @@ public class ProxyNative {
     }
 
     private ParcelFileDescriptor mVpnFd = null;
+    private ProxyService mProxyService;
 
     public ProxyNative(ProxyService proxyService) {
-        initNative(proxyService);
+        initNative();
+        mProxyService = proxyService;
     }
 
 
@@ -33,6 +35,7 @@ public class ProxyNative {
             throw new RuntimeException("not set Vpn fd");
         }
 
+        setProxyService(mProxyService);
 
         setVpnFd(mVpnFd.getFd());
 
@@ -65,7 +68,9 @@ public class ProxyNative {
         return mNativeHandler;
     }
 
-    private native void initNative(ProxyService proxyService);
+    private native void initNative();
+
+    private native void setProxyService(ProxyService proxyService);
 
     private native void destroyNative();
 

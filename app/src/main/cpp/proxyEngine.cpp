@@ -28,16 +28,28 @@
 #include "proxyTypes.h"
 #include "session/SessionFactory.h"
 #include "BufferPool.h"
+#include "util.h"
 
 #define LOG_TAG "proxyEngine"
 
 typedef struct ProxyContext proxyContext;
 
-proxyEngine::proxyEngine(size_t mtu) {
-    mMTU = mtu;
+proxyEngine::proxyEngine(size_t mtu)
+        : mMTU(mtu),
+          mJniEnv(nullptr),
+          mProxyService(nullptr),
+          mProtectMid(nullptr),
+          mTunFd(-1),
+          mRunning(false) {
 }
 
 proxyEngine::~proxyEngine() {
+    if (mJniEnv != nullptr && mProxyService != nullptr) {
+        mJniEnv->DeleteGlobalRef(mProxyService);
+        mJniEnv = nullptr;
+        mProxyService = nullptr;
+        mProtectMid = nullptr;
+    }
 }
 
 
@@ -93,15 +105,109 @@ void proxyEngine::handleEvents() {
         return;
     }
 
-
+    long long last_check = 0;
     while (mRunning) {
         //main looping
+
+        int recheck = 0;
+        int timeout = EPOLL_TIMEOUT;
+
+        // Count sessions
+        int isessions = 0;
+        int usessions = 0;
+        int tsessions = 0;
+
+        auto s = sessionFactory.getSessions();
+        while (s != NULL) {
+            if (s->transportHandler->isActive(s)) {
+                if (s->protocol == IPPROTO_ICMP || s->protocol == IPPROTO_ICMPV6) {
+                    isessions++;
+                } else if (s->protocol == IPPROTO_UDP) {
+                    usessions++;
+                } else if (s->protocol == IPPROTO_TCP) {
+                    tsessions++;
+                    recheck = recheck | s->transportHandler->monitorSession(s);
+                }
+            }
+
+            s = s->next;
+        }
+        int sessions = isessions + usessions + tsessions;
+
+        // Check sessions
+        long long ms = get_ms();
+        if (ms - last_check > EPOLL_MIN_CHECK) {
+            last_check = ms;
+
+            time_t now = time(NULL);
+            SessionInfo *sl = NULL;
+            s = sessionFactory.getSessions();
+            while (s != NULL) {
+                int del = 0;
+                if (s->protocol == IPPROTO_ICMP || s->protocol == IPPROTO_ICMPV6) {
+                    del = check_icmp_session(args, s, sessions, maxsessions);
+                    if (!s->icmp.stop && !del) {
+                        int stimeout = s->icmp.time +
+                                       get_icmp_timeout(&s->icmp, sessions, maxsessions) - now + 1;
+                        if (stimeout > 0 && stimeout < timeout)
+                            timeout = stimeout;
+                    }
+                } else if (s->protocol == IPPROTO_UDP) {
+                    del = check_udp_session(args, s, sessions, maxsessions);
+                    if (s->udp.state == UDP_ACTIVE && !del) {
+                        int stimeout = s->udp.time +
+                                       get_udp_timeout(&s->udp, sessions, maxsessions) - now + 1;
+                        if (stimeout > 0 && stimeout < timeout)
+                            timeout = stimeout;
+                    }
+                } else if (s->protocol == IPPROTO_TCP) {
+                    del = check_tcp_session(args, s, sessions, maxsessions);
+                    if (s->tcp.state != TCP_CLOSING && s->tcp.state != TCP_CLOSE && !del) {
+                        int stimeout = s->tcp.time +
+                                       get_tcp_timeout(&s->tcp, sessions, maxsessions) - now + 1;
+                        if (stimeout > 0 && stimeout < timeout)
+                            timeout = stimeout;
+                    }
+                }
+
+                if (del) {
+                    if (sl == NULL)
+                        args->ctx->ng_session = s->next;
+                    else
+                        sl->next = s->next;
+
+                    struct ng_session *c = s;
+                    s = s->next;
+                    if (c->protocol == IPPROTO_TCP)
+                        clear_tcp_data(&c->tcp);
+                    free(c);
+                } else {
+                    sl = s;
+                    s = s->next;
+                }
+            }
+        } else {
+            recheck = 1;
+            log_android(ANDROID_LOG_DEBUG, "Skipped session checks");
+        }
+
+        log_android(ANDROID_LOG_DEBUG,
+                    "sessions ICMP %d UDP %d TCP %d max %d/%d timeout %d recheck %d",
+                    isessions, usessions, tsessions, sessions, maxsessions, timeout, recheck);
 
         struct epoll_event ev[EPOLL_EVENTS];
         int ready = epoll_wait(epoll_fd, ev, EPOLL_EVENTS, 1000);
 
         for (int i = 0; i < ready; ++i) {
             if (ev[i].data.ptr == &ev_tun) {
+                // Check upstream
+//                ALOGD("epoll ready %d/%d in %d out %d err %d hup %d",
+//                      i, ready,
+//                      (ev[i].events & EPOLLIN) != 0,
+//                      (ev[i].events & EPOLLOUT) != 0,
+//                      (ev[i].events & EPOLLERR) != 0,
+//                      (ev[i].events & EPOLLHUP) != 0);
+
                 //tun event
                 auto ipPkt = checkTun(&context, &ev[i], &ipPackageFactory);
                 if (ipPkt == nullptr) continue;
@@ -122,8 +228,17 @@ void proxyEngine::handleEvents() {
 
                 delete tPkt;
             } else if (ev[i].data.ptr != nullptr) {
-                //task event
-
+                // Check downstream
+                SessionInfo *si = static_cast<SessionInfo *>(ev[i].data.ptr);
+//                ALOGD("epoll ready %d/%d in %d out %d err %d hup %d prot %d",
+//                      i, ready,
+//                      (ev[i].events & EPOLLIN) != 0,
+//                      (ev[i].events & EPOLLOUT) != 0,
+//                      (ev[i].events & EPOLLERR) != 0,
+//                      (ev[i].events & EPOLLHUP) != 0,
+//                      si->ipVersoin);
+                //process socket data incoming
+                si->transportHandler->onSocketDataIncoming(si, &ev[i]);
             }
         }
 
@@ -193,8 +308,15 @@ bool proxyEngine::isProxyRunning() {
 }
 
 void proxyEngine::setJniEnv(JNIEnv *env, jobject proxyService) {
+    if (mJniEnv != nullptr && mProxyService != nullptr) {
+        mJniEnv->DeleteGlobalRef(mProxyService);
+        mJniEnv = nullptr;
+        mProxyService = nullptr;
+        mProtectMid = nullptr;
+    }
+
     mJniEnv = env;
-    mProxyService = proxyService;
+    mProxyService = mJniEnv->NewGlobalRef(proxyService);
 
 
     jclass cls = mJniEnv->GetObjectClass(mProxyService);

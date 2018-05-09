@@ -9,6 +9,7 @@
 #include <netinet/ip.h>
 #include <errno.h>
 #include <cstring>
+#include <unistd.h>
 
 #include "UdpHandler.h"
 #include "../ip/IpHandler.h"
@@ -127,11 +128,11 @@ void UdpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
     if (rversion == IPVERSION) {
         addr4.sin_family = AF_INET;
         addr4.sin_addr.s_addr = (__be32) sessionInfo->dstAddr.ip4;
-        addr4.sin_port = sessionInfo->dPort;
+        addr4.sin_port = htons(sessionInfo->dPort);
     } else {
         addr6.sin6_family = AF_INET6;
         memcpy(&addr6.sin6_addr, &sessionInfo->dstAddr.ip6, 16);
-        addr6.sin6_port = sessionInfo->dPort;
+        addr6.sin6_port = htons(sessionInfo->dPort);
     }
 //    } else {
 //        rversion = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
@@ -169,22 +170,26 @@ void UdpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
 
 int open_udp_socket(SessionInfo *sessionInfo, UdpStatus *status) {
     int sock;
-    int version;
 //    if (redirect == NULL)
 //        version = cur->version;
 //    else
 //        version = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
 
     // Get UDP socket
-    sock = socket(version == 4 ? PF_INET : PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    sock = socket(sessionInfo->ipVersoin == IPVERSION ? PF_INET : PF_INET6, SOCK_DGRAM,
+                  IPPROTO_UDP);
     if (sock < 0) {
         ALOGE("UDP socket error %d: %s", errno, strerror(errno));
         return -1;
     }
 
     // Protect socket
-    if (sessionInfo->context->engine->protectSocket(sock))
+    if (!sessionInfo->context->engine->protectSocket(sock)) {
+        close(sock);
+        ALOGE("protect socket fail");
         return -1;
+    }
+
 
     // Check for broadcast/multicast
     if (sessionInfo->ipVersoin == IPVERSION) {
@@ -222,6 +227,182 @@ int open_udp_socket(SessionInfo *sessionInfo, UdpStatus *status) {
     return sock;
 }
 
+ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
+                  uint8_t *data, size_t datalen) {
+    size_t len;
+    u_int8_t *buffer;
+    struct udphdr *udp;
+    uint16_t csum;
+    char source[INET6_ADDRSTRLEN + 1];
+    char dest[INET6_ADDRSTRLEN + 1];
+
+    // Build packet
+//    if (cur->version == 4) {
+    len = sizeof(struct iphdr) + sizeof(struct udphdr) + datalen;
+    buffer = static_cast<u_int8_t *>(malloc(len));
+    struct iphdr *ip4 = (struct iphdr *) buffer;
+    udp = (struct udphdr *) (buffer + sizeof(struct iphdr));
+    if (datalen)
+        memcpy(buffer + sizeof(struct iphdr) + sizeof(struct udphdr), data, datalen);
+
+    // Build IP4 header
+    memset(ip4, 0, sizeof(struct iphdr));
+    ip4->version = 4;
+    ip4->ihl = sizeof(struct iphdr) >> 2;
+    ip4->tot_len = htons(len);
+    ip4->ttl = IPDEFTTL;
+    ip4->protocol = IPPROTO_UDP;
+    ip4->saddr = sessionInfo->dstAddr.ip4;
+    ip4->daddr = sessionInfo->srcAddr.ip4;
+
+    // Calculate IP4 checksum
+    ip4->check = ~calc_checksum(0, (uint8_t *) ip4, sizeof(struct iphdr));
+
+    // Calculate UDP4 checksum
+    struct ippseudo pseudo;
+    memset(&pseudo, 0, sizeof(struct ippseudo));
+    pseudo.ippseudo_src.s_addr = (__be32) ip4->saddr;
+    pseudo.ippseudo_dst.s_addr = (__be32) ip4->daddr;
+    pseudo.ippseudo_p = ip4->protocol;
+    pseudo.ippseudo_len = htons(sizeof(struct udphdr) + datalen);
+
+    csum = calc_checksum(0, (uint8_t *) &pseudo, sizeof(struct ippseudo));
+//    } else {
+//        len = sizeof(struct ip6_hdr) + sizeof(struct udphdr) + datalen;
+//        buffer = malloc(len);
+//        struct ip6_hdr *ip6 = (struct ip6_hdr *) buffer;
+//        udp = (struct udphdr *) (buffer + sizeof(struct ip6_hdr));
+//        if (datalen)
+//            memcpy(buffer + sizeof(struct ip6_hdr) + sizeof(struct udphdr), data, datalen);
+//
+//        // Build IP6 header
+//        memset(ip6, 0, sizeof(struct ip6_hdr));
+//        ip6->ip6_ctlun.ip6_un1.ip6_un1_flow = 0;
+//        ip6->ip6_ctlun.ip6_un1.ip6_un1_plen = htons(len - sizeof(struct ip6_hdr));
+//        ip6->ip6_ctlun.ip6_un1.ip6_un1_nxt = IPPROTO_UDP;
+//        ip6->ip6_ctlun.ip6_un1.ip6_un1_hlim = IPDEFTTL;
+//        ip6->ip6_ctlun.ip6_un2_vfc = IPV6_VERSION;
+//        memcpy(&(ip6->ip6_src), &sessionInfo->dstAddr.ip6, 16);
+//        memcpy(&(ip6->ip6_dst), &sessionInfo->srcAddr.ip6, 16);
+//
+//        // Calculate UDP6 checksum
+//        struct ip6_hdr_pseudo pseudo;
+//        memset(&pseudo, 0, sizeof(struct ip6_hdr_pseudo));
+//        memcpy(&pseudo.ip6ph_src, &ip6->ip6_dst, 16);
+//        memcpy(&pseudo.ip6ph_dst, &ip6->ip6_src, 16);
+//        pseudo.ip6ph_len = ip6->ip6_ctlun.ip6_un1.ip6_un1_plen;
+//        pseudo.ip6ph_nxt = ip6->ip6_ctlun.ip6_un1.ip6_un1_nxt;
+//
+//        csum = calc_checksum(0, (uint8_t *) &pseudo, sizeof(struct ip6_hdr_pseudo));
+//    }
+
+    // Build UDP header
+    memset(udp, 0, sizeof(struct udphdr));
+    udp->source = htons(sessionInfo->dPort);
+    udp->dest = htons(sessionInfo->sPort);
+    udp->len = htons(sizeof(struct udphdr) + datalen);
+
+    // Continue checksum
+    csum = calc_checksum(csum, (uint8_t *) udp, sizeof(struct udphdr));
+    csum = calc_checksum(csum, data, datalen);
+    udp->check = ~csum;
+
+    bool isIp4 = sessionInfo->ipVersoin == IPVERSION;
+    inet_ntop(isIp4 ? AF_INET : AF_INET6,
+              (isIp4 ? (const void *) &sessionInfo->srcAddr.ip4
+                     : (const void *) &sessionInfo->srcAddr.ip6),
+              source,
+              sizeof(source));
+    inet_ntop(isIp4 ? AF_INET : AF_INET6,
+              (isIp4 ? (const void *) &sessionInfo->dstAddr.ip4
+                     : (const void *) &sessionInfo->dstAddr.ip6),
+              dest,
+              sizeof(dest));
+
+    // Send packet
+    ALOGD("UDP sending to tun %d from %s/%u to %s/%u data %lu",
+          sessionInfo->context->tunFd, dest, sessionInfo->dPort, source, sessionInfo->sPort, len);
+
+    ssize_t res = write(sessionInfo->context->tunFd, buffer, len);
+
+    // Write PCAP record
+    if (res < 0) {
+        ALOGW("UDP write error %d: %s", errno, strerror(errno));
+    }
+
+    free(buffer);
+
+    if (res != len) {
+        ALOGE("write %ld/%lu", res, len);
+        return -1;
+    }
+
+    return res;
+}
+
+
+void UdpHandler::onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev) {
+    UdpStatus *status = static_cast<UdpStatus *>(sessionInfo->tData);
+
+    // Check socket error
+    if (ev->events & EPOLLERR) {
+        sessionInfo->lastActive = time(NULL);
+
+        int serr = 0;
+        socklen_t optlen = sizeof(int);
+        int err = getsockopt(status->socket, SOL_SOCKET, SO_ERROR, &serr, &optlen);
+        if (err < 0)
+            ALOGE("UDP getsockopt error %d: %s", errno, strerror(errno));
+        else if (serr)
+            ALOGE("UDP SO_ERROR %d: %s", serr, strerror(serr));
+
+        status->state = UDP_FINISHING;
+    } else {
+        // Check socket read
+        if (ev->events & EPOLLIN) {
+            sessionInfo->lastActive = time(NULL);
+
+            uint8_t *buffer = static_cast<uint8_t *>(malloc(status->mss));
+            ssize_t bytes = recv(status->socket, buffer, status->mss, 0);
+            if (bytes < 0) {
+                // Socket error
+                ALOGE("UDP recv error %d: %s", errno, strerror(errno));
+
+                if (errno != EINTR && errno != EAGAIN)
+                    status->state = UDP_FINISHING;
+            } else if (bytes == 0) {
+                ALOGW("UDP recv eof");
+                status->state = UDP_FINISHING;
+
+            } else {
+                // Socket read data
+                char dest[INET6_ADDRSTRLEN + 1];
+                if (sessionInfo->ipVersoin == IPVERSION)
+                    inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
+                else
+                    inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
+                ALOGI("UDP recv bytes %ld from %s/%u for tun", bytes, dest, ntohs(status->dest));
+
+                status->received += bytes;
+
+//                // Process DNS response
+//                if (ntohs(status->dest) == 53)
+//                    parse_dns_response(args, &s->udp, buffer, (size_t *) &bytes);
+
+                // Forward to tun
+                if (write_udp(sessionInfo, status, buffer, (size_t) bytes) < 0)
+                    status->state = UDP_FINISHING;
+                else {
+                    // Prevent too many open files
+                    if (ntohs(status->dest) == 53)
+                        status->state = UDP_FINISHING;
+                }
+            }
+            free(buffer);
+        }
+    }
+}
+
 void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) {
     struct udphdr *udphdr = reinterpret_cast<struct udphdr *>(firstPkt->payload);
 
@@ -241,7 +422,7 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 //        rversion = status->version;
 //    else
 //        rversion = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
-    status->mss = (uint16_t) (rversion == 4 ? UDP4_MAXMSG : UDP6_MAXMSG);
+    status->mss = (uint16_t) (rversion == IPVERSION ? UDP4_MAXMSG : UDP6_MAXMSG);
 
     status->sent = 0;
     status->received = 0;
@@ -251,8 +432,7 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
     // Open UDP socket
     status->socket = open_udp_socket(sessionInfo, status);
     if (status->socket < 0) {
-        freeStatusData(status);
-        return 0;
+        status->state = UDP_FINISHING;
     }
 
     ALOGD("UDP socket %d", status->socket);
@@ -261,7 +441,7 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
     memset(&sessionInfo->ev, 0, sizeof(struct epoll_event));
     sessionInfo->ev.events = EPOLLIN | EPOLLERR;
     sessionInfo->ev.data.ptr = sessionInfo;
-    if (epoll_ctl(sessionInfo->context->tunFd, EPOLL_CTL_ADD, status->socket, &sessionInfo->ev))
+    if (epoll_ctl(sessionInfo->context->epollFd, EPOLL_CTL_ADD, status->socket, &sessionInfo->ev))
         ALOGE("epoll add udp error %d: %s", errno, strerror(errno));
 
     return status;
@@ -269,4 +449,15 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 
 
 void UdpHandler::freeStatusData(void *data) {
+    if (data != nullptr)
+        free(data);
+}
+
+bool UdpHandler::isActive(SessionInfo *sessionInfo) {
+    UdpStatus *status = static_cast<UdpStatus *>(sessionInfo->tData);
+    return status->state == UDP_ACTIVE;
+}
+
+bool UdpHandler::monitorSession(SessionInfo *sessionInfo) {
+    return true;
 }

@@ -9,7 +9,12 @@ import android.net.VpnService
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.LocalBroadcastManager
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 class MainActivity : Activity() {
 
@@ -36,6 +41,28 @@ class MainActivity : Activity() {
             } else {
                 stopProxy()
             }
+        }
+
+
+        btn.setOnClickListener {
+
+            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+                    .subscribeOn(Schedulers.io())
+                    .map {
+                        val client = OkHttpClient()
+                        val request = Request.Builder()
+                                .url(it)
+                                .build()
+                        client.newCall(request)
+                                .execute()
+                                .body()
+                    }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        tv_response.text = it?.charStream()?.readText()
+                    }, {
+                        tv_response.text = it.toString()
+                    })
         }
 
         LocalBroadcastManager.getInstance(this)

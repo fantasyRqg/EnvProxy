@@ -22,6 +22,13 @@ public:
 
     void freeStatusData(void *data) override;
 
+    void onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev) override;
+
+    bool isActive(SessionInfo *sessionInfo) override;
+
+    bool monitorSession(SessionInfo *sessionInfo) override;
+
+
 };
 
 

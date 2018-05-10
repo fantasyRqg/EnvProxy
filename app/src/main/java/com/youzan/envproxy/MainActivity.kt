@@ -45,38 +45,23 @@ class MainActivity : Activity() {
 
 
         btn.setOnClickListener {
-
-            Observable.just(true)
+            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
                     .subscribeOn(Schedulers.io())
                     .map {
-                        throw RuntimeException("cache me")
+                        val client = OkHttpClient()
+                        val request = Request.Builder()
+                                .url(it)
+                                .build()
+                        client.newCall(request)
+                                .execute()
+                                .body()
                     }
-                    .doOnError {
-                        Log.i(TAG, "onCreate: hello exception, " + it.toString())
-                    }
+                    .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({
-                        Log.d(TAG, "onCreate: end")
+                        tv_response.text = it?.charStream()?.readText()
                     }, {
-                        Log.e(TAG, "onCreate: ", it)
+                        tv_response.text = it.toString()
                     })
-
-//            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
-//                    .subscribeOn(Schedulers.io())
-//                    .map {
-//                        val client = OkHttpClient()
-//                        val request = Request.Builder()
-//                                .url(it)
-//                                .build()
-//                        client.newCall(request)
-//                                .execute()
-//                                .body()
-//                    }
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribe({
-//                        tv_response.text = it?.charStream()?.readText()
-//                    }, {
-//                        tv_response.text = it.toString()
-//                    })
         }
 
         LocalBroadcastManager.getInstance(this)

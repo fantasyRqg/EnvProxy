@@ -29,7 +29,7 @@ public:
 
     virtual void processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt) = 0;
 
-    virtual void onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev) = 0;
+    virtual void onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) = 0;
 
     virtual void *createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) = 0;
 
@@ -37,7 +37,11 @@ public:
 
     virtual bool monitorSession(SessionInfo *sessionInfo) = 0;
 
-    virtual int checkSession()
+    virtual int checkSession(SessionInfo *sessionInfo) = 0;
+
+    virtual int getTimeout(SessionInfo *sessionInfo) = 0;
+
+    virtual time_t checkTimeout(SessionInfo *sessionInfo, time_t timeout, int del, time_t now) =0;
 
     virtual void freeStatusData(void *data) = 0;
 };

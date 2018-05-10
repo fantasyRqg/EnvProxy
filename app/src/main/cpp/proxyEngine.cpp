@@ -32,7 +32,6 @@
 
 #define LOG_TAG "proxyEngine"
 
-typedef struct ProxyContext proxyContext;
 
 proxyEngine::proxyEngine(size_t mtu)
         : mMTU(mtu),
@@ -83,12 +82,14 @@ void proxyEngine::handleEvents() {
 
     BufferPool bufferPool(8, mMTU);
 
-    proxyContext context = {
+    ProxyContext context = {
             this,
             mTunFd,
             epoll_fd,
             &bufferPool,
-            mMTU
+            mMTU,
+            maxsessions,
+            0
     };
     //ip package factory
     IpPackageFactory ipPackageFactory(&context);
@@ -110,7 +111,7 @@ void proxyEngine::handleEvents() {
         //main looping
 
         int recheck = 0;
-        int timeout = EPOLL_TIMEOUT;
+        time_t timeout = EPOLL_TIMEOUT;
 
         // Count sessions
         int isessions = 0;
@@ -133,6 +134,7 @@ void proxyEngine::handleEvents() {
             s = s->next;
         }
         int sessions = isessions + usessions + tsessions;
+        context.sessionCount = sessions;
 
         // Check sessions
         long long ms = get_ms();
@@ -140,63 +142,31 @@ void proxyEngine::handleEvents() {
             last_check = ms;
 
             time_t now = time(NULL);
-            SessionInfo *sl = NULL;
             s = sessionFactory.getSessions();
             while (s != NULL) {
-                int del = 0;
-                if (s->protocol == IPPROTO_ICMP || s->protocol == IPPROTO_ICMPV6) {
-                    del = check_icmp_session(args, s, sessions, maxsessions);
-                    if (!s->icmp.stop && !del) {
-                        int stimeout = s->icmp.time +
-                                       get_icmp_timeout(&s->icmp, sessions, maxsessions) - now + 1;
-                        if (stimeout > 0 && stimeout < timeout)
-                            timeout = stimeout;
-                    }
-                } else if (s->protocol == IPPROTO_UDP) {
-                    del = check_udp_session(args, s, sessions, maxsessions);
-                    if (s->udp.state == UDP_ACTIVE && !del) {
-                        int stimeout = s->udp.time +
-                                       get_udp_timeout(&s->udp, sessions, maxsessions) - now + 1;
-                        if (stimeout > 0 && stimeout < timeout)
-                            timeout = stimeout;
-                    }
-                } else if (s->protocol == IPPROTO_TCP) {
-                    del = check_tcp_session(args, s, sessions, maxsessions);
-                    if (s->tcp.state != TCP_CLOSING && s->tcp.state != TCP_CLOSE && !del) {
-                        int stimeout = s->tcp.time +
-                                       get_tcp_timeout(&s->tcp, sessions, maxsessions) - now + 1;
-                        if (stimeout > 0 && stimeout < timeout)
-                            timeout = stimeout;
-                    }
-                }
+                int del = s->transportHandler->checkSession(s);
+                timeout = s->transportHandler->checkTimeout(s, timeout, del, now);
+
 
                 if (del) {
-                    if (sl == NULL)
-                        args->ctx->ng_session = s->next;
-                    else
-                        sl->next = s->next;
-
-                    struct ng_session *c = s;
+                    auto tmp = s;
                     s = s->next;
-                    if (c->protocol == IPPROTO_TCP)
-                        clear_tcp_data(&c->tcp);
-                    free(c);
+                    sessionFactory.freeSession(s);
                 } else {
-                    sl = s;
                     s = s->next;
                 }
             }
         } else {
             recheck = 1;
-            log_android(ANDROID_LOG_DEBUG, "Skipped session checks");
+            ALOGD("Skipped session checks");
         }
 
-        log_android(ANDROID_LOG_DEBUG,
-                    "sessions ICMP %d UDP %d TCP %d max %d/%d timeout %d recheck %d",
-                    isessions, usessions, tsessions, sessions, maxsessions, timeout, recheck);
+        ALOGD("sessions ICMP %d UDP %d TCP %d max %d/%d timeout %ld recheck %d",
+              isessions, usessions, tsessions, sessions, maxsessions, timeout, recheck);
 
         struct epoll_event ev[EPOLL_EVENTS];
-        int ready = epoll_wait(epoll_fd, ev, EPOLL_EVENTS, 1000);
+        int ready = epoll_wait(epoll_fd, ev, EPOLL_EVENTS,
+                               recheck ? EPOLL_MIN_CHECK : static_cast<int>(timeout * 1000));
 
         for (int i = 0; i < ready; ++i) {
             if (ev[i].data.ptr == &ev_tun) {
@@ -238,17 +208,25 @@ void proxyEngine::handleEvents() {
 //                      (ev[i].events & EPOLLHUP) != 0,
 //                      si->ipVersoin);
                 //process socket data incoming
-                si->transportHandler->onSocketDataIncoming(si, &ev[i]);
+                si->transportHandler->onSocketEvent(si, &ev[i]);
             }
         }
 
+    }
+
+    // clean up jni env
+    if (mJniEnv != nullptr && mProxyService != nullptr) {
+        mJniEnv->DeleteGlobalRef(mProxyService);
+        mJniEnv = nullptr;
+        mProxyService = nullptr;
+        mProtectMid = nullptr;
     }
 }
 
 void proxyEngine::logPkt(const IpPackage *ipPkt, const TransportPkt *tPkt) const {
     ADDR_TO_STR(ipPkt);
 
-    ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6d, dPort = %6d, pkt_size = %6lu ,payload_size = %6lu",
+    ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6d, dPort = %6d, pkt_size = %6u ,payload_size = %6u",
           source, dest,
           ipPkt->protocol,
           tPkt->sPort, tPkt->dPort,
@@ -269,7 +247,7 @@ IpPackage *proxyEngine::checkTun(ProxyContext *context, epoll_event *pEvent,
         uint8_t *buffer = static_cast<uint8_t *>(context->bufferPool->allocBuffer());
 
         if (buffer == nullptr) {
-            ALOGW("buffer allocate failure, remain buffer %lu",
+            ALOGW("buffer allocate failure, remain buffer %u",
                   context->bufferPool->getRemainBufCount());
             return nullptr;
         }
@@ -308,13 +286,6 @@ bool proxyEngine::isProxyRunning() {
 }
 
 void proxyEngine::setJniEnv(JNIEnv *env, jobject proxyService) {
-    if (mJniEnv != nullptr && mProxyService != nullptr) {
-        mJniEnv->DeleteGlobalRef(mProxyService);
-        mJniEnv = nullptr;
-        mProxyService = nullptr;
-        mProtectMid = nullptr;
-    }
-
     mJniEnv = env;
     mProxyService = mJniEnv->NewGlobalRef(proxyService);
 

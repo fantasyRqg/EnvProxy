@@ -143,6 +143,27 @@ struct SessionInfo *SessionFactory::createSession(TransportPkt *pkt) {
 
 void SessionFactory::freeSession(SessionInfo *si) {
     if (si != nullptr) {
+        SessionInfo *s = mSessions;
+        SessionInfo *ps = nullptr;
+        while (s != nullptr && s != si) {
+            ps = s;
+            s = s->next;
+        }
+
+        if (s == si) {
+            //find si in session link
+            if (mSessions == si) {
+                mSessions = si->next;
+            } else {
+                //ps never be nullptr
+                ps->next = si;
+            }
+
+            mSessionCount--;
+        }
+
+
+        //free si
         if (si->tData != nullptr && si->transportHandler != nullptr) {
             si->transportHandler->freeStatusData(si->tData);
             si->tData = nullptr;
@@ -150,7 +171,6 @@ void SessionFactory::freeSession(SessionInfo *si) {
         delete si;
     }
 
-    mSessionCount--;
 }
 
 SessionInfo *SessionFactory::getSessions() const {

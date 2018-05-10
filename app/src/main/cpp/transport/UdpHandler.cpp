@@ -115,7 +115,7 @@ void UdpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
 //            return 1;
 //    }
 
-    ALOGI("UDP forward from tun %s/%u to %s/%u data %lu",
+    ALOGI("UDP forward from tun %s/%u to %s/%u data %u",
           source, pkt->sPort, dest, pkt->dPort, pkt->payloadSize);
 
     sessionInfo->lastActive = time(NULL);
@@ -320,7 +320,7 @@ ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
               sizeof(dest));
 
     // Send packet
-    ALOGD("UDP sending to tun %d from %s/%u to %s/%u data %lu",
+    ALOGD("UDP sending to tun %d from %s/%u to %s/%u data %u",
           sessionInfo->context->tunFd, dest, sessionInfo->dPort, source, sessionInfo->sPort, len);
 
     ssize_t res = write(sessionInfo->context->tunFd, buffer, len);
@@ -333,7 +333,7 @@ ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
     free(buffer);
 
     if (res != len) {
-        ALOGE("write %ld/%lu", res, len);
+        ALOGE("write %u/%u", res, len);
         return -1;
     }
 
@@ -341,7 +341,7 @@ ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
 }
 
 
-void UdpHandler::onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev) {
+void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
     UdpStatus *status = static_cast<UdpStatus *>(sessionInfo->tData);
 
     // Check socket error
@@ -381,7 +381,7 @@ void UdpHandler::onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev)
                     inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
                 else
                     inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
-                ALOGI("UDP recv bytes %ld from %s/%u for tun", bytes, dest, ntohs(status->dest));
+                ALOGI("UDP recv bytes %u from %s/%u for tun", bytes, dest, ntohs(status->dest));
 
                 status->received += bytes;
 
@@ -460,4 +460,78 @@ bool UdpHandler::isActive(SessionInfo *sessionInfo) {
 
 bool UdpHandler::monitorSession(SessionInfo *sessionInfo) {
     return true;
+}
+
+int UdpHandler::checkSession(SessionInfo *sessionInfo) {
+    UdpStatus *status = static_cast<UdpStatus *>(sessionInfo->tData);
+    time_t now = time(NULL);
+
+    char source[INET6_ADDRSTRLEN + 1];
+    char dest[INET6_ADDRSTRLEN + 1];
+    if (sessionInfo->ipVersoin == IPVERSION) {
+        inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
+        inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
+    } else {
+        inet_ntop(AF_INET6, &sessionInfo->srcAddr.ip6, source, sizeof(source));
+        inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
+    }
+
+    // Check session timeout
+    int timeout = getTimeout(sessionInfo);
+    if (status->state == UDP_ACTIVE && sessionInfo->lastActive + timeout < now) {
+        ALOGW("UDP idle %ld/%d sec state %d from %s/%u to %s/%u",
+              now - sessionInfo->lastActive, timeout, status->state,
+              source, sessionInfo->sPort, dest, ntohs(status->dest));
+        status->state = UDP_FINISHING;
+    }
+
+    // Check finished sessions
+    if (status->state == UDP_FINISHING) {
+        ALOGI("UDP close from %s/%u to %s/%u socket %d",
+              source, sessionInfo->sPort, dest, sessionInfo->dPort, status->socket);
+
+        if (close(status->socket))
+            ALOGE("UDP close %d error %d: %s", status->socket, errno, strerror(errno));
+        status->socket = -1;
+
+        sessionInfo->lastActive = time(NULL);
+        status->state = UDP_CLOSED;
+    }
+
+    if (status->state == UDP_CLOSED && (status->sent || status->received)) {
+//        account_usage(args, status->version, IPPROTO_UDP,
+//                      dest, ntohs(status->dest), status->uid, status->sent, status->received);
+        status->sent = 0;
+        status->received = 0;
+    }
+
+    // Cleanup lingering sessions
+    if ((status->state == UDP_CLOSED || status->state == UDP_BLOCKED) &&
+        sessionInfo->lastActive + UDP_KEEP_TIMEOUT < now)
+        return 1;
+
+    return 0;
+}
+
+int UdpHandler::getTimeout(SessionInfo *sessionInfo) {
+    int timeout = (sessionInfo->dPort == 53 ? UDP_TIMEOUT_53 : UDP_TIMEOUT_ANY);
+    auto ctx = sessionInfo->context;
+    int scale = 100 - ctx->sessionCount * 100 / ctx->maxSessions;
+    timeout = timeout * scale / 100;
+
+    return timeout;
+}
+
+
+time_t UdpHandler::checkTimeout(SessionInfo *sessionInfo, time_t timeout, int del, time_t now) {
+    UdpStatus *status = static_cast<UdpStatus *>(sessionInfo->tData);
+
+    if (status->state == UDP_ACTIVE && !del) {
+        time_t stimeout = sessionInfo->lastActive +
+                          getTimeout(sessionInfo) - now + 1;
+        if (stimeout > 0 && stimeout < timeout)
+            timeout = stimeout;
+    }
+
+    return timeout;
 }

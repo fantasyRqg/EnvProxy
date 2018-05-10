@@ -39,7 +39,7 @@ struct segment {
 struct TcpStatus {
     int socket;
     bool stop;
-    TransportPkt *firstPkt;
+    bool skipFirst;
 
     uint16_t mss;
     uint8_t recv_scale;
@@ -80,6 +80,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status,
 
 void write_rst(SessionInfo *sessionInfo, TcpStatus *status);
 
+int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status);
 
 TcpHandler::TcpHandler() {}
 
@@ -134,7 +135,7 @@ void getPackageStr(TransportPkt *pkt, struct TcpStatus *status, char *pktStr) {
 
 
     sprintf(pktStr,
-            "TCP %s %s/%u > %s/%u seq %u ack %u data %lu win %u",
+            "TCP %s %s/%u > %s/%u seq %u ack %u data %u win %u",
             flags,
             source, ntohs(tcphdr->source),
             dest, ntohs(tcphdr->dest),
@@ -286,21 +287,23 @@ void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
     struct tcphdr *tcphdr = reinterpret_cast<struct tcphdr *>(pkt->ipPackage->payload);
     struct TcpStatus *status = reinterpret_cast<struct TcpStatus *>(sessionInfo->tData);
 
-    if (status->firstPkt == pkt) {
+    char packet[250];
+    getPackageStr(pkt, status, packet);
+
+    if (status->skipFirst) {
+        status->skipFirst = false;
         // first pkt handle by createStatus
+        ALOGV("%s, skip first pkt process", packet);
         return;
     }
+
+    ALOGD("%s", packet);
 
     const uint8_t tcpoptlen = (uint8_t) ((tcphdr->doff - 5) * 4);
     size_t tcphdrSize = sizeof(struct tcphdr);
     const uint8_t *tcpoptions = pkt->ipPackage->payload + tcphdrSize;
     const uint8_t *data = pkt->payload + tcpoptlen;
     const uint16_t datalen = static_cast<const uint16_t>(pkt->payloadSize - tcpoptlen);
-
-    char packet[250];
-    getPackageStr(pkt, status, packet);
-
-    ALOGD("%s", packet);
 
 
     char str_session[250];
@@ -454,6 +457,8 @@ void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
                   strstate(status->state),
                   status->local_seq - status->local_start,
                   status->remote_seq - status->remote_start);
+
+        writeForwardData(sessionInfo, status);
     }
 }
 
@@ -521,63 +526,6 @@ int open_tcp_socket(const struct SessionInfo *sessionInfo) {
         close(sock);
         return -1;
     }
-
-    // Build target address
-    struct sockaddr_in addr4;
-    struct sockaddr_in6 addr6;
-//    if (redirect == nullptr) {
-//        if (*socks5_addr && socks5_port) {
-//            log_android(ANDROID_LOG_WARN, "TCP%d SOCKS5 to %s/%u",
-//                        version, socks5_addr, socks5_port);
-//
-//            if (version == 4) {
-//                addr4.sin_family = AF_INET;
-//                inet_pton(AF_INET, socks5_addr, &addr4.sin_addr);
-//                addr4.sin_port = htons(socks5_port);
-//            } else {
-//                addr6.sin6_family = AF_INET6;
-//                inet_pton(AF_INET6, socks5_addr, &addr6.sin6_addr);
-//                addr6.sin6_port = htons(socks5_port);
-//            }
-//        } else {
-    if (version == IPVERSION) {
-        addr4.sin_family = AF_INET;
-        addr4.sin_addr.s_addr = (__be32) sessionInfo->dstAddr.ip4;
-        addr4.sin_port = htons(sessionInfo->dPort);
-    } else {
-        addr6.sin6_family = AF_INET6;
-        memcpy(&addr6.sin6_addr, &sessionInfo->dstAddr.ip6, 16);
-        addr6.sin6_port = htons(sessionInfo->dPort);
-    }
-//}
-//    } else {
-//        log_android(ANDROID_LOG_WARN, "TCP%d redirect to %s/%u",
-//                    version, redirect->raddr, redirect->rport);
-//
-//        if (version == 4) {
-//            addr4.sin_family = AF_INET;
-//            inet_pton(AF_INET, redirect->raddr, &addr4.sin_addr);
-//            addr4.sin_port = htons(redirect->rport);
-//        } else {
-//            addr6.sin6_family = AF_INET6;
-//            inet_pton(AF_INET6, redirect->raddr, &addr6.sin6_addr);
-//            addr6.sin6_port = htons(redirect->rport);
-//        }
-//    }
-
-// Initiate connect
-    int err = connect(sock,
-                      (version == 4 ? (const struct sockaddr *) &addr4
-                                    : (const struct sockaddr *) &addr6),
-                      (socklen_t) (version == 4
-                                   ? sizeof(struct sockaddr_in)
-                                   : sizeof(struct sockaddr_in6)));
-    if (err < 0 && errno != EINPROGRESS) {
-        ALOGE("connect error %d: %s", errno, strerror(errno));
-        close(sock);
-        return -1;
-    }
-
     return sock;
 }
 
@@ -744,7 +692,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
               dest, sizeof(dest));
 
     // Send packet
-    ALOGD("TCP sending%s%s%s%s to tun %s/%u seq %u ack %u data %lu",
+    ALOGD("TCP sending%s%s%s%s to tun %s/%u seq %u ack %u data %u",
           (tcp->syn ? " SYN" : ""),
           (tcp->ack ? " ACK" : ""),
           (tcp->fin ? " FIN" : ""),
@@ -759,7 +707,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
 
     // Write pcap record
     if (res < 0) {
-        ALOGE("TCP write%s%s%s%s data %lu error %d: %s",
+        ALOGE("TCP write%s%s%s%s data %u error %u: %s",
               (tcp->syn ? " SYN" : ""),
               (tcp->ack ? " ACK" : ""),
               (tcp->fin ? " FIN" : ""),
@@ -772,7 +720,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
     free(buffer);
 
     if (res != len) {
-        ALOGE("TCP write %ld/%ld", res, len);
+        ALOGE("TCP write %u/%u", res, len);
         return -1;
     }
 
@@ -802,7 +750,7 @@ uint32_t get_send_window(const TcpStatus *status) {
     return window;
 }
 
-void TcpHandler::onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev) {
+void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
     TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
 
 
@@ -880,62 +828,8 @@ void TcpHandler::onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev)
             // Always forward data
             int fwd = 0;
             if (ev->events & EPOLLOUT) {
-                // Forward data
-                uint32_t buffer_size = (uint32_t) get_receive_buffer(status);
-                while (status->forward != nullptr &&
-                       status->forward->seq + status->forward->sent == status->remote_seq &&
-                       status->forward->len - status->forward->sent < buffer_size) {
-                    ALOGD("%s fwd %u...%u sent %u",
-                          str_session,
-                          status->forward->seq - status->remote_start,
-                          status->forward->seq + status->forward->len - status->remote_start,
-                          status->forward->sent);
-
-                    ssize_t sent = send(status->socket,
-                                        status->forward->data + status->forward->sent,
-                                        status->forward->len - status->forward->sent,
-                                        (unsigned int) (MSG_NOSIGNAL | (status->forward->psh
-                                                                        ? 0
-                                                                        : MSG_MORE)));
-                    if (sent < 0) {
-                        ALOGE("%s send error %d: %s", str_session, errno, strerror(errno));
-                        if (errno == EINTR || errno == EAGAIN) {
-                            // Retry later
-                            break;
-                        } else {
-                            write_rst(sessionInfo, status);
-                            break;
-                        }
-                    } else {
-                        fwd = 1;
-                        buffer_size -= sent;
-                        status->sent += sent;
-                        status->forward->sent += sent;
-                        status->remote_seq = status->forward->seq + status->forward->sent;
-
-                        if (status->forward->len == status->forward->sent) {
-                            struct segment *p = status->forward;
-                            status->forward = status->forward->next;
-                            free(p->data);
-                            free(p);
-                        } else {
-                            ALOGW("%s partial send %u/%u",
-                                  str_session, status->forward->sent, status->forward->len);
-                            break;
-                        }
-                    }
-                }
-
-                // Log data buffered
-                struct segment *seg = status->forward;
-                while (seg != nullptr) {
-                    ALOGW("%s queued %u...%u sent %u",
-                          str_session,
-                          seg->seq - status->remote_start,
-                          seg->seq + seg->len - status->remote_start,
-                          seg->sent);
-
-                    seg = seg->next;
+                if (writeForwardData(sessionInfo, status) > 0) {
+                    fwd = 1;
                 }
             }
 
@@ -1000,7 +894,7 @@ void TcpHandler::onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev)
 
                     } else {
                         // Socket read data
-                        ALOGD("%s recv bytes %ld", str_session, bytes);
+                        ALOGD("%s recv bytes %u", str_session, bytes);
                         status->received += bytes;
 
                         // Forward to tun
@@ -1017,12 +911,91 @@ void TcpHandler::onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev)
         ALOGD("%s new state", str_session);
 }
 
+int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
+    int fwdCount = 0;
+
+    char source[INET6_ADDRSTRLEN + 1];
+    char dest[INET6_ADDRSTRLEN + 1];
+    if (sessionInfo->ipVersoin == IPVERSION) {
+        inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
+        inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
+    } else {
+        inet_ntop(AF_INET6, &sessionInfo->srcAddr.ip6, source, sizeof(source));
+        inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
+    }
+    char str_session[250];
+    sprintf(str_session, "TCP socket from %s/%u to %s/%u %s loc %u rem %u",
+            source, sessionInfo->sPort, dest, sessionInfo->dPort,
+            strstate(status->state),
+            status->local_seq - status->local_start,
+            status->remote_seq - status->remote_start);
+
+
+    uint32_t buffer_size = (uint32_t) get_receive_buffer(status);
+    while (status->forward != nullptr &&
+           status->forward->seq + status->forward->sent == status->remote_seq &&
+           status->forward->len - status->forward->sent < buffer_size) {
+        ALOGD("%s fwd %u...%u sent %u",
+              str_session,
+              status->forward->seq - status->remote_start,
+              status->forward->seq + status->forward->len - status->remote_start,
+              status->forward->sent);
+
+        ssize_t sent = send(status->socket,
+                            status->forward->data + status->forward->sent,
+                            status->forward->len - status->forward->sent,
+                            (unsigned int) (MSG_NOSIGNAL | (status->forward->psh
+                                                            ? 0
+                                                            : MSG_MORE)));
+        if (sent < 0) {
+            ALOGE("%s send error %d: %s", str_session, errno, strerror(errno));
+            if (errno == EINTR || errno == EAGAIN) {
+                // Retry later
+                break;
+            } else {
+                write_rst(sessionInfo, status);
+                break;
+            }
+        } else {
+            fwdCount += sent;
+            buffer_size -= sent;
+            status->sent += sent;
+            status->forward->sent += sent;
+            status->remote_seq = status->forward->seq + status->forward->sent;
+
+            if (status->forward->len == status->forward->sent) {
+                struct segment *p = status->forward;
+                status->forward = status->forward->next;
+                free(p->data);
+                free(p);
+            } else {
+                ALOGW("%s partial send %u/%u",
+                      str_session, status->forward->sent, status->forward->len);
+                break;
+            }
+        }
+    }
+
+    // Log data buffered
+    struct segment *seg = status->forward;
+    while (seg != nullptr) {
+        ALOGW("%s queued %u...%u sent %u",
+              str_session,
+              seg->seq - status->remote_start,
+              seg->seq + seg->len - status->remote_start,
+              seg->sent);
+
+        seg = seg->next;
+    }
+    return fwdCount;
+}
+
 void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) {
     struct tcphdr *tcphdr = reinterpret_cast<struct tcphdr *>(firstPkt->ipPackage->payload);
 
     TcpStatus *status = static_cast<TcpStatus *>(malloc(sizeof(struct TcpStatus)));
     status->stop = false;
-    status->firstPkt = firstPkt;
+    status->skipFirst = true;
 
     const uint8_t tcpoptlen = (uint8_t) ((tcphdr->doff - 5) * 4);
     size_t tcphdrSize = sizeof(struct tcphdr);
@@ -1118,8 +1091,69 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
         sessionInfo->ev.events = EPOLLOUT | EPOLLERR;
         sessionInfo->ev.data.ptr = sessionInfo;
         if (epoll_ctl(sessionInfo->context->epollFd, EPOLL_CTL_ADD, status->socket,
-                      &sessionInfo->ev))
+                      &sessionInfo->ev)) {
+            status->state = TCP_CLOSING;
             ALOGE("epoll add tcp error %d: %s", errno, strerror(errno));
+            goto createFail;
+        }
+
+
+        // Build target address
+        struct sockaddr_in addr4;
+        struct sockaddr_in6 addr6;
+//    if (redirect == nullptr) {
+//        if (*socks5_addr && socks5_port) {
+//            log_android(ANDROID_LOG_WARN, "TCP%d SOCKS5 to %s/%u",
+//                        version, socks5_addr, socks5_port);
+//
+//            if (version == 4) {
+//                addr4.sin_family = AF_INET;
+//                inet_pton(AF_INET, socks5_addr, &addr4.sin_addr);
+//                addr4.sin_port = htons(socks5_port);
+//            } else {
+//                addr6.sin6_family = AF_INET6;
+//                inet_pton(AF_INET6, socks5_addr, &addr6.sin6_addr);
+//                addr6.sin6_port = htons(socks5_port);
+//            }
+//        } else {
+        if (sessionInfo->ipVersoin == IPVERSION) {
+            addr4.sin_family = AF_INET;
+            addr4.sin_addr.s_addr = (__be32) sessionInfo->dstAddr.ip4;
+            addr4.sin_port = htons(sessionInfo->dPort);
+        } else {
+            addr6.sin6_family = AF_INET6;
+            memcpy(&addr6.sin6_addr, &sessionInfo->dstAddr.ip6, 16);
+            addr6.sin6_port = htons(sessionInfo->dPort);
+        }
+//}
+//    } else {
+//        log_android(ANDROID_LOG_WARN, "TCP%d redirect to %s/%u",
+//                    version, redirect->raddr, redirect->rport);
+//
+//        if (version == 4) {
+//            addr4.sin_family = AF_INET;
+//            inet_pton(AF_INET, redirect->raddr, &addr4.sin_addr);
+//            addr4.sin_port = htons(redirect->rport);
+//        } else {
+//            addr6.sin6_family = AF_INET6;
+//            inet_pton(AF_INET6, redirect->raddr, &addr6.sin6_addr);
+//            addr6.sin6_port = htons(redirect->rport);
+//        }
+//    }
+
+// Initiate connect
+        int err = connect(status->socket,
+                          (sessionInfo->ipVersoin == IPVERSION ? (const struct sockaddr *) &addr4
+                                                               : (const struct sockaddr *) &addr6),
+                          (socklen_t) (sessionInfo->ipVersoin == IPVERSION
+                                       ? sizeof(struct sockaddr_in)
+                                       : sizeof(struct sockaddr_in6)));
+        if (err < 0 && errno != EINPROGRESS) {
+            ALOGE("connect error %d: %s", errno, strerror(errno));
+            close(status->socket);
+            status->state = TCP_CLOSING;
+            goto createFail;
+        }
 
     } else {
         ALOGW("%s unknown session", packet);
@@ -1162,7 +1196,7 @@ void TcpHandler::freeStatusData(void *data) {
 
 bool TcpHandler::monitorSession(SessionInfo *sessionInfo) {
     bool recheck = false;
-    unsigned int events = EPOLLERR;
+    unsigned int events = EPOLLERR | EPOLLOUT;
 
     TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
 
@@ -1224,3 +1258,94 @@ bool TcpHandler::isActive(SessionInfo *sessionInfo) {
 }
 
 
+int TcpHandler::checkSession(SessionInfo *sessionInfo) {
+    TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
+    time_t now = time(NULL);
+
+    char source[INET6_ADDRSTRLEN + 1];
+    char dest[INET6_ADDRSTRLEN + 1];
+    if (sessionInfo->ipVersoin == IPVERSION) {
+        inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
+        inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
+    } else {
+        inet_ntop(AF_INET6, &sessionInfo->srcAddr.ip6, source, sizeof(source));
+        inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
+    }
+
+    char session[250];
+    sprintf(session, "TCP socket from %s/%u to %s/%u %s socket %d",
+            source, sessionInfo->sPort, dest, sessionInfo->dPort,
+            strstate(status->state), status->socket);
+
+    int timeout = getTimeout(sessionInfo);
+
+    // Check session timeout
+    if (status->state != TCP_CLOSING && status->state != TCP_CLOSE &&
+        sessionInfo->lastActive + timeout < now) {
+        ALOGW("%s idle %ld/%d sec ", session, now - sessionInfo->lastActive, timeout);
+        if (status->state == TCP_LISTEN)
+            status->state = TCP_CLOSING;
+        else
+            write_rst(sessionInfo, status);
+    }
+
+    // Check closing sessions
+    if (status->state == TCP_CLOSING) {
+        // eof closes socket
+        if (status->socket >= 0) {
+            if (close(status->socket))
+                ALOGE("%s close error %d: %s", session, errno, strerror(errno));
+            else
+                ALOGW("%s close", session);
+            status->socket = -1;
+        }
+
+        sessionInfo->lastActive = time(NULL);
+        status->state = TCP_CLOSE;
+    }
+
+    if ((status->state == TCP_CLOSING || status->state == TCP_CLOSE) &&
+        (status->sent || status->received)) {
+//        account_usage(args, status->version, IPPROTO_TCP,
+//                      dest, ntohs(status->dest), status->uid, status->sent, status->received);
+        status->sent = 0;
+        status->received = 0;
+    }
+
+    // Cleanup lingering sessions
+    if (status->state == TCP_CLOSE && sessionInfo->lastActive + TCP_KEEP_TIMEOUT < now)
+        return 1;
+
+    return 0;
+}
+
+int TcpHandler::getTimeout(SessionInfo *sessionInfo) {
+    TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
+
+    int timeout;
+    if (status->state == TCP_LISTEN || status->state == TCP_SYN_RECV)
+        timeout = TCP_INIT_TIMEOUT;
+    else if (status->state == TCP_ESTABLISHED)
+        timeout = TCP_IDLE_TIMEOUT;
+    else
+        timeout = TCP_CLOSE_TIMEOUT;
+
+    auto ctx = sessionInfo->context;
+    int scale = 100 - ctx->sessionCount * 100 / ctx->maxSessions;
+    timeout = timeout * scale / 100;
+
+    return timeout;
+}
+
+time_t TcpHandler::checkTimeout(SessionInfo *sessionInfo, time_t timeout, int del, time_t now) {
+    TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
+
+    if (status->state != TCP_CLOSING && status->state != TCP_CLOSE && !del) {
+        time_t stimeout = sessionInfo->lastActive +
+                          getTimeout(sessionInfo) - now + 1;
+        if (stimeout > 0 && stimeout < timeout)
+            timeout = stimeout;
+    }
+
+    return timeout;
+}

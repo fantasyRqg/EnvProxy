@@ -83,7 +83,7 @@ void IcmpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pk
 
 
     ADDR_TO_STR(pkt->ipPackage);
-    ALOGI("ICMP forward from tun %s to %s type %d code %d id %x seq %d data %lu",
+    ALOGI("ICMP forward from tun %s to %s type %d code %d id %x seq %d data %u",
           source, dest,
           icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq, pkt->payloadSize);
 
@@ -174,7 +174,7 @@ ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
               dest, sizeof(dest));
 
     // Send raw ICMP message
-    ALOGW("ICMP sending to tun %d from %s to %s data %lu type %d code %d id %x seq %d",
+    ALOGW("ICMP sending to tun %d from %s to %s data %u type %d code %d id %x seq %d",
           sessionInfo->context->tunFd, dest, source, datalen,
           icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq);
 
@@ -187,7 +187,7 @@ ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
     free(buffer);
 
     if (res != len) {
-        ALOGE("write %ld/%ld", res, len);
+        ALOGE("write %u/%u", res, len);
         return -1;
     }
 
@@ -195,7 +195,7 @@ ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
 }
 
 
-void IcmpHandler::onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev) {
+void IcmpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
     IcmpStatus *status = static_cast<IcmpStatus *>(sessionInfo->tData);
 
     // Check socket error
@@ -244,12 +244,12 @@ void IcmpHandler::onSocketDataIncoming(SessionInfo *sessionInfo, epoll_event *ev
                 struct icmp *icmp = (struct icmp *) buffer;
 
                 if (status->id == icmp->icmp_id) {
-                    ALOGI("ICMP recv bytes %ld from %s for tun type %d code %d id %x/%x seq %d",
+                    ALOGI("ICMP recv bytes %u from %s for tun type %d code %d id %x/%x seq %d",
                           bytes, dest,
                           icmp->icmp_type, icmp->icmp_code,
                           status->id, icmp->icmp_id, icmp->icmp_seq);
                 } else {
-                    ALOGW("ICMP recv bytes %ld from %s for tun type %d code %d id %x/%x seq %d",
+                    ALOGW("ICMP recv bytes %u from %s for tun type %d code %d id %x/%x seq %d",
                           bytes, dest,
                           icmp->icmp_type, icmp->icmp_code,
                           status->id, icmp->icmp_id, icmp->icmp_seq);
@@ -323,4 +323,53 @@ bool IcmpHandler::isActive(SessionInfo *sessionInfo) {
 
 bool IcmpHandler::monitorSession(SessionInfo *sessionInfo) {
     return true;
+}
+
+int IcmpHandler::checkSession(SessionInfo *sessionInfo) {
+    time_t now = time(NULL);
+    IcmpStatus *status = static_cast<IcmpStatus *>(sessionInfo->tData);
+
+    int timeout = getTimeout(sessionInfo);
+    if (status->stop || sessionInfo->lastActive + timeout < now) {
+        char source[INET6_ADDRSTRLEN + 1];
+        char dest[INET6_ADDRSTRLEN + 1];
+        if (sessionInfo->ipVersoin == IPVERSION) {
+            inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
+            inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
+        } else {
+            inet_ntop(AF_INET6, &sessionInfo->srcAddr.ip6, source, sizeof(source));
+            inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
+        }
+        ALOGW("ICMP idle %ld/%d sec stop %d from %s to %s",
+              now - sessionInfo->lastActive, timeout, status->stop, dest, source);
+
+        if (close(status->socket))
+            ALOGE("ICMP close %d error %d: %s", status->socket, errno, strerror(errno));
+        status->socket = -1;
+        return 1;
+    }
+
+    return 0;
+}
+
+int IcmpHandler::getTimeout(SessionInfo *sessionInfo) {
+    int timeout = ICMP_TIMEOUT;
+    auto ctx = sessionInfo->context;
+    int scale = 100 - ctx->sessionCount * 100 / ctx->maxSessions;
+    timeout = timeout * scale / 100;
+
+    return timeout;
+}
+
+time_t IcmpHandler::checkTimeout(SessionInfo *sessionInfo, time_t timeout, int del, time_t now) {
+    IcmpStatus *status = static_cast<IcmpStatus *>(sessionInfo->tData);
+
+    if (!status->stop && !del) {
+        time_t stimeout = sessionInfo->lastActive +
+                          getTimeout(sessionInfo) - now + 1;
+        if (stimeout > 0 && stimeout < timeout)
+            timeout = stimeout;
+    }
+
+    return timeout;
 }

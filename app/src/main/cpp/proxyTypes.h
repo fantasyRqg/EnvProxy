@@ -29,6 +29,19 @@
 #define UDP_CLOSED 2
 #define UDP_BLOCKED 3
 
+#define ICMP_TIMEOUT 15 // seconds
+
+#define UDP_TIMEOUT_53 15 // seconds
+#define UDP_TIMEOUT_ANY 300 // seconds
+#define UDP_KEEP_TIMEOUT 60 // seconds
+
+#define TCP_INIT_TIMEOUT 20 // seconds ~net.inet.tcp.keepinit
+#define TCP_IDLE_TIMEOUT 3600 // seconds ~net.inet.tcp.keepidle
+#define TCP_CLOSE_TIMEOUT 20 // seconds
+#define TCP_KEEP_TIMEOUT 300 // seconds
+// https://en.wikipedia.org/wiki/Maximum_segment_lifetime
+
+
 
 union IpAddr {
     in6_addr ip6;
@@ -45,6 +58,8 @@ struct ProxyContext {
     int epollFd;
     BufferPool *bufferPool;
     size_t mtu;
+    int maxSessions;
+    int sessionCount;
 };
 
 class IpHandler;

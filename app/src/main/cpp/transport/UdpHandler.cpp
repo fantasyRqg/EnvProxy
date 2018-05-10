@@ -406,7 +406,6 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) {
     struct udphdr *udphdr = reinterpret_cast<struct udphdr *>(firstPkt->payload);
 
-
     ADDR_TO_STR(firstPkt->ipPackage);
     ALOGI("UDP new session from %s/%u to %s/%u",
           source, ntohs(udphdr->source), dest, ntohs(udphdr->dest));
@@ -414,6 +413,7 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 
     // Register session
     UdpStatus *status = static_cast<UdpStatus *>(malloc(sizeof(UdpStatus)));
+    ALOGV("UDP create status data %p", status);
 
     sessionInfo->lastActive = time(NULL);
 
@@ -449,6 +449,8 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 
 
 void UdpHandler::freeStatusData(void *data) {
+    ALOGI("free UDP status data %p", data);
+
     if (data != nullptr)
         free(data);
 }
@@ -459,7 +461,7 @@ bool UdpHandler::isActive(SessionInfo *sessionInfo) {
 }
 
 bool UdpHandler::monitorSession(SessionInfo *sessionInfo) {
-    return true;
+    return false;
 }
 
 int UdpHandler::checkSession(SessionInfo *sessionInfo) {

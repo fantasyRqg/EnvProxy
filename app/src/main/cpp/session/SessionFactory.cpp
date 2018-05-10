@@ -7,6 +7,7 @@
 #include <netinet/ip.h>
 #include <cstring>
 #include <netinet/ip6.h>
+#include <string>
 
 #include "SessionFactory.h"
 #include "../proxyTypes.h"
@@ -142,6 +143,8 @@ struct SessionInfo *SessionFactory::createSession(TransportPkt *pkt) {
 }
 
 void SessionFactory::freeSession(SessionInfo *si) {
+
+
     if (si != nullptr) {
         SessionInfo *s = mSessions;
         SessionInfo *ps = nullptr;
@@ -156,20 +159,24 @@ void SessionFactory::freeSession(SessionInfo *si) {
                 mSessions = si->next;
             } else {
                 //ps never be nullptr
-                ps->next = si;
+                ps->next = si->next;
             }
 
             mSessionCount--;
+        } else {
+            ALOGE("session find error");
         }
 
-
-        //free si
+        //free session
         if (si->tData != nullptr && si->transportHandler != nullptr) {
             si->transportHandler->freeStatusData(si->tData);
             si->tData = nullptr;
         }
         delete si;
+    } else {
+        ALOGE("freeSession free nullptr");
     }
+
 
 }
 

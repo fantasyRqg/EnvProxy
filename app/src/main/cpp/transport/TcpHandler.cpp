@@ -38,8 +38,8 @@ struct segment {
 
 struct TcpStatus {
     int socket;
-    bool stop;
     bool skipFirst;
+    bool socketConnected;
 
     uint16_t mss;
     uint8_t recv_scale;
@@ -458,7 +458,7 @@ void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
                   status->local_seq - status->local_start,
                   status->remote_seq - status->remote_start);
 
-        writeForwardData(sessionInfo, status);
+//        writeForwardData(sessionInfo, status);
     }
 }
 
@@ -823,6 +823,8 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                 status->local_seq++; // local SYN
                 status->state = TCP_SYN_RECV;
             }
+            status->socketConnected = true;
+            ALOGV("write tun syn act");
         } else {
 
             // Always forward data
@@ -994,7 +996,7 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
     struct tcphdr *tcphdr = reinterpret_cast<struct tcphdr *>(firstPkt->ipPackage->payload);
 
     TcpStatus *status = static_cast<TcpStatus *>(malloc(sizeof(struct TcpStatus)));
-    status->stop = false;
+    status->socketConnected = false;
     status->skipFirst = true;
 
     const uint8_t tcpoptlen = (uint8_t) ((tcphdr->doff - 5) * 4);
@@ -1175,6 +1177,7 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 }
 
 void TcpHandler::freeStatusData(void *data) {
+    ALOGI("free TCP status data %p", data);
 
     if (data != nullptr) {
         TcpStatus *s = static_cast<TcpStatus *>(data);
@@ -1196,17 +1199,17 @@ void TcpHandler::freeStatusData(void *data) {
 
 bool TcpHandler::monitorSession(SessionInfo *sessionInfo) {
     bool recheck = false;
-    unsigned int events = EPOLLERR | EPOLLOUT;
+    unsigned int events = EPOLLERR;
 
     TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
 
 
     if (status->state == TCP_LISTEN) {
         // Check for connected = writable
-//        if (status->socks5 == SOCKS5_NONE)
-//            events = events | EPOLLOUT;
-//        else
-        events = events | EPOLLIN;
+        if (status->socketConnected) {
+            events = events | EPOLLOUT;
+        }
+        events = events | EPOLLOUT;
     } else if (status->state == TCP_ESTABLISHED || status->state == TCP_CLOSE_WAIT) {
 
         // Check for incoming data
@@ -1293,6 +1296,14 @@ int TcpHandler::checkSession(SessionInfo *sessionInfo) {
     if (status->state == TCP_CLOSING) {
         // eof closes socket
         if (status->socket >= 0) {
+
+
+            auto ctx = sessionInfo->context;
+
+            if (epoll_ctl(ctx->epollFd, EPOLL_CTL_DEL, status->socket, &sessionInfo->ev)) {
+                ALOGE("ICMP epoll del event error %d: %s", errno, strerror(errno));
+            }
+
             if (close(status->socket))
                 ALOGE("%s close error %d: %s", session, errno, strerror(errno));
             else

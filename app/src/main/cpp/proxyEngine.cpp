@@ -151,7 +151,7 @@ void proxyEngine::handleEvents() {
                 if (del) {
                     auto tmp = s;
                     s = s->next;
-                    sessionFactory.freeSession(s);
+                    sessionFactory.freeSession(tmp);
                 } else {
                     s = s->next;
                 }
@@ -165,18 +165,20 @@ void proxyEngine::handleEvents() {
               isessions, usessions, tsessions, sessions, maxsessions, timeout, recheck);
 
         struct epoll_event ev[EPOLL_EVENTS];
-        int ready = epoll_wait(epoll_fd, ev, EPOLL_EVENTS,
-                               recheck ? EPOLL_MIN_CHECK : static_cast<int>(timeout * 1000));
+        int wait_ms = recheck ? EPOLL_MIN_CHECK : static_cast<int>(timeout) * 1000;
+        int ready = epoll_wait(epoll_fd, ev, EPOLL_EVENTS, wait_ms);
+
+        ALOGV("epoll wait %d ms, ready %d", wait_ms, ready);
 
         for (int i = 0; i < ready; ++i) {
             if (ev[i].data.ptr == &ev_tun) {
-                // Check upstream
-//                ALOGD("epoll ready %d/%d in %d out %d err %d hup %d",
-//                      i, ready,
-//                      (ev[i].events & EPOLLIN) != 0,
-//                      (ev[i].events & EPOLLOUT) != 0,
-//                      (ev[i].events & EPOLLERR) != 0,
-//                      (ev[i].events & EPOLLHUP) != 0);
+//                 Check upstream
+                ALOGD("tun epoll ready %d/%d in %d out %d err %d hup %d",
+                      i, ready,
+                      (ev[i].events & EPOLLIN) != 0,
+                      (ev[i].events & EPOLLOUT) != 0,
+                      (ev[i].events & EPOLLERR) != 0,
+                      (ev[i].events & EPOLLHUP) != 0);
 
                 //tun event
                 auto ipPkt = checkTun(&context, &ev[i], &ipPackageFactory);
@@ -200,13 +202,16 @@ void proxyEngine::handleEvents() {
             } else if (ev[i].data.ptr != nullptr) {
                 // Check downstream
                 SessionInfo *si = static_cast<SessionInfo *>(ev[i].data.ptr);
-//                ALOGD("epoll ready %d/%d in %d out %d err %d hup %d prot %d",
-//                      i, ready,
-//                      (ev[i].events & EPOLLIN) != 0,
-//                      (ev[i].events & EPOLLOUT) != 0,
-//                      (ev[i].events & EPOLLERR) != 0,
-//                      (ev[i].events & EPOLLHUP) != 0,
-//                      si->ipVersoin);
+
+                ALOGD("session epoll ready %d/%d in %d out %d err %d hup %d prot %d protocol %d",
+                      i, ready,
+                      (ev[i].events & EPOLLIN) != 0,
+                      (ev[i].events & EPOLLOUT) != 0,
+                      (ev[i].events & EPOLLERR) != 0,
+                      (ev[i].events & EPOLLHUP) != 0,
+                      si->ipVersoin,
+                      si->protocol
+                );
                 //process socket data incoming
                 si->transportHandler->onSocketEvent(si, &ev[i]);
             }
@@ -221,6 +226,9 @@ void proxyEngine::handleEvents() {
         mProxyService = nullptr;
         mProtectMid = nullptr;
     }
+
+
+    ALOGI("proxy stop");
 }
 
 void proxyEngine::logPkt(const IpPackage *ipPkt, const TransportPkt *tPkt) const {

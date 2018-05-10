@@ -312,8 +312,10 @@ void *IcmpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firs
 }
 
 void IcmpHandler::freeStatusData(void *data) {
-    if (data != nullptr)
+    ALOGI("free ICMP status data %p", data);
+    if (data != nullptr) {
         free(data);
+    }
 }
 
 bool IcmpHandler::isActive(SessionInfo *sessionInfo) {
@@ -322,7 +324,7 @@ bool IcmpHandler::isActive(SessionInfo *sessionInfo) {
 }
 
 bool IcmpHandler::monitorSession(SessionInfo *sessionInfo) {
-    return true;
+    return false;
 }
 
 int IcmpHandler::checkSession(SessionInfo *sessionInfo) {
@@ -343,9 +345,22 @@ int IcmpHandler::checkSession(SessionInfo *sessionInfo) {
         ALOGW("ICMP idle %ld/%d sec stop %d from %s to %s",
               now - sessionInfo->lastActive, timeout, status->stop, dest, source);
 
-        if (close(status->socket))
-            ALOGE("ICMP close %d error %d: %s", status->socket, errno, strerror(errno));
-        status->socket = -1;
+
+        if (status->socket > 0) {
+            auto ctx = sessionInfo->context;
+
+            if (epoll_ctl(ctx->epollFd, EPOLL_CTL_DEL, status->socket, &sessionInfo->ev)) {
+                ALOGE("ICMP epoll del event error %d: %s", errno, strerror(errno));
+                // try again
+                return 0;
+            }
+
+            if (close(status->socket))
+                ALOGE("ICMP close %d error %d: %s", status->socket, errno, strerror(errno));
+
+            status->socket = -1;
+        }
+
         return 1;
     }
 

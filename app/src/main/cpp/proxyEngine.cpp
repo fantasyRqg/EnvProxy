@@ -161,8 +161,9 @@ void proxyEngine::handleEvents() {
             ALOGD("Skipped session checks");
         }
 
-        ALOGD("sessions ICMP %d UDP %d TCP %d max %d/%d timeout %ld recheck %d",
-              isessions, usessions, tsessions, sessions, maxsessions, timeout, recheck);
+        ALOGD("sessions ICMP %d UDP %d TCP %d max %d/%d/%d timeout %ld recheck %d",
+              isessions, usessions, tsessions, sessions, maxsessions,
+              sessionFactory.getSessionCount(), timeout, recheck);
 
         struct epoll_event ev[EPOLL_EVENTS];
         int wait_ms = recheck ? EPOLL_MIN_CHECK : static_cast<int>(timeout) * 1000;

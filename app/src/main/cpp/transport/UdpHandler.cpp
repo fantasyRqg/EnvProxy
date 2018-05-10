@@ -492,9 +492,18 @@ int UdpHandler::checkSession(SessionInfo *sessionInfo) {
         ALOGI("UDP close from %s/%u to %s/%u socket %d",
               source, sessionInfo->sPort, dest, sessionInfo->dPort, status->socket);
 
-        if (close(status->socket))
-            ALOGE("UDP close %d error %d: %s", status->socket, errno, strerror(errno));
-        status->socket = -1;
+        if (status->socket > 0) {
+            auto ctx = sessionInfo->context;
+
+            if (epoll_ctl(ctx->epollFd, EPOLL_CTL_DEL, status->socket, &sessionInfo->ev)) {
+                ALOGE("UDP epoll del event error %d: %s", errno, strerror(errno));
+            }
+
+            if (close(status->socket))
+                ALOGE("UDP close %d error %d: %s", status->socket, errno, strerror(errno));
+            status->socket = -1;
+        }
+
 
         sessionInfo->lastActive = time(NULL);
         status->state = UDP_CLOSED;

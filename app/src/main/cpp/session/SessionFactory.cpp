@@ -111,10 +111,10 @@ static void buildSessionProcess(SessionInfo *si) {
 
 
 struct SessionInfo *SessionFactory::createSession(TransportPkt *pkt) {
-    if (mSessionCount >= mMaxSessionSize) {
-        ALOGW("reach max session size limit, can not create session");
-        return nullptr;
-    }
+//    if (mSessionCount >= mMaxSessionSize) {
+//        ALOGW("reach max session size limit, can not create session");
+//        return nullptr;
+//    }
 
     struct SessionInfo *s = new SessionInfo();
     s->next = mSessions;
@@ -182,4 +182,8 @@ void SessionFactory::freeSession(SessionInfo *si) {
 
 SessionInfo *SessionFactory::getSessions() const {
     return mSessions;
+}
+
+int SessionFactory::getSessionCount() const {
+    return mSessionCount;
 }

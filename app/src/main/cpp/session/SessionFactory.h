@@ -23,6 +23,8 @@ public:
 
     SessionInfo *getSessions() const;
 
+    int getSessionCount() const;
+
 private:
     struct SessionInfo *createSession(TransportPkt *pkt);
 

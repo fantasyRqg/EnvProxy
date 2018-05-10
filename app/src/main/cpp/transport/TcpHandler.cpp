@@ -1296,8 +1296,6 @@ int TcpHandler::checkSession(SessionInfo *sessionInfo) {
     if (status->state == TCP_CLOSING) {
         // eof closes socket
         if (status->socket >= 0) {
-
-
             auto ctx = sessionInfo->context;
 
             if (epoll_ctl(ctx->epollFd, EPOLL_CTL_DEL, status->socket, &sessionInfo->ev)) {
@@ -1324,7 +1322,8 @@ int TcpHandler::checkSession(SessionInfo *sessionInfo) {
     }
 
     // Cleanup lingering sessions
-    if (status->state == TCP_CLOSE && sessionInfo->lastActive + TCP_KEEP_TIMEOUT < now)
+//    if (status->state == TCP_CLOSE && sessionInfo->lastActive + TCP_KEEP_TIMEOUT < now)
+    if (status->state == TCP_CLOSE)
         return 1;
 
     return 0;

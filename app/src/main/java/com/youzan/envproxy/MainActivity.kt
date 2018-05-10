@@ -9,6 +9,7 @@ import android.net.VpnService
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.LocalBroadcastManager
+import android.util.Log
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -17,9 +18,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 class MainActivity : Activity() {
-
     companion object {
-
+        val TAG = "MainActivity"
         private const val REQUEST_CONNECT = 0
     }
 
@@ -46,23 +46,37 @@ class MainActivity : Activity() {
 
         btn.setOnClickListener {
 
-            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+            Observable.just(true)
                     .subscribeOn(Schedulers.io())
                     .map {
-                        val client = OkHttpClient()
-                        val request = Request.Builder()
-                                .url(it)
-                                .build()
-                        client.newCall(request)
-                                .execute()
-                                .body()
+                        throw RuntimeException("cache me")
                     }
-                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnError {
+                        Log.i(TAG, "onCreate: hello exception, " + it.toString())
+                    }
                     .subscribe({
-                        tv_response.text = it?.charStream()?.readText()
+                        Log.d(TAG, "onCreate: end")
                     }, {
-                        tv_response.text = it.toString()
+                        Log.e(TAG, "onCreate: ", it)
                     })
+
+//            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+//                    .subscribeOn(Schedulers.io())
+//                    .map {
+//                        val client = OkHttpClient()
+//                        val request = Request.Builder()
+//                                .url(it)
+//                                .build()
+//                        client.newCall(request)
+//                                .execute()
+//                                .body()
+//                    }
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe({
+//                        tv_response.text = it?.charStream()?.readText()
+//                    }, {
+//                        tv_response.text = it.toString()
+//                    })
         }
 
         LocalBroadcastManager.getInstance(this)

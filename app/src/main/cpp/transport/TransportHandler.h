@@ -35,7 +35,7 @@ public:
 
     virtual bool isActive(SessionInfo *sessionInfo) = 0;
 
-    virtual bool monitorSession(SessionInfo *sessionInfo) = 0;
+    virtual int monitorSession(SessionInfo *sessionInfo) = 0;
 
     virtual int checkSession(SessionInfo *sessionInfo) = 0;
 

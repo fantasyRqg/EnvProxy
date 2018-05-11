@@ -835,6 +835,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
             ALOGV("write tun syn act");
         } else {
 
+            ALOGV("EPOLL in or out");
             // Always forward data
             int fwd = 0;
             if (ev->events & EPOLLOUT) {
@@ -1214,8 +1215,8 @@ void TcpHandler::freeStatusData(SessionInfo *sessionInfo) {
     }
 }
 
-bool TcpHandler::monitorSession(SessionInfo *sessionInfo) {
-    bool recheck = false;
+int TcpHandler::monitorSession(SessionInfo *sessionInfo) {
+    bool recheck = 0;
     unsigned int events = EPOLLERR;
 
     TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);

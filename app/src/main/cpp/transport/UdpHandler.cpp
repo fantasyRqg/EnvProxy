@@ -463,8 +463,8 @@ bool UdpHandler::isActive(SessionInfo *sessionInfo) {
     return status->state == UDP_ACTIVE;
 }
 
-bool UdpHandler::monitorSession(SessionInfo *sessionInfo) {
-    return false;
+int UdpHandler::monitorSession(SessionInfo *sessionInfo) {
+    return 0;
 }
 
 int UdpHandler::checkSession(SessionInfo *sessionInfo) {

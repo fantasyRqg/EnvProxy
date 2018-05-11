@@ -15,7 +15,7 @@
 #define BUFFER_POOL_IDLE 1
 #define BUFFER_POOL_IN_USE 2
 
-#define MAP_BUFFER_SIZE_INTERVAL 512
+#define MAP_BUFFER_SIZE_INTERVAL 128
 
 struct Buffer {
     uint8_t *buf;

@@ -325,8 +325,8 @@ bool IcmpHandler::isActive(SessionInfo *sessionInfo) {
     return !status->stop;
 }
 
-bool IcmpHandler::monitorSession(SessionInfo *sessionInfo) {
-    return false;
+int IcmpHandler::monitorSession(SessionInfo *sessionInfo) {
+    return 0;
 }
 
 int IcmpHandler::checkSession(SessionInfo *sessionInfo) {

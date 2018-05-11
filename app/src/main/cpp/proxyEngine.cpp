@@ -138,7 +138,7 @@ void proxyEngine::handleEvents() {
 
         // Check sessions
         long long ms = get_ms();
-        if (ms - last_check > EPOLL_MIN_CHECK) {
+        if (ms - last_check > EPOLL_MIN_CHECK || recheck) {
             last_check = ms;
 
             time_t now = time(NULL);
@@ -157,7 +157,6 @@ void proxyEngine::handleEvents() {
                 }
             }
         } else {
-            recheck = 1;
             ALOGD("Skipped session checks");
         }
 

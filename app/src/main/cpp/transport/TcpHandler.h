@@ -27,7 +27,7 @@ public:
 
     bool isActive(SessionInfo *sessionInfo) override;
 
-    bool monitorSession(SessionInfo *sessionInfo) override;
+    int monitorSession(SessionInfo *sessionInfo) override;
 
     int checkSession(SessionInfo *sessionInfo) override;
 

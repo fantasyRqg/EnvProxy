@@ -20,7 +20,7 @@ public:
 
     void *createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) override;
 
-    void freeStatusData(void *data) override;
+    void freeStatusData(SessionInfo *sessionInfo) override;
 
     void onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) override;
 

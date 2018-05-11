@@ -10,9 +10,9 @@
 #include "../proxyTypes.h"
 
 TransportFactory::TransportFactory() {
-    mHandlerMap.insert(std::pair<int, TransportHandler *>(IPPROTO_ICMP, new IcmpHandler()));
-    mHandlerMap.insert(std::pair<int, TransportHandler *>(IPPROTO_TCP, new TcpHandler()));
-    mHandlerMap.insert(std::pair<int, TransportHandler *>(IPPROTO_UDP, new UdpHandler()));
+    mHandlerMap[IPPROTO_ICMP] = new IcmpHandler();
+    mHandlerMap[IPPROTO_TCP] = new TcpHandler();
+    mHandlerMap[IPPROTO_UDP] = new UdpHandler();
 }
 
 TransportFactory::~TransportFactory() {

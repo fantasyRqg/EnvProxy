@@ -80,7 +80,7 @@ void proxyEngine::handleEvents() {
     }
 
 
-    BufferPool bufferPool(8, mMTU);
+    BufferPool bufferPool;
 
     ProxyContext context = {
             this,
@@ -235,7 +235,7 @@ void proxyEngine::handleEvents() {
 void proxyEngine::logPkt(const IpPackage *ipPkt, const TransportPkt *tPkt) const {
     ADDR_TO_STR(ipPkt);
 
-    ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6d, dPort = %6d, pkt_size = %6u ,payload_size = %6u",
+    ALOGD("sAddr = %15s, dAddr = %15s, protocol = %3u, sPort = %6d, dPort = %6d, pkt_size = %6zu ,payload_size = %6zu",
           source, dest,
           ipPkt->protocol,
           tPkt->sPort, tPkt->dPort,
@@ -253,15 +253,14 @@ IpPackage *proxyEngine::checkTun(ProxyContext *context, epoll_event *pEvent,
     }
 
     if (pEvent->events & EPOLLIN) {
-        uint8_t *buffer = static_cast<uint8_t *>(context->bufferPool->allocBuffer());
+        uint8_t *buffer = context->bufferPool->allocBuffer(context->mtu);
 
         if (buffer == nullptr) {
-            ALOGW("buffer allocate failure, remain buffer %u",
-                  context->bufferPool->getRemainBufCount());
+            ALOGW("buffer allocate failure, should not happen");
             return nullptr;
         }
 
-        auto length = read(mTunFd, buffer, context->bufferPool->getMaxBufSize());
+        auto length = read(mTunFd, buffer, context->mtu);
         if (length < 0) {
             context->bufferPool->freeBuffer(buffer);
             ALOGE("tun %d read error %d: %s", mTunFd, errno, strerror(errno));

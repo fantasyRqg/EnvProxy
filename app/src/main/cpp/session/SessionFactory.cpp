@@ -138,14 +138,17 @@ struct SessionInfo *SessionFactory::createSession(TransportPkt *pkt) {
 
     buildSessionProcess(s);
 
+
+    ALOGV("create session %p / %p", s, s->tData);
+
     mSessionCount++;
     return s;
 }
 
 void SessionFactory::freeSession(SessionInfo *si) {
-
-
     if (si != nullptr) {
+        ALOGI("free session %p / %p", si, si->tData);
+
         SessionInfo *s = mSessions;
         SessionInfo *ps = nullptr;
         while (s != nullptr && s != si) {
@@ -169,7 +172,7 @@ void SessionFactory::freeSession(SessionInfo *si) {
 
         //free session
         if (si->tData != nullptr && si->transportHandler != nullptr) {
-            si->transportHandler->freeStatusData(si->tData);
+            si->transportHandler->freeStatusData(si);
             si->tData = nullptr;
         }
         delete si;

@@ -5,31 +5,20 @@
 #ifndef ENVPROXY_PROXYBUFFER_H
 #define ENVPROXY_PROXYBUFFER_H
 
-
-#include <cstring>
+#include <map>
 
 class BufferPool {
 public:
-    BufferPool(size_t bufCount, size_t maxBufBytesSize);
+    BufferPool();
 
-    size_t getBufCount() const;
+    uint8_t * allocBuffer(size_t size);
 
-    size_t getMaxBufSize() const;
-
-
-    void *allocBuffer(void);
-
-    void freeBuffer(void *buf);
+    void freeBuffer(uint8_t *buf);
 
     virtual ~BufferPool();
 
-    size_t getRemainBufCount();
-
 private:
-    size_t mBufCount;
-    size_t mMaxBufSize;
-    void **mBufArray;
-    short *mBufUsage;
+    std::map<size_t, void *> mBuffMap;
 };
 
 

@@ -17,6 +17,7 @@
 #include "../log.h"
 #include "../proxyEngine.h"
 #include "../util.h"
+#include "../BufferPool.h"
 
 #define LOG_TAG "UdpHandler"
 
@@ -115,7 +116,7 @@ void UdpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
 //            return 1;
 //    }
 
-    ALOGI("UDP forward from tun %s/%u to %s/%u data %u",
+    ALOGI("UDP forward from tun %s/%u to %s/%u data %zu",
           source, pkt->sPort, dest, pkt->dPort, pkt->payloadSize);
 
     sessionInfo->lastActive = time(NULL);
@@ -239,7 +240,7 @@ ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
     // Build packet
 //    if (cur->version == 4) {
     len = sizeof(struct iphdr) + sizeof(struct udphdr) + datalen;
-    buffer = static_cast<u_int8_t *>(malloc(len));
+    buffer = static_cast<u_int8_t *>(sessionInfo->balloc(len));
     struct iphdr *ip4 = (struct iphdr *) buffer;
     udp = (struct udphdr *) (buffer + sizeof(struct iphdr));
     if (datalen)
@@ -320,7 +321,7 @@ ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
               sizeof(dest));
 
     // Send packet
-    ALOGD("UDP sending to tun %d from %s/%u to %s/%u data %u",
+    ALOGD("UDP sending to tun %d from %s/%u to %s/%u data %zu",
           sessionInfo->context->tunFd, dest, sessionInfo->dPort, source, sessionInfo->sPort, len);
 
     ssize_t res = write(sessionInfo->context->tunFd, buffer, len);
@@ -330,10 +331,10 @@ ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
         ALOGW("UDP write error %d: %s", errno, strerror(errno));
     }
 
-    free(buffer);
+    sessionInfo->bfree(buffer);
 
     if (res != len) {
-        ALOGE("write %u/%u", res, len);
+        ALOGE("write %zu/%zu", res, len);
         return -1;
     }
 
@@ -362,7 +363,7 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
         if (ev->events & EPOLLIN) {
             sessionInfo->lastActive = time(NULL);
 
-            uint8_t *buffer = static_cast<uint8_t *>(malloc(status->mss));
+            uint8_t *buffer = static_cast<uint8_t *>(sessionInfo->balloc(status->mss));
             ssize_t bytes = recv(status->socket, buffer, status->mss, 0);
             if (bytes < 0) {
                 // Socket error
@@ -381,7 +382,7 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                     inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
                 else
                     inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
-                ALOGI("UDP recv bytes %u from %s/%u for tun", bytes, dest, ntohs(status->dest));
+                ALOGI("UDP recv bytes %zu from %s/%u for tun", bytes, dest, ntohs(status->dest));
 
                 status->received += bytes;
 
@@ -398,7 +399,7 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                         status->state = UDP_FINISHING;
                 }
             }
-            free(buffer);
+            sessionInfo->bfree(buffer);
         }
     }
 }
@@ -412,7 +413,7 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 
 
     // Register session
-    UdpStatus *status = static_cast<UdpStatus *>(malloc(sizeof(UdpStatus)));
+    UdpStatus *status = reinterpret_cast<UdpStatus *>(sessionInfo->balloc(sizeof(UdpStatus)));
     ALOGV("UDP create status data %p", status);
 
     sessionInfo->lastActive = time(NULL);
@@ -448,11 +449,13 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 }
 
 
-void UdpHandler::freeStatusData(void *data) {
+void UdpHandler::freeStatusData(SessionInfo *sessionInfo) {
+    auto data = sessionInfo->tData;
+
     ALOGI("free UDP status data %p", data);
 
     if (data != nullptr)
-        free(data);
+        sessionInfo->bfree(reinterpret_cast<uint8_t *>(data));
 }
 
 bool UdpHandler::isActive(SessionInfo *sessionInfo) {

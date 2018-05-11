@@ -62,6 +62,10 @@ struct ProxyContext {
     int sessionCount;
 };
 
+#define balloc context->bufferPool->allocBuffer
+#define bfree context->bufferPool->freeBuffer
+
+
 class IpHandler;
 
 class IpPackage {
@@ -114,6 +118,12 @@ struct SessionInfo {
     SessionInfo *next;
     void *tData;
     epoll_event ev;
+};
+
+struct DataBuffer {
+    void *data;
+    size_t size;
+    DataBuffer *next;
 };
 
 #endif //ENVPROXY_PROXYTYPES_H

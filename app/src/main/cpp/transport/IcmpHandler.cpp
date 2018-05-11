@@ -17,6 +17,7 @@
 #include "../proxyEngine.h"
 #include "../log.h"
 #include "../util.h"
+#include "../BufferPool.h"
 
 
 #define LOG_TAG "IcmpHandler"
@@ -83,7 +84,7 @@ void IcmpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pk
 
 
     ADDR_TO_STR(pkt->ipPackage);
-    ALOGI("ICMP forward from tun %s to %s type %d code %d id %x seq %d data %u",
+    ALOGI("ICMP forward from tun %s to %s type %d code %d id %x seq %d data %zu",
           source, dest,
           icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq, pkt->payloadSize);
 
@@ -128,7 +129,7 @@ ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
     // Build packet
 //    if (cur->version == 4) {
     len = sizeof(struct iphdr) + datalen;
-    buffer = static_cast<u_int8_t *>(malloc(len));
+    buffer = static_cast<u_int8_t *>(sessionInfo->balloc(len));
     struct iphdr *ip4 = (struct iphdr *) buffer;
     if (datalen)
         memcpy(buffer + sizeof(struct iphdr), data, datalen);
@@ -174,7 +175,7 @@ ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
               dest, sizeof(dest));
 
     // Send raw ICMP message
-    ALOGW("ICMP sending to tun %d from %s to %s data %u type %d code %d id %x seq %d",
+    ALOGW("ICMP sending to tun %d from %s to %s data %zu type %d code %d id %x seq %d",
           sessionInfo->context->tunFd, dest, source, datalen,
           icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq);
 
@@ -184,10 +185,10 @@ ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
     if (res < 0) {
         ALOGW("ICMP write error %d: %s", errno, strerror(errno));
     }
-    free(buffer);
+    sessionInfo->bfree(buffer);
 
     if (res != len) {
-        ALOGE("write %u/%u", res, len);
+        ALOGE("write %zu/%zu", res, len);
         return -1;
     }
 
@@ -218,7 +219,7 @@ void IcmpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
             uint16_t blen = (uint16_t) (sessionInfo->ipVersoin == IPVERSION ? ICMP4_MAXMSG
                                                                             : ICMP6_MAXMSG);
-            uint8_t *buffer = static_cast<uint8_t *>(malloc(blen));
+            uint8_t *buffer = static_cast<uint8_t *>(sessionInfo->balloc(blen));
             ssize_t bytes = recv(status->socket, buffer, blen, 0);
             if (bytes < 0) {
                 // Socket error
@@ -244,12 +245,12 @@ void IcmpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                 struct icmp *icmp = (struct icmp *) buffer;
 
                 if (status->id == icmp->icmp_id) {
-                    ALOGI("ICMP recv bytes %u from %s for tun type %d code %d id %x/%x seq %d",
+                    ALOGI("ICMP recv bytes %zu from %s for tun type %d code %d id %x/%x seq %d",
                           bytes, dest,
                           icmp->icmp_type, icmp->icmp_code,
                           status->id, icmp->icmp_id, icmp->icmp_seq);
                 } else {
-                    ALOGW("ICMP recv bytes %u from %s for tun type %d code %d id %x/%x seq %d",
+                    ALOGW("ICMP recv bytes %zu from %s for tun type %d code %d id %x/%x seq %d",
                           bytes, dest,
                           icmp->icmp_type, icmp->icmp_code,
                           status->id, icmp->icmp_id, icmp->icmp_seq);
@@ -276,14 +277,14 @@ void IcmpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                 if (write_icmp(sessionInfo, status, buffer, (size_t) bytes) < 0)
                     status->stop = 1;
             }
-            free(buffer);
+            sessionInfo->bfree(buffer);
         }
     }
 }
 
 
 void *IcmpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) {
-    IcmpStatus *s = static_cast<IcmpStatus *>(malloc(sizeof(struct IcmpStatus)));
+    IcmpStatus *s = reinterpret_cast<IcmpStatus *>(sessionInfo->balloc(sizeof(struct IcmpStatus)));
     s->id = sessionInfo->sPort;
     s->socket = socket(sessionInfo->protocol == IPVERSION ? PF_INET : PF_INET6, SOCK_DGRAM,
                        IPPROTO_ICMP);
@@ -311,10 +312,11 @@ void *IcmpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firs
 
 }
 
-void IcmpHandler::freeStatusData(void *data) {
+void IcmpHandler::freeStatusData(SessionInfo *sessionInfo) {
+    auto data = sessionInfo->tData;
     ALOGI("free ICMP status data %p", data);
     if (data != nullptr) {
-        free(data);
+        sessionInfo->bfree(reinterpret_cast<uint8_t *>(data));
     }
 }
 

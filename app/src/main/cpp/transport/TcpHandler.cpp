@@ -23,6 +23,7 @@
 #include "../log.h"
 #include "../proxyEngine.h"
 #include "../util.h"
+#include "../BufferPool.h"
 
 #define LOG_TAG "TcpHandler"
 
@@ -82,6 +83,8 @@ void write_rst(SessionInfo *sessionInfo, TcpStatus *status);
 
 int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status);
 
+void closeSocket(SessionInfo *sessionInfo, TcpStatus *status);
+
 TcpHandler::TcpHandler() {}
 
 TcpHandler::~TcpHandler() {
@@ -135,7 +138,7 @@ void getPackageStr(TransportPkt *pkt, struct TcpStatus *status, char *pktStr) {
 
 
     sprintf(pktStr,
-            "TCP %s %s/%u > %s/%u seq %u ack %u data %u win %u",
+            "TCP %s %s/%u > %s/%u seq %u ack %u data %zu win %u",
             flags,
             source, ntohs(tcphdr->source),
             dest, ntohs(tcphdr->dest),
@@ -213,12 +216,14 @@ void queue_tcp(const SessionInfo *sessionInfo,
 //                  seq - status->remote_start,
 //                  seq + datalen - status->remote_start);
 
-            struct segment *n = reinterpret_cast<segment *>(malloc(sizeof(struct segment)));
+            struct segment *n = reinterpret_cast<segment *>(
+                    sessionInfo->balloc(sizeof(struct segment))
+            );
             n->seq = seq;
             n->len = datalen;
             n->sent = 0;
             n->psh = tcphdr->psh;
-            n->data = reinterpret_cast<uint8_t *>(malloc(datalen));
+            n->data = reinterpret_cast<uint8_t *>(sessionInfo->balloc(datalen));
             memcpy(n->data, data, datalen);
             n->next = s;
             if (p == nullptr)
@@ -237,8 +242,8 @@ void queue_tcp(const SessionInfo *sessionInfo,
                       s->seq - status->remote_start,
                       s->seq + s->len - status->remote_start,
                       s->seq + datalen - status->remote_start);
-                free(s->data);
-                s->data = reinterpret_cast<uint8_t *>(malloc(datalen));
+                sessionInfo->bfree(s->data);
+                s->data = reinterpret_cast<uint8_t *>(sessionInfo->balloc(datalen));
                 memcpy(s->data, data, datalen);
             } else
                 ALOGE("%s segment larger %u..%u < %u",
@@ -281,6 +286,7 @@ int write_fin_ack(const SessionInfo *sessionInfo, TcpStatus *status) {
     }
     return 0;
 }
+
 
 void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt) {
 
@@ -376,7 +382,7 @@ void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
                         ALOGW("%s last ACK", str_session);
                         status->remote_seq++; // remote FIN
                         if (write_ack(sessionInfo, status) >= 0)
-                            status->state = TCP_CLOSE;
+                            closeSocket(sessionInfo, status);
                     } else {
                         ALOGE("%s invalid FIN", str_session);
                         return;
@@ -582,7 +588,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
     bool isIp4 = sessionInfo->ipVersoin == IPVERSION;
     if (isIp4) {
         len = sizeof(struct iphdr) + sizeof(struct tcphdr) + optlen + datalen;
-        buffer = static_cast<u_int8_t *>(malloc(len));
+        buffer = static_cast<u_int8_t *>(sessionInfo->balloc(len));
         struct iphdr *ip4 = (struct iphdr *) buffer;
         tcp = (struct tcphdr *) (buffer + sizeof(struct iphdr));
         options = buffer + sizeof(struct iphdr) + sizeof(struct tcphdr);
@@ -692,7 +698,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
               dest, sizeof(dest));
 
     // Send packet
-    ALOGD("TCP sending%s%s%s%s to tun %s/%u seq %u ack %u data %u",
+    ALOGD("TCP sending%s%s%s%s to tun %s/%u seq %u ack %u data %zu",
           (tcp->syn ? " SYN" : ""),
           (tcp->ack ? " ACK" : ""),
           (tcp->fin ? " FIN" : ""),
@@ -707,7 +713,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
 
     // Write pcap record
     if (res < 0) {
-        ALOGE("TCP write%s%s%s%s data %u error %u: %s",
+        ALOGE("TCP write%s%s%s%s data %zu error %u: %s",
               (tcp->syn ? " SYN" : ""),
               (tcp->ack ? " ACK" : ""),
               (tcp->fin ? " FIN" : ""),
@@ -717,10 +723,10 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
     }
 
 
-    free(buffer);
+    sessionInfo->bfree(buffer);
 
     if (res != len) {
-        ALOGE("TCP write %u/%u", res, len);
+        ALOGE("TCP write %zu/%zu", res, len);
         return -1;
     }
 
@@ -752,6 +758,8 @@ uint32_t get_send_window(const TcpStatus *status) {
 
 void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
     TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
+
+    ALOGD("onSocketEvent %p / %p", sessionInfo, status);
 
 
     int oldstate = status->state;
@@ -861,7 +869,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
                     uint32_t buffer_size = (send_window > status->mss
                                             ? status->mss : send_window);
-                    uint8_t *buffer = static_cast<uint8_t *>(malloc(buffer_size));
+                    uint8_t *buffer = static_cast<uint8_t *>(sessionInfo->balloc(buffer_size));
                     ssize_t bytes = recv(status->socket, buffer, (size_t) buffer_size, 0);
                     if (bytes < 0) {
                         // Socket error
@@ -896,14 +904,14 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
                     } else {
                         // Socket read data
-                        ALOGD("%s recv bytes %u", str_session, bytes);
+                        ALOGD("%s recv bytes %zu", str_session, bytes);
                         status->received += bytes;
 
                         // Forward to tun
                         if (write_data(sessionInfo, status, buffer, (size_t) bytes) >= 0)
                             status->local_seq += bytes;
                     }
-                    free(buffer);
+                    sessionInfo->bfree(buffer);
                 }
             }
         }
@@ -971,8 +979,8 @@ int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
             if (status->forward->len == status->forward->sent) {
                 struct segment *p = status->forward;
                 status->forward = status->forward->next;
-                free(p->data);
-                free(p);
+                sessionInfo->bfree(p->data);
+                sessionInfo->bfree(reinterpret_cast<uint8_t *>(p));
             } else {
                 ALOGW("%s partial send %u/%u",
                       str_session, status->forward->sent, status->forward->len);
@@ -1001,7 +1009,7 @@ int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
 void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) {
     struct tcphdr *tcphdr = reinterpret_cast<struct tcphdr *>(firstPkt->ipPackage->payload);
 
-    TcpStatus *status = static_cast<TcpStatus *>(malloc(sizeof(struct TcpStatus)));
+    TcpStatus *status = reinterpret_cast<TcpStatus *>(sessionInfo->balloc(sizeof(TcpStatus)));
     status->socketConnected = false;
     status->skipFirst = true;
 
@@ -1070,12 +1078,13 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 
         if (datalen) {
             ALOGW("%s SYN data", packet);
-            status->forward = reinterpret_cast<segment *>(malloc(sizeof(struct segment)));
+            status->forward = reinterpret_cast<segment *>(sessionInfo->balloc(
+                    sizeof(struct segment)));
             status->forward->seq = status->remote_seq;
             status->forward->len = datalen;
             status->forward->sent = 0;
             status->forward->psh = tcphdr->psh;
-            status->forward->data = static_cast<uint8_t *>(malloc(datalen));
+            status->forward->data = static_cast<uint8_t *>(sessionInfo->balloc(datalen));
             memcpy(status->forward->data, data, datalen);
             status->forward->next = nullptr;
         }
@@ -1182,7 +1191,9 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
     return status;
 }
 
-void TcpHandler::freeStatusData(void *data) {
+void TcpHandler::freeStatusData(SessionInfo *sessionInfo) {
+    auto data = sessionInfo->tData;
+
     ALOGI("free TCP status data %p", data);
 
     if (data != nullptr) {
@@ -1193,13 +1204,13 @@ void TcpHandler::freeStatusData(void *data) {
                 auto tmp = sf;
                 sf = sf->next;
                 if (tmp->data != nullptr) {
-                    free(tmp->data);
+                    sessionInfo->bfree(tmp->data);
                 }
-                free(tmp);
+                sessionInfo->bfree(reinterpret_cast<uint8_t *>(tmp));
             }
         }
 
-        free(data);
+        sessionInfo->bfree(static_cast<uint8_t *>(data));
     }
 }
 
@@ -1267,6 +1278,49 @@ bool TcpHandler::isActive(SessionInfo *sessionInfo) {
 }
 
 
+void closeSocket(SessionInfo *sessionInfo, TcpStatus *status) {
+#undef LOG_TAG
+#define LOG_TAG "closeSocket"
+
+    char source[INET6_ADDRSTRLEN + 1];
+    char dest[INET6_ADDRSTRLEN + 1];
+    if (sessionInfo->ipVersoin == IPVERSION) {
+        inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
+        inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
+    } else {
+        inet_ntop(AF_INET6, &sessionInfo->srcAddr.ip6, source, sizeof(source));
+        inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
+    }
+
+    char session[250];
+    sprintf(session, "close TCP socket from %s/%u to %s/%u %s socket %d",
+            source, sessionInfo->sPort, dest, sessionInfo->dPort,
+            strstate(status->state), status->socket);
+
+    ALOGI("%s", session);
+
+    // eof closes socket
+    if (status->socket >= 0) {
+        auto ctx = sessionInfo->context;
+
+        if (epoll_ctl(ctx->epollFd, EPOLL_CTL_DEL, status->socket, &sessionInfo->ev)) {
+            ALOGE("TCP epoll del event error %d: %s", errno, strerror(errno));
+        }
+
+        if (close(status->socket))
+            ALOGE("%s close error %d: %s", session, errno, strerror(errno));
+        else
+            ALOGW("%s close", session);
+        status->socket = -1;
+    }
+
+    sessionInfo->lastActive = time(NULL);
+    status->state = TCP_CLOSE;
+
+#undef LOG_TAG
+#define LOG_TAG "TcpHandler"
+}
+
 int TcpHandler::checkSession(SessionInfo *sessionInfo) {
     TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
     time_t now = time(NULL);
@@ -1300,23 +1354,7 @@ int TcpHandler::checkSession(SessionInfo *sessionInfo) {
 
     // Check closing sessions
     if (status->state == TCP_CLOSING) {
-        // eof closes socket
-        if (status->socket >= 0) {
-            auto ctx = sessionInfo->context;
-
-            if (epoll_ctl(ctx->epollFd, EPOLL_CTL_DEL, status->socket, &sessionInfo->ev)) {
-                ALOGE("ICMP epoll del event error %d: %s", errno, strerror(errno));
-            }
-
-            if (close(status->socket))
-                ALOGE("%s close error %d: %s", session, errno, strerror(errno));
-            else
-                ALOGW("%s close", session);
-            status->socket = -1;
-        }
-
-        sessionInfo->lastActive = time(NULL);
-        status->state = TCP_CLOSE;
+        closeSocket(sessionInfo, status);
     }
 
     if ((status->state == TCP_CLOSING || status->state == TCP_CLOSE) &&

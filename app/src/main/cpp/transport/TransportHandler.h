@@ -43,7 +43,7 @@ public:
 
     virtual time_t checkTimeout(SessionInfo *sessionInfo, time_t timeout, int del, time_t now) =0;
 
-    virtual void freeStatusData(void *data) = 0;
+    virtual void freeStatusData(SessionInfo *sessionInfo) = 0;
 };
 
 

@@ -5,6 +5,7 @@
 
 
 #include <stdlib.h>
+#include <cstring>
 
 #include "BufferPool.h"
 #include "log.h"
@@ -14,68 +15,96 @@
 #define BUFFER_POOL_IDLE 1
 #define BUFFER_POOL_IN_USE 2
 
+#define MAP_BUFFER_SIZE_INTERVAL 512
 
-BufferPool::BufferPool(size_t bufCount, size_t maxBufBytesSize) : mBufCount(bufCount),
-                                                                  mMaxBufSize(maxBufBytesSize),
-                                                                  mBufArray(nullptr),
-                                                                  mBufUsage(nullptr) {
-    mBufArray = reinterpret_cast<void **>(malloc(sizeof(void *) * mBufCount));
-    mBufUsage = reinterpret_cast<short *>(malloc(sizeof(short) * mBufCount));
-    for (int i = 0; i < mBufCount; ++i) {
-        mBufArray[i] = malloc(mMaxBufSize);
-        mBufUsage[i] = BUFFER_POOL_IDLE;
-    }
+struct Buffer {
+    uint8_t *buf;
+    uint8_t *realBuf;
+    size_t size;
+    int state;
+    Buffer *next;
+};
+
+BufferPool::BufferPool() {
+
+}
+
+
+size_t mapSize(size_t size) {
+    return (size / MAP_BUFFER_SIZE_INTERVAL + 1) * MAP_BUFFER_SIZE_INTERVAL;
 }
 
 BufferPool::~BufferPool() {
-    ALOGI("destructor call");
-    for (int i = 0; i < mBufCount; ++i) {
-        if (mBufArray[i] != nullptr)
-            free(mBufArray[i]);
-    }
-    if (mBufArray != nullptr)
-        free(mBufArray);
-    if (mBufUsage != nullptr)
-        free(mBufUsage);
-}
+    for (auto i = mBuffMap.begin(); i != mBuffMap.end(); ++i) {
+        Buffer *b = static_cast<Buffer *>(i->second);
+        Buffer *tmp = nullptr;
 
-size_t BufferPool::getBufCount() const {
-    return mBufCount;
-}
+        while (b != nullptr) {
+            tmp = b;
+            b = b->next;
 
-size_t BufferPool::getMaxBufSize() const {
-    return mMaxBufSize;
-}
-
-
-void *BufferPool::allocBuffer(void) {
-    for (int i = 0; i < mBufCount; ++i) {
-        if (mBufUsage[i] == BUFFER_POOL_IDLE) {
-            mBufUsage[i] = BUFFER_POOL_IN_USE;
-            memset(mBufArray[i], 0, mMaxBufSize);
-            return mBufArray[i];
-        }
-    }
-
-    return nullptr;
-}
-
-void BufferPool::freeBuffer(void *buf) {
-    for (int i = 0; i < mBufCount; ++i) {
-        if (mBufArray[i] == buf) {
-            mBufUsage[i] = BUFFER_POOL_IDLE;
-            return;
+            free(tmp->realBuf);
+            free(tmp);
         }
     }
 }
 
-size_t BufferPool::getRemainBufCount() {
-    size_t c = 0;
 
-    for (int i = 0; i < mBufCount; ++i) {
-        if (mBufUsage[i] == BUFFER_POOL_IDLE) {
-            c++;
+uint8_t *BufferPool::allocBuffer(size_t size) {
+    size = mapSize(size);
+
+    Buffer *lb = static_cast<Buffer *>(mBuffMap[size]);
+    Buffer *idle = nullptr;
+
+    while (lb != nullptr) {
+        if (lb->state == BUFFER_POOL_IDLE) {
+            idle = lb;
+            break;
         }
+        lb = lb->next;
     }
-    return c;
+
+    if (idle == nullptr) {
+        idle = static_cast<Buffer *>(malloc(sizeof(Buffer)));
+
+        idle->realBuf = static_cast<uint8_t *>(malloc(size + sizeof(size_t)));
+        size_t *sizeP = reinterpret_cast<size_t *>(idle->realBuf);
+        *sizeP = size;
+        idle->size = size;
+        idle->buf = idle->realBuf + sizeof(size_t);
+        idle->state = BUFFER_POOL_IDLE;
+        idle->next = static_cast<Buffer *>(mBuffMap[size]);
+        mBuffMap[size] = idle;
+    }
+
+    idle->state = BUFFER_POOL_IN_USE;
+    memset(idle->buf, 0, idle->size);
+
+    ALOGD("allocate buffer %p", idle->buf);
+    return idle->buf;
+}
+
+void BufferPool::freeBuffer(uint8_t *buf) {
+    ALOGV("freeBuffer %p", buf);
+    size_t *p = reinterpret_cast<size_t *>(buf - sizeof(size_t));
+    size_t size = *p;
+
+    if (size % MAP_BUFFER_SIZE_INTERVAL != 0) {
+        ALOGE("buffer header has been modify, size not correct");
+    }
+
+    Buffer *lb = static_cast<Buffer *>(mBuffMap[size]);
+    bool putBack = false;
+
+    while (lb != nullptr) {
+        if (lb->buf == buf) {
+            putBack = true;
+            lb->state = BUFFER_POOL_IDLE;
+        }
+        lb = lb->next;
+    }
+
+    if (!putBack) {
+        ALOGE("put back buf error, can not find buf location");
+    }
 }

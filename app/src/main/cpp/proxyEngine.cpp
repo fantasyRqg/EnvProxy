@@ -192,7 +192,7 @@ void proxyEngine::handleEvents() {
                     continue;
                 }
 
-                logPkt(ipPkt, tPkt);
+//                logPkt(ipPkt, tPkt);
 
                 auto sessionInfo = sessionFactory.findOrCreateSession(tPkt);
                 if (sessionInfo != nullptr)

@@ -115,6 +115,7 @@ TransportPkt *TcpHandler::handleIpPkt(IpPackage *pkt) {
 }
 
 void getPackageStr(TransportPkt *pkt, struct TcpStatus *status, char *pktStr) {
+#ifdef ENABLE_LOG
     struct tcphdr *tcphdr = reinterpret_cast<struct tcphdr *>(pkt->ipPackage->payload);
 
 
@@ -136,7 +137,6 @@ void getPackageStr(TransportPkt *pkt, struct TcpStatus *status, char *pktStr) {
 
     ADDR_TO_STR(pkt->ipPackage);
 
-
     sprintf(pktStr,
             "TCP %s %s/%u > %s/%u seq %u ack %u data %zu win %u",
             flags,
@@ -146,6 +146,7 @@ void getPackageStr(TransportPkt *pkt, struct TcpStatus *status, char *pktStr) {
             tcphdr->ack ? ntohl(tcphdr->ack_seq) - (status == nullptr ? 0 : status->local_start)
                         : 0,
             pkt->ipPackage->payloadSize, ntohs(tcphdr->window));
+#endif
 }
 
 const char *strstate(const int state) {
@@ -759,7 +760,7 @@ uint32_t get_send_window(const TcpStatus *status) {
 void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
     TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
 
-    ALOGD("onSocketEvent %p / %p", sessionInfo, status);
+//    ALOGD("onSocketEvent %p / %p", sessionInfo, status);
 
 
     int oldstate = status->state;
@@ -835,7 +836,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
             ALOGV("write tun syn act");
         } else {
 
-            ALOGV("EPOLL in or out");
+//            ALOGV("EPOLL in or out");
             // Always forward data
             int fwd = 0;
             if (ev->events & EPOLLOUT) {

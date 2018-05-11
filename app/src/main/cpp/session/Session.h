@@ -54,41 +54,42 @@ public:
 
     virtual ~Session();
 
-//
-//    virtual DataBuffer * onTunDown(ProxyContext *ctx, uint8_t *_in_data, size_t _in_size, DataBuffer *);
-//
-//    /**
-//     *
-//     * @param ctx context
-//     * @param _in_data in data ptr
-//     * @param _in_size in data size
-//     * @param _out_size out data size
-//     * @return out data ptr
-//     */
-//    virtual uint8_t *
-//    onTunUp(ProxyContext *ctx, uint8_t *_in_data, size_t _in_size, size_t *_out_size);
-//
-//    /**
-//     *
-//     * @param ctx context
-//     * @param _in_data in data ptr
-//     * @param _in_size in data size
-//     * @param _out_size out data size
-//     * @return out data ptr
-//     */
-//    virtual uint8_t *
-//    onSocketDown(ProxyContext *ctx, uint8_t *_in_data, size_t _in_size, size_t *_out_size);
-//
-//    /**
-//     *
-//     * @param ctx context
-//     * @param _in_data in data ptr
-//     * @param _in_size in data size
-//     * @param _out_size out data size
-//     * @return out data ptr
-//     */
-//    virtual uint8_t *
-//    onSocketUp(ProxyContext *ctx, uint8_t *_in_data, size_t _in_size, size_t *_out_size);
+
+    virtual DataBuffer *
+    onTunDown(SessionInfo *sessionInfo, uint8_t *_in_data, size_t _in_size, DataBuffer *);
+
+    /**
+     *
+     * @param ctx context
+     * @param _in_data in data ptr
+     * @param _in_size in data size
+     * @param _out_size out data size
+     * @return out data ptr
+     */
+    virtual uint8_t *
+    onTunUp(ProxyContext *ctx, uint8_t *_in_data, size_t _in_size, size_t *_out_size);
+
+    /**
+     *
+     * @param ctx context
+     * @param _in_data in data ptr
+     * @param _in_size in data size
+     * @param _out_size out data size
+     * @return out data ptr
+     */
+    virtual uint8_t *
+    onSocketDown(ProxyContext *ctx, uint8_t *_in_data, size_t _in_size, size_t *_out_size);
+
+    /**
+     *
+     * @param ctx context
+     * @param _in_data in data ptr
+     * @param _in_size in data size
+     * @param _out_size out data size
+     * @return out data ptr
+     */
+    virtual uint8_t *
+    onSocketUp(ProxyContext *ctx, uint8_t *_in_data, size_t _in_size, size_t *_out_size);
 
 
 public:

@@ -1086,7 +1086,7 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
             status->forward->len = datalen;
             status->forward->sent = 0;
             status->forward->psh = tcphdr->psh;
-            status->forward->data = static_cast<uint8_t *>(sessionInfo->balloc(datalen));
+            status->forward->data = sessionInfo->balloc(datalen);
             memcpy(status->forward->data, data, datalen);
             status->forward->next = nullptr;
         }

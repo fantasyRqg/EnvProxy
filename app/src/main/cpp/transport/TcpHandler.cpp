@@ -914,6 +914,9 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 }
 
 int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
+#undef LOG_TAG
+#define LOG_TAG "writeForwardData"
+
     int fwdCount = 0;
 
     char source[INET6_ADDRSTRLEN + 1];
@@ -990,6 +993,9 @@ int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
         seg = seg->next;
     }
     return fwdCount;
+
+#undef LOG_TAG
+#define LOG_TAG "TcpHandler"
 }
 
 void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) {

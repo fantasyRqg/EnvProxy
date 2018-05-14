@@ -390,3 +390,12 @@ time_t IcmpHandler::checkTimeout(SessionInfo *sessionInfo, time_t timeout, int d
 
     return timeout;
 }
+
+
+int IcmpHandler::dataToTun(SessionInfo *sessionInfo, DataBuffer *data) {
+    return 0;
+}
+
+int IcmpHandler::dataToSocket(SessionInfo *sessionInfo, DataBuffer *data) {
+    return 0;
+}

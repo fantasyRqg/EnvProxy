@@ -34,6 +34,10 @@ public:
 
     time_t checkTimeout(SessionInfo *sessionInfo, time_t timeout, int del, time_t now) override;
 
+    int dataToTun(SessionInfo *sessionInfo, DataBuffer *data) override;
+
+    int dataToSocket(SessionInfo *sessionInfo, DataBuffer *data) override;
+
 };
 
 

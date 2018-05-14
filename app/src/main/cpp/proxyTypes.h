@@ -121,8 +121,10 @@ struct SessionInfo {
 };
 
 struct DataBuffer {
-    void *data;
-    size_t size;
+    uint8_t *data;
+    uint16_t size;
+    void *other;
+    char *desc;
     DataBuffer *next;
 };
 

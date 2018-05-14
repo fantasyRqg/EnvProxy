@@ -224,7 +224,7 @@ void queue_tcp(const SessionInfo *sessionInfo,
             n->len = datalen;
             n->sent = 0;
             n->psh = tcphdr->psh;
-            n->data = reinterpret_cast<uint8_t *>(sessionInfo->balloc(datalen));
+            n->data = sessionInfo->balloc(datalen);
             memcpy(n->data, data, datalen);
             n->next = s;
             if (p == nullptr)
@@ -244,7 +244,7 @@ void queue_tcp(const SessionInfo *sessionInfo,
                       s->seq + s->len - status->remote_start,
                       s->seq + datalen - status->remote_start);
                 sessionInfo->bfree(s->data);
-                s->data = reinterpret_cast<uint8_t *>(sessionInfo->balloc(datalen));
+                s->data = sessionInfo->balloc(datalen);
                 memcpy(s->data, data, datalen);
             } else
                 ALOGE("%s segment larger %u..%u < %u",
@@ -1404,4 +1404,13 @@ time_t TcpHandler::checkTimeout(SessionInfo *sessionInfo, time_t timeout, int de
     }
 
     return timeout;
+}
+
+
+int TcpHandler::dataToTun(SessionInfo *sessionInfo, DataBuffer *data) {
+    return 0;
+}
+
+int TcpHandler::dataToSocket(SessionInfo *sessionInfo, DataBuffer *data) {
+    return 0;
 }

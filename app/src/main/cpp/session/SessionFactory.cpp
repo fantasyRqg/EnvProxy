@@ -13,11 +13,11 @@
 #include "../proxyTypes.h"
 #include "Session.h"
 #include "../ip/IpHandler.h"
-#include "IcmpSession.h"
-#include "TcpSession.h"
-#include "UdpSession.h"
 #include "../transport/TransportHandler.h"
 #include "../log.h"
+#include "TcpSession.h"
+#include "UdpSession.h"
+#include "IcmpSession.h"
 
 
 SessionFactory::SessionFactory(int maxSessionSize) : mMaxSessionSize(maxSessionSize),
@@ -92,18 +92,59 @@ struct SessionInfo *SessionFactory::findOrCreateSession(TransportPkt *pkt) {
 static void buildSessionProcess(SessionInfo *si) {
     switch (si->protocol) {
         case IPPROTO_ICMP: {
-            si->session = new IcmpSession();
+            auto icmp = new IcmpSession();
+            icmp->prev = nullptr;
+            si->session = icmp;
+
+            icmp->next = nullptr;
+
         }
             break;
         case IPPROTO_TCP: {
-            si->session = new TcpSession();
+            auto tcp = new TcpSession();
+            tcp->prev = nullptr;
+            si->session = tcp;
+
+            tcp->next = nullptr;
+
+//            if (si->dPort == 80) {
+//                auto http = new HttpSession();
+//                http->prev = tcp;
+//                http->next = nullptr;
+//
+//                tcp->next = http;
+//            } else if (si->dPort == 443) {
+//                auto tls = new TlsSession();
+//                auto http = new HttpSession();
+//                tls->next = http;
+//                http->next = nullptr;
+//                tls->prev = tcp;
+//                http->prev = tls;
+//
+//                tcp->next = tls;
+//            } else {
+//                tcp->next = nullptr;
+//            }
         }
             break;
         case IPPROTO_UDP: {
-            si->session = new UdpSession();
+            auto udp = new UdpSession();
+            udp->prev = nullptr;
+            si->session = udp;
+
+            udp->next = nullptr;
+
+//            if (si->dPort == 53) {
+//                auto dns = new DnsSession();
+//                dns->next = nullptr;
+//                dns->prev = udp;
+//
+//                udp->next = dns;
+//            } else {
+//                udp->next = nullptr;
+//            }
         }
             break;
-
         default:
             break;
     }
@@ -175,6 +216,14 @@ void SessionFactory::freeSession(SessionInfo *si) {
             si->transportHandler->freeStatusData(si);
             si->tData = nullptr;
         }
+
+        auto ss = si->session;
+        while (ss != nullptr) {
+            auto ssTmp = ss;
+            ss = ss->next;
+            delete ssTmp;
+        }
+
         delete si;
     } else {
         ALOGE("freeSession free nullptr");

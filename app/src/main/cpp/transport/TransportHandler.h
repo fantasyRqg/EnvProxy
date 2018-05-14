@@ -18,6 +18,8 @@ struct ProxyContext;
 
 struct SessionInfo;
 
+struct DataBuffer;
+
 class TransportHandler {
 
 public:
@@ -44,6 +46,10 @@ public:
     virtual time_t checkTimeout(SessionInfo *sessionInfo, time_t timeout, int del, time_t now) =0;
 
     virtual void freeStatusData(SessionInfo *sessionInfo) = 0;
+
+    virtual int dataToTun(SessionInfo *sessionInfo, DataBuffer *data) = 0;
+
+    virtual int dataToSocket(SessionInfo *sessionInfo, DataBuffer *data) = 0;
 };
 
 

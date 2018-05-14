@@ -549,3 +549,11 @@ time_t UdpHandler::checkTimeout(SessionInfo *sessionInfo, time_t timeout, int de
 
     return timeout;
 }
+
+int UdpHandler::dataToTun(SessionInfo *sessionInfo, DataBuffer *data) {
+    return 0;
+}
+
+int UdpHandler::dataToSocket(SessionInfo *sessionInfo, DataBuffer *data) {
+    return 0;
+}

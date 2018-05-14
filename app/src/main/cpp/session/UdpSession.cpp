@@ -3,6 +3,8 @@
 //
 
 #include "UdpSession.h"
+#include "../proxyTypes.h"
+
 
 UdpSession::UdpSession() {}
 

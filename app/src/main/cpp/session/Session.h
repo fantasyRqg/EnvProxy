@@ -31,6 +31,10 @@
  *               ∨----------------------------->-------------------------------
  *                                      send data to socket
  *
+ *
+ *
+ * 所有函数，输入内存即无需外部管理释放，输出内存由外部释放
+ *
  */
 
 #ifndef ENVPROXY_TASK_H
@@ -55,41 +59,44 @@ public:
     virtual ~Session();
 
 
-    virtual DataBuffer *
-    onTunDown(SessionInfo *sessionInfo, uint8_t *_in_data, size_t _in_size, DataBuffer *);
+    /**
+     * 所有函数，输入内存即无需外部管理释放，输出内存由外部释放
+     *
+     * @param sessionInfo session info
+     * @param _in_data input data
+     * @param _in_size input data size
+     * @param upData directly to up layer data,out
+     */
+    virtual int onTunDown(SessionInfo *sessionInfo, DataBuffer *downData);
 
     /**
+     * 所有函数，输入内存即无需外部管理释放，输出内存由外部释放
      *
-     * @param ctx context
-     * @param _in_data in data ptr
-     * @param _in_size in data size
-     * @param _out_size out data size
-     * @return out data ptr
+     * @param sessionInfo
+     * @param upData
+     * @return
      */
-    virtual uint8_t *
-    onTunUp(ProxyContext *ctx, uint8_t *_in_data, size_t _in_size, size_t *_out_size);
+    virtual int onTunUp(SessionInfo *sessionInfo, DataBuffer *upData);
 
     /**
+     * 所有函数，输入内存即无需外部管理释放，输出内存由外部释放
      *
-     * @param ctx context
-     * @param _in_data in data ptr
-     * @param _in_size in data size
-     * @param _out_size out data size
-     * @return out data ptr
+     * @param sessionInfo
+     * @param _in_data
+     * @param _in_size
+     * @param upData out
+     * @return
      */
-    virtual uint8_t *
-    onSocketDown(ProxyContext *ctx, uint8_t *_in_data, size_t _in_size, size_t *_out_size);
+    virtual int onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData);
 
     /**
+     * 所有函数，输入内存即无需外部管理释放，输出内存由外部释放
      *
-     * @param ctx context
-     * @param _in_data in data ptr
-     * @param _in_size in data size
-     * @param _out_size out data size
-     * @return out data ptr
+     * @param sessionInfo
+     * @param upData
+     * @return
      */
-    virtual uint8_t *
-    onSocketUp(ProxyContext *ctx, uint8_t *_in_data, size_t _in_size, size_t *_out_size);
+    virtual int onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData);
 
 
 public:

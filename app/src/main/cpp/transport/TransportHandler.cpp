@@ -4,13 +4,10 @@
 
 #define LOG_TAG "TransportHandler"
 
-#include <jni.h>
-
 
 #include "TransportHandler.h"
 #include "../proxyTypes.h"
-#include "../log.h"
-
+#include "../session/Session.h"
 
 TransportHandler::TransportHandler() {
 
@@ -19,4 +16,3 @@ TransportHandler::TransportHandler() {
 TransportHandler::~TransportHandler() {
 
 }
-

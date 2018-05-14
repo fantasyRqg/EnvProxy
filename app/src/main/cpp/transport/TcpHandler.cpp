@@ -871,7 +871,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
                     uint32_t buffer_size = (send_window > status->mss
                                             ? status->mss : send_window);
-                    uint8_t *buffer = static_cast<uint8_t *>(sessionInfo->balloc(buffer_size));
+                    uint8_t *buffer = sessionInfo->balloc(buffer_size);
                     ssize_t bytes = recv(status->socket, buffer, (size_t) buffer_size, 0);
                     if (bytes < 0) {
                         // Socket error
@@ -1078,18 +1078,18 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
         status->state = TCP_LISTEN;
         status->forward = nullptr;
 
-        if (datalen) {
-            ALOGW("%s SYN data", packet);
-            status->forward = reinterpret_cast<segment *>(sessionInfo->balloc(
-                    sizeof(struct segment)));
-            status->forward->seq = status->remote_seq;
-            status->forward->len = datalen;
-            status->forward->sent = 0;
-            status->forward->psh = tcphdr->psh;
-            status->forward->data = sessionInfo->balloc(datalen);
-            memcpy(status->forward->data, data, datalen);
-            status->forward->next = nullptr;
-        }
+//        if (datalen) {
+//            ALOGW("%s SYN data", packet);
+//            status->forward = reinterpret_cast<segment *>(sessionInfo->balloc(
+//                    sizeof(struct segment)));
+//            status->forward->seq = status->remote_seq;
+//            status->forward->len = datalen;
+//            status->forward->sent = 0;
+//            status->forward->psh = tcphdr->psh;
+//            status->forward->data = sessionInfo->balloc(datalen);
+//            memcpy(status->forward->data, data, datalen);
+//            status->forward->next = nullptr;
+//        }
 
         // Open socket
         status->socket = open_tcp_socket(sessionInfo);

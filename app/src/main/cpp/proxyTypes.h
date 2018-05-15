@@ -124,8 +124,10 @@ struct DataBuffer {
     uint8_t *data;
     uint16_t size;
     void *other;
-    char *desc;
+    uint16_t sent;
     DataBuffer *next;
 };
+
+void freeLinkDataBuffer(SessionInfo *sessionInfo, DataBuffer *dbuff);
 
 #endif //ENVPROXY_PROXYTYPES_H

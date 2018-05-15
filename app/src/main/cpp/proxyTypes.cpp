@@ -28,3 +28,14 @@ TransportPkt::~TransportPkt() {
         ipPackage = nullptr;
     }
 }
+
+void freeLinkDataBuffer(SessionInfo *sessionInfo, DataBuffer *dbuff) {
+    auto d = dbuff;
+    while (d != nullptr) {
+        auto tmp = d;
+        d = d->next;
+
+        sessionInfo->bfree(tmp->data);
+        sessionInfo->bfree(reinterpret_cast<uint8_t *>(tmp));
+    }
+}

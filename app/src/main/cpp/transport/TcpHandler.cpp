@@ -24,6 +24,7 @@
 #include "../proxyEngine.h"
 #include "../util.h"
 #include "../BufferPool.h"
+#include "../session/Session.h"
 
 #define LOG_TAG "TcpHandler"
 
@@ -32,8 +33,11 @@ struct segment {
     uint32_t seq;
     uint16_t len;
     uint16_t sent;
+    uint16_t r_len;  // data buffer
+    uint16_t r_sent; //data buffer
     int psh;
-    uint8_t *data;
+//    uint8_t *data;
+    DataBuffer *dataBuffer;
     struct segment *next;
 };
 
@@ -224,13 +228,27 @@ void queue_tcp(const SessionInfo *sessionInfo,
             n->len = datalen;
             n->sent = 0;
             n->psh = tcphdr->psh;
-            n->data = sessionInfo->balloc(datalen);
-            memcpy(n->data, data, datalen);
+//            n->data = sessionInfo->balloc(datalen);
+//            memcpy(n->data, data, datalen);
+            //process sessions
+            DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(
+                    sizeof(DataBuffer)));
+            dbuff->size = datalen;
+            dbuff->data = sessionInfo->balloc(datalen);
+            memcpy(dbuff->data, data, datalen);
+            dbuff->next = nullptr;
+            dbuff->other = n;
+            dbuff->sent = 0;
+            sessionInfo->session->onTunDown(const_cast<SessionInfo *>(sessionInfo), dbuff);
+
+
             n->next = s;
+
             if (p == nullptr)
                 status->forward = n;
             else
                 p->next = n;
+
         } else if (s != nullptr && s->seq == seq) {
             if (s->len == datalen)
                 ALOGW("%s segment already queued %u..%u",
@@ -243,14 +261,16 @@ void queue_tcp(const SessionInfo *sessionInfo,
                       s->seq - status->remote_start,
                       s->seq + s->len - status->remote_start,
                       s->seq + datalen - status->remote_start);
-                sessionInfo->bfree(s->data);
-                s->data = sessionInfo->balloc(datalen);
-                memcpy(s->data, data, datalen);
-            } else
+//                sessionInfo->bfree(s->data);
+//                s->data = sessionInfo->balloc(datalen);
+//                memcpy(s->data, data, datalen);
+            } else {
                 ALOGE("%s segment larger %u..%u < %u",
                       str_session,
                       s->seq - status->remote_start, s->seq + s->len - status->remote_start,
                       s->seq + datalen - status->remote_start);
+            }
+
         }
     }
 }
@@ -939,57 +959,93 @@ int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
         inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
     }
     char str_session[250];
-    sprintf(str_session, "TCP socket from %s/%u to %s/%u %s loc %u rem %u",
-            source, sessionInfo->sPort, dest, sessionInfo->dPort,
-            strstate(status->state),
-            status->local_seq - status->local_start,
-            status->remote_seq - status->remote_start);
+//    sprintf(str_session, "TCP socket from %s/%u to %s/%u %s loc %u rem %u",
+//            source, sessionInfo->sPort, dest, sessionInfo->dPort,
+//            strstate(status->state),
+//            status->local_seq - status->local_start,
+//            status->remote_seq - status->remote_start);
 
 
     uint32_t buffer_size = (uint32_t) get_receive_buffer(status);
+
+    bool breakSending = false;
+
     while (status->forward != nullptr &&
            status->forward->seq + status->forward->sent == status->remote_seq &&
-           status->forward->len - status->forward->sent < buffer_size) {
-        ALOGD("%s fwd %u...%u sent %u",
-              str_session,
-              status->forward->seq - status->remote_start,
-              status->forward->seq + status->forward->len - status->remote_start,
-              status->forward->sent);
+           status->forward->r_len - status->forward->r_sent < buffer_size) {
+//        ALOGD("%s fwd %u...%u sent %u",
+//              str_session,
+//              status->forward->seq - status->remote_start,
+//              status->forward->seq + status->forward->len - status->remote_start,
+//              status->forward->sent);
 
-        ssize_t sent = send(status->socket,
-                            status->forward->data + status->forward->sent,
-                            status->forward->len - status->forward->sent,
-                            (unsigned int) (MSG_NOSIGNAL | (status->forward->psh
-                                                            ? 0
-                                                            : MSG_MORE)));
-        if (sent < 0) {
-            ALOGE("%s send error %d: %s", str_session, errno, strerror(errno));
-            if (errno == EINTR || errno == EAGAIN) {
-                // Retry later
-                break;
-            } else {
-                write_rst(sessionInfo, status);
-                break;
-            }
-        } else {
-            fwdCount += sent;
-            buffer_size -= sent;
-            status->sent += sent;
-            status->forward->sent += sent;
-            status->remote_seq = status->forward->seq + status->forward->sent;
+        DataBuffer *dbuff = status->forward->dataBuffer;
+        auto seg = status->forward;
 
-            if (status->forward->len == status->forward->sent) {
-                struct segment *p = status->forward;
-                status->forward = status->forward->next;
-                sessionInfo->bfree(p->data);
-                sessionInfo->bfree(reinterpret_cast<uint8_t *>(p));
+        while (dbuff != nullptr) {
+            auto dsent = send(status->socket,
+                              seg->dataBuffer->data + seg->dataBuffer->sent,
+                              seg->dataBuffer->size - seg->dataBuffer->sent,
+                              (unsigned int) (MSG_NOSIGNAL | (status->forward->psh ? 0 : MSG_MORE))
+            );
+
+            if (dsent < 0) {
+                ALOGE("%s send error %d: %s", str_session, errno, strerror(errno));
+                if (errno == EINTR || errno == EAGAIN) {
+                    // Retry later
+                    breakSending = true;
+                    break;
+                } else {
+                    write_rst(sessionInfo, status);
+                    breakSending = true;
+                    break;
+                }
             } else {
-                ALOGW("%s partial send %u/%u",
-                      str_session, status->forward->sent, status->forward->len);
-                break;
+                seg->r_sent += dsent;
+                seg->dataBuffer->sent += dsent;
+                if (seg->dataBuffer->size == seg->dataBuffer->sent) {
+                    auto p_dbuff = dbuff;
+                    dbuff = dbuff->next;
+
+                    p_dbuff->next = nullptr;
+                    freeLinkDataBuffer(sessionInfo, p_dbuff);
+                } else {
+                    ALOGW("%s partial send %u/%u",
+                          str_session, seg->dataBuffer->sent, seg->dataBuffer->size);
+
+                    breakSending = true;
+                    break;
+                }
             }
         }
+
+        if (breakSending) {
+            break;
+        }
+
+        //segment send finish
+        if (seg->r_len == seg->r_sent) {
+            fwdCount += seg->len;
+            buffer_size -= seg->r_sent;
+            status->sent += seg->len;
+            status->forward->sent += seg->len;
+            status->remote_seq = status->forward->seq + status->forward->sent;
+
+//            if (status->forward->len == status->forward->sent) {
+            segment *p = status->forward;
+            status->forward = status->forward->next;
+//                sessionInfo->bfree(p->data);
+            freeLinkDataBuffer(sessionInfo, p->dataBuffer);
+            sessionInfo->bfree(reinterpret_cast<uint8_t *>(p));
+//            } else {
+//                ALOGW("%s partial send %u/%u",
+//                      str_session, status->forward->sent, status->forward->len);
+//                break;
+//            }
+        }
     }
+
+
 
     // Log data buffered
     struct segment *seg = status->forward;
@@ -1074,7 +1130,6 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
         status->sent = 0;
         status->received = 0;
 
-
         status->state = TCP_LISTEN;
         status->forward = nullptr;
 
@@ -1115,6 +1170,7 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
             ALOGE("epoll add tcp error %d: %s", errno, strerror(errno));
             goto createFail;
         }
+
 
 
         // Build target address
@@ -1205,9 +1261,7 @@ void TcpHandler::freeStatusData(SessionInfo *sessionInfo) {
             while (sf != nullptr) {
                 auto tmp = sf;
                 sf = sf->next;
-                if (tmp->data != nullptr) {
-                    sessionInfo->bfree(tmp->data);
-                }
+                freeLinkDataBuffer(sessionInfo, tmp->dataBuffer);
                 sessionInfo->bfree(reinterpret_cast<uint8_t *>(tmp));
             }
         }
@@ -1221,7 +1275,6 @@ int TcpHandler::monitorSession(SessionInfo *sessionInfo) {
     unsigned int events = EPOLLERR;
 
     TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
-
 
     if (status->state == TCP_LISTEN) {
         // Check for connected = writable
@@ -1250,11 +1303,13 @@ int TcpHandler::monitorSession(SessionInfo *sessionInfo) {
         // Check for outgoing data
         if (status->forward != NULL) {
             uint32_t buffer_size = (uint32_t) get_receive_buffer(status);
-            if (status->forward->seq + status->forward->sent == status->remote_seq &&
-                status->forward->len - status->forward->sent < buffer_size)
+//            status->forward->seq + status->forward->sent == status->remote_seq &&
+            if (status->forward->dataBuffer == nullptr ||
+                status->forward->r_len - status->forward->r_sent < buffer_size) {
                 events = events | EPOLLOUT;
-            else
+//            } else {
                 recheck = 1;
+            }
         }
     }
 
@@ -1408,9 +1463,26 @@ time_t TcpHandler::checkTimeout(SessionInfo *sessionInfo, time_t timeout, int de
 
 
 int TcpHandler::dataToTun(SessionInfo *sessionInfo, DataBuffer *data) {
+
+
     return 0;
 }
 
 int TcpHandler::dataToSocket(SessionInfo *sessionInfo, DataBuffer *data) {
+    if (data == nullptr) {
+        return 0;
+    }
+    segment *seg = reinterpret_cast<segment *>(data->other);
+    seg->dataBuffer = data;
+    seg->r_len = 0;
+    seg->r_sent = 0;
+
+    DataBuffer *d = data;
+    while (d != nullptr) {
+        seg->r_len += d->size;
+        d->sent = 0;
+        d = d->next;
+    }
+
     return 0;
 }

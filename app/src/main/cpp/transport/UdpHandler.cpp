@@ -18,6 +18,7 @@
 #include "../proxyEngine.h"
 #include "../util.h"
 #include "../BufferPool.h"
+#include "../session/Session.h"
 
 #define LOG_TAG "UdpHandler"
 
@@ -121,20 +122,7 @@ void UdpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
 
     sessionInfo->lastActive = time(NULL);
 
-    int rversion;
-    struct sockaddr_in addr4;
-    struct sockaddr_in6 addr6;
-//    if (redirect == NULL) {
-    rversion = sessionInfo->ipVersoin;
-    if (rversion == IPVERSION) {
-        addr4.sin_family = AF_INET;
-        addr4.sin_addr.s_addr = (__be32) sessionInfo->dstAddr.ip4;
-        addr4.sin_port = htons(sessionInfo->dPort);
-    } else {
-        addr6.sin6_family = AF_INET6;
-        memcpy(&addr6.sin6_addr, &sessionInfo->dstAddr.ip6, 16);
-        addr6.sin6_port = htons(sessionInfo->dPort);
-    }
+
 //    } else {
 //        rversion = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
 //        log_android(ANDROID_LOG_WARN, "UDP%d redirect to %s/%u",
@@ -151,19 +139,17 @@ void UdpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
 //        }
 //    }
 
-    if (sendto(status->socket, pkt->payload, (socklen_t) pkt->payloadSize, MSG_NOSIGNAL,
-               (rversion == IPVERSION ? (const struct sockaddr *) &addr4
-                                      : (const struct sockaddr *) &addr6),
-               (socklen_t) (rversion == IPVERSION ? sizeof(addr4) : sizeof(addr6))) !=
-        pkt->payloadSize) {
-        ALOGE("UDP sendto error %d: %s", errno, strerror(errno));
-        if (errno != EINTR && errno != EAGAIN) {
-            status->state = UDP_FINISHING;
-            return;
-        }
-    } else
-        status->sent += pkt->payloadSize;
+    DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(sizeof(DataBuffer)));
+    dbuff->size = static_cast<uint16_t>(pkt->payloadSize);
+    dbuff->data = sessionInfo->balloc(dbuff->size);
+    memcpy(dbuff->data, pkt->payload, dbuff->size);
+    dbuff->next = nullptr;
+    dbuff->other = nullptr;
+    dbuff->sent = 0;
 
+    if (sessionInfo->session->onTunDown(sessionInfo, dbuff) == 0) {
+        status->sent += pkt->payloadSize;
+    }
     return;
 
 }
@@ -555,5 +541,46 @@ int UdpHandler::dataToTun(SessionInfo *sessionInfo, DataBuffer *data) {
 }
 
 int UdpHandler::dataToSocket(SessionInfo *sessionInfo, DataBuffer *data) {
+    UdpStatus *status = static_cast<UdpStatus *>(sessionInfo->tData);
+
+    int rversion;
+    struct sockaddr_in addr4;
+    struct sockaddr_in6 addr6;
+//    if (redirect == NULL) {
+    rversion = sessionInfo->ipVersoin;
+    if (rversion == IPVERSION) {
+        addr4.sin_family = AF_INET;
+        addr4.sin_addr.s_addr = (__be32) sessionInfo->dstAddr.ip4;
+        addr4.sin_port = htons(sessionInfo->dPort);
+    } else {
+        addr6.sin6_family = AF_INET6;
+        memcpy(&addr6.sin6_addr, &sessionInfo->dstAddr.ip6, 16);
+        addr6.sin6_port = htons(sessionInfo->dPort);
+    }
+
+    auto dbuff = data;
+
+
+    while (dbuff != nullptr) {
+        if (sendto(status->socket, dbuff->data, (socklen_t) dbuff->size, MSG_NOSIGNAL,
+                   (rversion == IPVERSION ? (const struct sockaddr *) &addr4
+                                          : (const struct sockaddr *) &addr6),
+                   (socklen_t) (rversion == IPVERSION ? sizeof(addr4) : sizeof(addr6))
+        ) != dbuff->size) {
+            ALOGE("UDP sendto error %d: %s", errno, strerror(errno));
+            if (errno != EINTR && errno != EAGAIN) {
+                status->state = UDP_FINISHING;
+                freeLinkDataBuffer(sessionInfo, dbuff);
+                return -1;
+            }
+        }
+
+        auto dbuff_tmp = dbuff;
+        dbuff = dbuff->next;
+        dbuff_tmp->next = nullptr;
+        freeLinkDataBuffer(sessionInfo, dbuff_tmp);
+    }
+
+
     return 0;
 }

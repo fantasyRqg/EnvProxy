@@ -228,8 +228,10 @@ void queue_tcp(const SessionInfo *sessionInfo,
             n->len = datalen;
             n->sent = 0;
             n->psh = tcphdr->psh;
-//            n->data = sessionInfo->balloc(datalen);
-//            memcpy(n->data, data, datalen);
+
+            n->r_len = 0;
+            n->r_sent = 0;
+            n->dataBuffer = nullptr;
             //process sessions
             DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(
                     sizeof(DataBuffer)));
@@ -1472,17 +1474,21 @@ int TcpHandler::dataToSocket(SessionInfo *sessionInfo, DataBuffer *data) {
     if (data == nullptr) {
         return 0;
     }
-    segment *seg = reinterpret_cast<segment *>(data->other);
-    seg->dataBuffer = data;
-    seg->r_len = 0;
-    seg->r_sent = 0;
 
-    DataBuffer *d = data;
+    segment *seg = reinterpret_cast<segment *>(data->other);
+    if (seg->dataBuffer == nullptr) {
+        seg->dataBuffer = data;
+    } else {
+        auto ld = seg->dataBuffer;
+        while (ld->next != nullptr) ld = ld->next;
+        ld->next = data;
+    }
+
+    DataBuffer *d = seg->dataBuffer;
     while (d != nullptr) {
         seg->r_len += d->size;
         d->sent = 0;
         d = d->next;
     }
-
     return 0;
 }

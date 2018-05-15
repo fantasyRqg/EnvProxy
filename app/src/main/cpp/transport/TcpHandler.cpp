@@ -901,6 +901,8 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
                         if (errno != EINTR && errno != EAGAIN)
                             write_rst(sessionInfo, status);
+
+                        sessionInfo->bfree(buffer);
                     } else if (bytes == 0) {
                         ALOGW("%s recv eof", str_session);
 
@@ -925,17 +927,26 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                         if (close(status->socket))
                             ALOGE("%s close error %d: %s", str_session, errno, strerror(errno));
                         status->socket = -1;
-
+                        sessionInfo->bfree(buffer);
                     } else {
                         // Socket read data
                         ALOGD("%s recv bytes %zu", str_session, bytes);
                         status->received += bytes;
 
                         // Forward to tun
-                        if (write_data(sessionInfo, status, buffer, (size_t) bytes) >= 0)
+
+                        DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(
+                                sizeof(DataBuffer)));
+
+                        dbuff->data = buffer;
+                        dbuff->size = static_cast<uint16_t>(bytes);
+                        dbuff->next = nullptr;
+                        dbuff->other = nullptr;
+                        dbuff->sent = 0;
+                        if (sessionInfo->session->onSocketDown(sessionInfo, dbuff) == 0) {
                             status->local_seq += bytes;
+                        }
                     }
-                    sessionInfo->bfree(buffer);
                 }
             }
         }
@@ -1465,7 +1476,23 @@ time_t TcpHandler::checkTimeout(SessionInfo *sessionInfo, time_t timeout, int de
 
 
 int TcpHandler::dataToTun(SessionInfo *sessionInfo, DataBuffer *data) {
+    if (data == nullptr) {
+        return 0;
+    }
+    TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
 
+    auto d = data;
+    while (d != nullptr) {
+        if (write_data(sessionInfo, status, d->data, d->size) < 0) {
+            freeLinkDataBuffer(sessionInfo, d);
+            return -1;
+        }
+
+        auto tmp = d;
+        d = d->next;
+        tmp->next = nullptr;
+        freeLinkDataBuffer(sessionInfo, tmp);
+    }
 
     return 0;
 }

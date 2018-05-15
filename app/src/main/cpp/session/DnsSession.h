@@ -14,6 +14,19 @@ public:
 
     virtual ~DnsSession();
 
+    int onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) override;
+
+    int onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) override;
+
+    int onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) override;
+
+    int onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData) override;
+
+protected:
+    void parseDnsResponse(const SessionInfo *sessionInfo, const uint8_t *data, size_t datalen);
+
+    int getDnsQuery(const SessionInfo *sessionInfo, const uint8_t *data, const size_t datalen,
+                    uint16_t *qtype, uint16_t *qclass, char *qname);
 };
 
 

@@ -18,6 +18,7 @@
 #include "TcpSession.h"
 #include "UdpSession.h"
 #include "IcmpSession.h"
+#include "DnsSession.h"
 
 
 SessionFactory::SessionFactory(int maxSessionSize) : mMaxSessionSize(maxSessionSize),
@@ -134,15 +135,15 @@ static void buildSessionProcess(SessionInfo *si) {
 
             udp->next = nullptr;
 
-//            if (si->dPort == 53) {
-//                auto dns = new DnsSession();
-//                dns->next = nullptr;
-//                dns->prev = udp;
-//
-//                udp->next = dns;
-//            } else {
-//                udp->next = nullptr;
-//            }
+            if (si->dPort == 53) {
+                auto dns = new DnsSession();
+                dns->next = nullptr;
+                dns->prev = udp;
+
+                udp->next = dns;
+            } else {
+                udp->next = nullptr;
+            }
         }
             break;
         default:

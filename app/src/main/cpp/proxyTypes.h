@@ -130,4 +130,57 @@ struct DataBuffer {
 
 void freeLinkDataBuffer(SessionInfo *sessionInfo, DataBuffer *dbuff);
 
+
+
+
+// DNS
+
+#define DNS_QCLASS_IN 1
+#define DNS_QTYPE_A 1 // IPv4
+#define DNS_QTYPE_AAAA 28 // IPv6
+
+#define DNS_QNAME_MAX 255
+#define DNS_TTL (10 * 60) // seconds
+
+struct dns_header {
+    uint16_t id; // identification number
+# if __BYTE_ORDER == __LITTLE_ENDIAN
+    uint16_t rd :1; // recursion desired
+    uint16_t tc :1; // truncated message
+    uint16_t aa :1; // authoritive answer
+    uint16_t opcode :4; // purpose of message
+    uint16_t qr :1; // query/response flag
+    uint16_t rcode :4; // response code
+    uint16_t cd :1; // checking disabled
+    uint16_t ad :1; // authenticated data
+    uint16_t z :1; // its z! reserved
+    uint16_t ra :1; // recursion available
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    uint16_t qr :1; // query/response flag
+    uint16_t opcode :4; // purpose of message
+    uint16_t aa :1; // authoritive answer
+    uint16_t tc :1; // truncated message
+    uint16_t rd :1; // recursion desired
+    uint16_t ra :1; // recursion available
+    uint16_t z :1; // its z! reserved
+    uint16_t ad :1; // authenticated data
+    uint16_t cd :1; // checking disabled
+    uint16_t rcode :4; // response code
+# else
+# error "Adjust your <bits/endian.h> defines"
+#endif
+    uint16_t q_count; // number of question entries
+    uint16_t ans_count; // number of answer entries
+    uint16_t auth_count; // number of authority entries
+    uint16_t add_count; // number of resource entries
+} __packed;
+
+typedef struct dns_rr {
+    __be16 qname_ptr;
+    __be16 qtype;
+    __be16 qclass;
+    __be32 ttl;
+    __be16 rdlength;
+} __packed dns_rr;
+
 #endif //ENVPROXY_PROXYTYPES_H

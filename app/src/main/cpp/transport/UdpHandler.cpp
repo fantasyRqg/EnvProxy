@@ -357,10 +357,13 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
                 if (errno != EINTR && errno != EAGAIN)
                     status->state = UDP_FINISHING;
+
+                sessionInfo->bfree(buffer);
             } else if (bytes == 0) {
                 ALOGW("UDP recv eof");
                 status->state = UDP_FINISHING;
 
+                sessionInfo->bfree(buffer);
             } else {
                 // Socket read data
                 char dest[INET6_ADDRSTRLEN + 1];
@@ -372,20 +375,19 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
                 status->received += bytes;
 
-//                // Process DNS response
-//                if (ntohs(status->dest) == 53)
-//                    parse_dns_response(args, &s->udp, buffer, (size_t *) &bytes);
-
                 // Forward to tun
-                if (write_udp(sessionInfo, status, buffer, (size_t) bytes) < 0)
+                DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(
+                        sizeof(DataBuffer)));
+                dbuff->data = buffer;
+                dbuff->size = static_cast<uint16_t>(bytes);
+                dbuff->next = nullptr;
+                dbuff->sent = 0;
+                dbuff->other = nullptr;
+
+                if (sessionInfo->session->onSocketDown(sessionInfo, dbuff) != 0) {
                     status->state = UDP_FINISHING;
-                else {
-                    // Prevent too many open files
-                    if (ntohs(status->dest) == 53)
-                        status->state = UDP_FINISHING;
                 }
             }
-            sessionInfo->bfree(buffer);
         }
     }
 }
@@ -537,6 +539,23 @@ time_t UdpHandler::checkTimeout(SessionInfo *sessionInfo, time_t timeout, int de
 }
 
 int UdpHandler::dataToTun(SessionInfo *sessionInfo, DataBuffer *data) {
+    UdpStatus *status = static_cast<UdpStatus *>(sessionInfo->tData);
+
+
+    DataBuffer *d = data;
+
+    while (d != nullptr) {
+        if (write_udp(sessionInfo, status, d->data, d->size) < 0) {
+            freeLinkDataBuffer(sessionInfo, d);
+            return -1;
+        }
+
+        auto tmp = d;
+        d = d->next;
+        tmp->next = nullptr;
+        freeLinkDataBuffer(sessionInfo, tmp);
+    }
+
     return 0;
 }
 

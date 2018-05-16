@@ -130,7 +130,7 @@ struct DataBuffer {
 
 void freeLinkDataBuffer(SessionInfo *sessionInfo, DataBuffer *dbuff);
 
-
+DataBuffer *createBaseOn(SessionInfo *sessionInfo, size_t size, DataBuffer *b = nullptr);
 
 
 // DNS

@@ -14,6 +14,14 @@ public:
 
     virtual ~HttpSession();
 
+    int onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) override;
+
+    int onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) override;
+
+    int onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) override;
+
+    int onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData) override;
+
 };
 
 

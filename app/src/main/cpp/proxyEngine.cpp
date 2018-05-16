@@ -20,6 +20,12 @@
 #include <netinet/tcp.h>
 #include <netinet/icmp6.h>
 
+#include <openssl/err.h>
+#include <openssl/dh.h>
+#include <openssl/ssl.h>
+#include <openssl/conf.h>
+#include <openssl/tls1.h>
+
 #include "proxyEngine.h"
 #include "log.h"
 #include "ip/IpPackageFactory.h"
@@ -51,6 +57,22 @@ proxyEngine::~proxyEngine() {
     }
 }
 
+
+void krx_begin() {
+    SSL_library_init();
+    SSL_load_error_strings();
+    ERR_load_BIO_strings();
+    OpenSSL_add_all_algorithms();
+}
+
+void krx_end() {
+    CONF_modules_unload(1);
+    ERR_free_strings();
+    EVP_cleanup();
+    sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
+    CRYPTO_cleanup_all_ex_data();
+    OPENSSL_thread_stop();
+}
 
 void proxyEngine::handleEvents() {
     mRunning = true;
@@ -160,6 +182,9 @@ void proxyEngine::handleEvents() {
             ALOGD("Skipped session checks");
         }
 
+        //init open ssl
+        krx_begin();
+
         ALOGD("sessions ICMP %d UDP %d TCP %d max %d/%d/%d timeout %ld recheck %d",
               isessions, usessions, tsessions, sessions, maxsessions,
               sessionFactory.getSessionCount(), timeout, recheck);
@@ -227,6 +252,8 @@ void proxyEngine::handleEvents() {
         mProtectMid = nullptr;
     }
 
+    //de-init
+    krx_end();
 
     ALOGI("proxy stop");
 }

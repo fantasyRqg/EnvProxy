@@ -8,11 +8,26 @@
 
 #include "Session.h"
 
+
+struct TlsCtx;
+
 class TlsSession : public Session {
 public:
     TlsSession();
 
     virtual ~TlsSession();
+
+    int onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) override;
+
+    int onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) override;
+
+    int onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) override;
+
+    int onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData) override;
+
+private:
+    TlsCtx *mTunServer;
+    TlsCtx *mClient;
 };
 
 

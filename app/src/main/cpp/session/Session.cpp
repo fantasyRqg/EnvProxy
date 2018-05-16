@@ -16,7 +16,7 @@ Session::~Session() {
 
 int Session::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
     if (next == nullptr) {
-        return sessionInfo->transportHandler->dataToSocket(sessionInfo, downData);
+        return onTunUp(sessionInfo, downData);
     } else {
         return next->onTunDown(sessionInfo, downData);
     }
@@ -33,7 +33,7 @@ int Session::onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) {
 
 int Session::onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) {
     if (next == nullptr) {
-        return sessionInfo->transportHandler->dataToTun(sessionInfo, downData);
+        return onSocketUp(sessionInfo, downData);
     } else {
         return next->onSocketDown(sessionInfo, downData);
     }

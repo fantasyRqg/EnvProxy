@@ -80,6 +80,8 @@ public class ProxyNative {
 
     private native void stopProxy_Native();
 
+    public native void setKeyAndCertificate(String key, String certificate);
+
     private native boolean isProxyRunning_Native();
 
     private static native void initClass();

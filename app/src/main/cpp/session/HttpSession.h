@@ -10,7 +10,8 @@
 
 class HttpSession : public Session {
 public:
-    HttpSession();
+
+    HttpSession(SessionInfo *sessionInfo);
 
     virtual ~HttpSession();
 

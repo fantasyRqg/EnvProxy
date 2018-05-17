@@ -4,7 +4,7 @@
 
 #include "TcpSession.h"
 
-TcpSession::TcpSession() {}
+TcpSession::TcpSession(SessionInfo *sessionInfo) : Session(sessionInfo) {}
 
 TcpSession::~TcpSession() {
 

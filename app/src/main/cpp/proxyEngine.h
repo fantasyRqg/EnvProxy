@@ -33,6 +33,8 @@ public:
     bool isProxyRunning();
 
 
+    void setKeyAndCertificate(const char *key, size_t keyLen, const char *cert, size_t certLen);
+
 public:
     int mTunFd = -1;
     bool mRunning = false;
@@ -48,6 +50,9 @@ private:
     JNIEnv *mJniEnv;
     jobject mProxyService;
     jmethodID mProtectMid;
+
+    char *mKeyPath;
+    char *mCertPath;
 
 private:
     IpPackage *

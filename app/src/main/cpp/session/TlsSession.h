@@ -15,7 +15,8 @@ struct DataBuffer;
 
 class TlsSession : public Session {
 public:
-    TlsSession();
+
+    TlsSession(SessionInfo *sessionInfo);
 
     virtual ~TlsSession();
 

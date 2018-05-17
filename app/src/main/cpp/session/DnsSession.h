@@ -10,7 +10,8 @@
 
 class DnsSession : public Session {
 public:
-    DnsSession();
+
+    DnsSession(SessionInfo *sessionInfo);
 
     virtual ~DnsSession();
 

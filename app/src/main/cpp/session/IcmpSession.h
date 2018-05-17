@@ -9,7 +9,8 @@
 
 class IcmpSession : public Session {
 public:
-    IcmpSession();
+
+    IcmpSession(SessionInfo *sessionInfo);
 
     virtual ~IcmpSession();
 

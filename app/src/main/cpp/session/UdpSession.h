@@ -10,7 +10,8 @@
 
 class UdpSession : public Session {
 public:
-    UdpSession();
+
+    UdpSession(SessionInfo *sessionInfo);
 
     virtual ~UdpSession();
 };

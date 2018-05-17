@@ -60,6 +60,9 @@ struct ProxyContext {
     size_t mtu;
     int maxSessions;
     int sessionCount;
+
+    char *keyPath;
+    char *certPath;
 };
 
 #define balloc context->bufferPool->allocBuffer

@@ -7,10 +7,19 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.VpnService
 import android.os.Bundle
+import android.security.KeyChain
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.IOException
 import java.security.KeyStore
 import java.security.KeyStoreException
@@ -21,6 +30,13 @@ class MainActivity : Activity() {
     companion object {
         val TAG = "MainActivity"
         private const val REQUEST_CONNECT = 0
+        private const val REQUEST_INSTALL_CERT = 1
+
+        const val PEM_CHAIN_CERT = "ca-chain.cert.pem"
+        const val PEM_ENV2_KEY = "www.env2.com.key.pem"
+        const val PEM_ENV2_CERT = "www.evn2.com.cert.pem"
+        const val PEM_DIR = "pems"
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,49 +61,103 @@ class MainActivity : Activity() {
 
 
         btn.setOnClickListener {
-            //            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
-//                    .subscribeOn(Schedulers.io())
-//                    .map {
-//                        val client = OkHttpClient()
-//                        val request = Request.Builder()
-//                                .url(it)
-//                                .build()
-//                        client.newCall(request)
-//                                .execute()
-//                                .body()
-//                    }
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribe({
-//                        tv_response.text = it?.charStream()?.readText()
-//                    }, {
-//                        tv_response.text = it.toString()
-//                    })
-
-            checkCAInstalled()
+            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+                    .subscribeOn(Schedulers.io())
+                    .map {
+                        val client = OkHttpClient()
+                        val request = Request.Builder()
+                                .url(it)
+                                .build()
+                        client.newCall(request)
+                                .execute()
+                                .body()
+                    }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        tv_response.text = it?.charStream()?.readText()
+                    }, {
+                        tv_response.text = it.toString()
+                    })
         }
+
+
 
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(statusReceiver, IntentFilter(ProxyService.STATUS_BROADCAST))
 
         LocalBroadcastManager.getInstance(this)
                 .sendBroadcast(Intent(ProxyService.STATUS_BROADCAST_TRIGGER))
+
+
+        Observable.just(true)
+                .observeOn(Schedulers.io())
+                .map {
+                    makeSurePems()
+                    it
+                }
+                .filter {
+                    !checkCAInstalled()
+                }
+                .subscribe {
+                    installCa()
+                }
+    }
+
+    private fun installCa() {
+        val intent = KeyChain.createInstallIntent()
+
+        intent.putExtra(KeyChain.EXTRA_NAME, "envProxy")
+
+
+        val file = File(getDir(PEM_DIR, Context.MODE_PRIVATE), PEM_CHAIN_CERT)
+        val fis = FileInputStream(file)
+        val bytesArray = ByteArray(file.length().toInt())
+        fis.read(bytesArray)
+        intent.putExtra(KeyChain.EXTRA_CERTIFICATE, bytesArray)
+
+        startActivityForResult(intent, REQUEST_INSTALL_CERT)
     }
 
 
+    private fun makeSurePems() {
+        val pemDir = getDir(PEM_DIR, Context.MODE_PRIVATE)
+        checkPemFile(pemDir, PEM_CHAIN_CERT)
+        checkPemFile(pemDir, PEM_ENV2_CERT)
+        checkPemFile(pemDir, PEM_ENV2_KEY)
+    }
+
+    private fun checkPemFile(pemDir: File, name: String) {
+        val chainFile = File(pemDir, name)
+        if (!chainFile.exists()) {
+            val fos = FileOutputStream(chainFile)
+            val fis = assets.open(name)
+            val buffer = ByteArray(1024)
+            var read: Int
+            while (true) {
+                read = fis.read(buffer);
+                if (read != -1)
+                    fos.write(buffer, 0, read)
+                else
+                    break;
+            }
+
+            fos.close()
+            fis.close()
+        }
+    }
+
     private fun checkCAInstalled(): Boolean {
         try {
-            val ks = KeyStore.getInstance(KeyStore.getDefaultType())
+            val ks = KeyStore.getInstance("AndroidCAStore")
             if (ks != null) {
                 ks.load(null, null)
                 val aliases = ks.aliases()
                 while (aliases.hasMoreElements()) {
                     val alias = aliases.nextElement() as String
                     val cert = ks.getCertificate(alias) as java.security.cert.X509Certificate
-
-                    Log.d(TAG, "checkCAInstalled: ${cert.issuerDN}")
-//                    if (cert.issuerDN.name.contains("MyCert")) {
-//                        return true
-//                    }
+                    if (cert.issuerDN.name.contains("www.env.com")) {
+                        return true
+                    }
                 }
             }
         } catch (e: IOException) {
@@ -133,9 +203,17 @@ class MainActivity : Activity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_CONNECT && resultCode == RESULT_OK) {
-            val intent = Intent(this, ProxyService::class.java)
-            intent.putExtra(ProxyService.PROXY_CMD, ProxyService.CMD_START)
-            ContextCompat.startForegroundService(this, intent)
+            when (requestCode) {
+                REQUEST_CONNECT -> {
+                    val intent = Intent(this, ProxyService::class.java)
+                    intent.putExtra(ProxyService.PROXY_CMD, ProxyService.CMD_START)
+                    ContextCompat.startForegroundService(this, intent)
+                }
+                REQUEST_INSTALL_CERT -> {
+                    Log.d(TAG, "onActivityResult: cert installed")
+                }
+            }
+
         }
     }
 }

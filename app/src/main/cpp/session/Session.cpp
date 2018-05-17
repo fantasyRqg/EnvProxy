@@ -6,7 +6,7 @@
 #include "../proxyTypes.h"
 #include "../transport/TransportHandler.h"
 
-Session::Session() : next(nullptr), prev(nullptr) {
+Session::Session(SessionInfo *sessionInfo) : next(nullptr), prev(nullptr) {
 
 }
 

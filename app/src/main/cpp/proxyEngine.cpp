@@ -111,7 +111,10 @@ void proxyEngine::handleEvents() {
             &bufferPool,
             mMTU,
             maxsessions,
-            0
+            0,
+            mKeyPath,
+            mCertPath
+
     };
     //ip package factory
     IpPackageFactory ipPackageFactory(&context);
@@ -255,6 +258,9 @@ void proxyEngine::handleEvents() {
     //de-init
     krx_end();
 
+    free(mKeyPath);
+    free(mCertPath);
+
     ALOGI("proxy stop");
 }
 
@@ -353,4 +359,15 @@ bool proxyEngine::protectSocket(int socket) {
         return false;
     }
     return true;
+}
+
+void proxyEngine::setKeyAndCertificate(const char *key, size_t keyLen, const char *cert,
+                                       size_t certLen) {
+
+    mKeyPath = static_cast<char *>(malloc(keyLen));
+    memcpy(mKeyPath, key, keyLen);
+
+    mCertPath = static_cast<char *>(malloc(certLen));
+    memcpy(mCertPath, cert, certLen);
+
 }

@@ -10,6 +10,7 @@ import android.content.IntentFilter
 import android.net.VpnService
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.LocalBroadcastManager
+import java.io.File
 
 /**
  * * Created by rqg on 03/04/2018.
@@ -68,10 +69,20 @@ class ProxyService : VpnService() {
         val fileDp = getVpnBuilder().establish()
         proxyNative.vpnFileDescriptor = fileDp
         Thread {
-            proxyNative.startProxy()
 
+            setKeyAndCertificate()
+            proxyNative.startProxy()
             proxyNative.vpnFileDescriptor?.close()
         }.start()
+    }
+
+
+    private fun setKeyAndCertificate() {
+        val pemDir = getDir(MainActivity.PEM_DIR, Context.MODE_PRIVATE)
+        val keyFile = File(pemDir, MainActivity.PEM_ENV2_KEY)
+        val certFile = File(pemDir, MainActivity.PEM_ENV2_CERT)
+
+        proxyNative.setKeyAndCertificate(keyFile.absolutePath, certFile.absolutePath)
     }
 
     private val triggerReceiver = object : BroadcastReceiver() {

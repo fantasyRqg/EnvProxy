@@ -4,7 +4,7 @@
 
 #include "IcmpSession.h"
 
-IcmpSession::IcmpSession() {}
+IcmpSession::IcmpSession(SessionInfo *sessionInfo) : Session(sessionInfo) {}
 
 IcmpSession::~IcmpSession() {
 

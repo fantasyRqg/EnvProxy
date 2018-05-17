@@ -12,7 +12,7 @@
 
 #define LOG_TAG "DnsSession"
 
-DnsSession::DnsSession() {}
+DnsSession::DnsSession(SessionInfo *sessionInfo) : Session(sessionInfo) {}
 
 DnsSession::~DnsSession() {
 

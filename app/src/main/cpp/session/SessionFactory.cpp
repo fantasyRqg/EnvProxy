@@ -95,7 +95,7 @@ struct SessionInfo *SessionFactory::findOrCreateSession(TransportPkt *pkt) {
 static void buildSessionProcess(SessionInfo *si) {
     switch (si->protocol) {
         case IPPROTO_ICMP: {
-            auto icmp = new IcmpSession();
+            auto icmp = new IcmpSession(si);
             icmp->prev = nullptr;
             si->session = icmp;
 
@@ -104,20 +104,20 @@ static void buildSessionProcess(SessionInfo *si) {
         }
             break;
         case IPPROTO_TCP: {
-            auto tcp = new TcpSession();
+            auto tcp = new TcpSession(si);
             tcp->prev = nullptr;
             si->session = tcp;
             tcp->next = nullptr;
 
             if (si->dPort == 80) {
-                auto http = new HttpSession();
+                auto http = new HttpSession(si);
                 http->prev = tcp;
                 http->next = nullptr;
 
                 tcp->next = http;
             } else if (si->dPort == 443) {
-                auto tls = new TlsSession();
-                auto http = new HttpSession();
+                auto tls = new TlsSession(si);
+                auto http = new HttpSession(si);
                 tls->next = http;
                 http->next = nullptr;
                 tls->prev = tcp;
@@ -130,14 +130,14 @@ static void buildSessionProcess(SessionInfo *si) {
         }
             break;
         case IPPROTO_UDP: {
-            auto udp = new UdpSession();
+            auto udp = new UdpSession(si);
             udp->prev = nullptr;
             si->session = udp;
 
             udp->next = nullptr;
 
             if (si->dPort == 53) {
-                auto dns = new DnsSession();
+                auto dns = new DnsSession(si);
                 dns->next = nullptr;
                 dns->prev = udp;
 

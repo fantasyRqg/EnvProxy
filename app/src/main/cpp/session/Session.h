@@ -54,7 +54,7 @@ struct DataBuffer;
 
 class Session {
 public:
-    Session();
+    Session(SessionInfo *sessionInfo);
 
     virtual ~Session();
 

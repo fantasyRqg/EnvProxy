@@ -108,7 +108,7 @@ int krx_ssl_init(TlsCtx *k, int isserver, info_callback cb) {
     return 0;
 }
 
-int krx_ssl_ctx_init(TlsCtx *k, int is_server) {
+int krx_ssl_ctx_init(SessionInfo *sessionInfo, TlsCtx *k, int is_server) {
 
     int r = 0;
 
@@ -151,12 +151,12 @@ int krx_ssl_ctx_init(TlsCtx *k, int is_server) {
 
     if (is_server) {
 
-        /* load key and certificate */
-        char certfile[] = "/sdcard/env-cert.pem";
-        char keyfile[] = "/sdcard/env-key.pem";
+        ALOGV("cert path = %s, key path = %s", sessionInfo->context->certPath,
+              sessionInfo->context->keyPath);
 
+        /* load key and certificate */
         /* certificate file; contains also the public key */
-        r = SSL_CTX_use_certificate_file(k->ctx, certfile, SSL_FILETYPE_PEM);
+        r = SSL_CTX_use_certificate_file(k->ctx, sessionInfo->context->certPath, SSL_FILETYPE_PEM);
         if (r != 1) {
             char err_msg[250];
             get_err_msg(err_msg, sizeof(err_msg));
@@ -165,7 +165,7 @@ int krx_ssl_ctx_init(TlsCtx *k, int is_server) {
         }
 
         /* load private key */
-        r = SSL_CTX_use_PrivateKey_file(k->ctx, keyfile, SSL_FILETYPE_PEM);
+        r = SSL_CTX_use_PrivateKey_file(k->ctx, sessionInfo->context->keyPath, SSL_FILETYPE_PEM);
         if (r != 1) {
             char err_msg[250];
             get_err_msg(err_msg, sizeof(err_msg));
@@ -186,10 +186,12 @@ int krx_ssl_ctx_init(TlsCtx *k, int is_server) {
 }
 
 
-TlsSession::TlsSession() : mTunServer(nullptr), mClient(nullptr), mPenddingData(nullptr) {
+TlsSession::TlsSession(SessionInfo *sessionInfo)
+        : Session(sessionInfo), mTunServer(nullptr),
+          mClient(nullptr), mPenddingData(nullptr) {
     mTunServer = new TlsCtx();
 
-    if (krx_ssl_ctx_init(mTunServer, 1) != 0) {
+    if (krx_ssl_ctx_init(sessionInfo, mTunServer, 1) != 0) {
         ALOGE("init server ctx fail");
     }
 
@@ -199,7 +201,7 @@ TlsSession::TlsSession() : mTunServer(nullptr), mClient(nullptr), mPenddingData(
 
     mClient = new TlsCtx();
 
-    if (krx_ssl_ctx_init(mClient, 0) != 0) {
+    if (krx_ssl_ctx_init(sessionInfo, mClient, 0) != 0) {
         ALOGE("init server ctx fail");
     }
 
@@ -207,7 +209,6 @@ TlsSession::TlsSession() : mTunServer(nullptr), mClient(nullptr), mPenddingData(
         ALOGE("init server ssl fail");
     }
 }
-
 
 void free_ctx(TlsCtx *ctx) {
     if (ctx == nullptr)

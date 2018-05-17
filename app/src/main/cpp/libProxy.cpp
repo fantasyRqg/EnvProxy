@@ -56,7 +56,19 @@ void setProxyService(JNIEnv *env, jobject thiz, jobject proxyService) {
     getProxyEngine(env, thiz)->setJniEnv(env, proxyService);
 }
 
+void setKeyAndCertificate(JNIEnv *env, jobject thiz, jstring key, jstring certificate) {
+    auto *nKey = env->GetStringUTFChars(key, 0);
+    auto keyLen = env->GetStringUTFLength(key);
+    auto *nCert = env->GetStringUTFChars(certificate, 0);
+    auto certLen = env->GetStringUTFLength(certificate);
+    getProxyEngine(env, thiz)->setKeyAndCertificate(reinterpret_cast<const char *>(nKey),
+                                                    static_cast<size_t>(keyLen),
+                                                    reinterpret_cast<const char *>(nCert),
+                                                    static_cast<size_t>(certLen));
 
+    env->ReleaseStringUTFChars(key, nKey);
+    env->ReleaseStringUTFChars(certificate, nCert);
+}
 
 
 
@@ -93,15 +105,16 @@ void setProxyService(JNIEnv *env, jobject thiz, jobject proxyService) {
 
 static const char *classPathName = "com/youzan/envproxy/ProxyNative";
 static JNINativeMethod methods[] = {
-        {"getMTU",                "()I",                                   (void *) getMTU},
-        {"initNative",            "()V",                                   (void *) initNative},
-        {"initClass",             "()V",                                   (void *) initClass},
-        {"destroyNative",         "()V",                                   (void *) destroyNative},
-        {"setVpnFd",              "(I)V",                                  (void *) setVpnFd},
-        {"startProxy_Native",     "()V",                                   (void *) startProxy},
-        {"stopProxy_Native",      "()V",                                   (void *) stopProxy},
-        {"isProxyRunning_Native", "()Z",                                   (void *) isProxyRunning},
-        {"setProxyService",       "(Lcom/youzan/envproxy/ProxyService;)V", (void *) setProxyService},
+        {"getMTU",                "()I",                                     (void *) getMTU},
+        {"initNative",            "()V",                                     (void *) initNative},
+        {"initClass",             "()V",                                     (void *) initClass},
+        {"destroyNative",         "()V",                                     (void *) destroyNative},
+        {"setVpnFd",              "(I)V",                                    (void *) setVpnFd},
+        {"startProxy_Native",     "()V",                                     (void *) startProxy},
+        {"stopProxy_Native",      "()V",                                     (void *) stopProxy},
+        {"isProxyRunning_Native", "()Z",                                     (void *) isProxyRunning},
+        {"setProxyService",       "(Lcom/youzan/envproxy/ProxyService;)V",   (void *) setProxyService},
+        {"setKeyAndCertificate",  "(Ljava/lang/String;Ljava/lang/String;)V", (void *) setKeyAndCertificate},
 };
 
 /*

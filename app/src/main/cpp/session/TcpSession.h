@@ -10,7 +10,8 @@
 
 class TcpSession : public Session {
 public:
-    TcpSession();
+
+    TcpSession(SessionInfo *sessionInfo);
 
     virtual ~TcpSession();
 

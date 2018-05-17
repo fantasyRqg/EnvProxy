@@ -4,7 +4,7 @@
 
 #include "HttpSession.h"
 
-HttpSession::HttpSession() {}
+HttpSession::HttpSession(SessionInfo *sessionInfo) : Session(sessionInfo) {}
 
 HttpSession::~HttpSession() {
 

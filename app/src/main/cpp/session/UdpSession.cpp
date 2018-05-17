@@ -6,7 +6,7 @@
 #include "../proxyTypes.h"
 
 
-UdpSession::UdpSession() {}
+UdpSession::UdpSession(SessionInfo *sessionInfo) : Session(sessionInfo) {}
 
 UdpSession::~UdpSession() {
 

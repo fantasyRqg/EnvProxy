@@ -152,9 +152,9 @@ Makefile
 *.0
 
 # All kinds of libraries and executables
-*.a
-*.so
-*.so.*
+#*.a
+#*.so
+#*.so.*
 *.dylib
 *.dylib.*
 *.dll

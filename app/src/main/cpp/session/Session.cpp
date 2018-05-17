@@ -46,3 +46,7 @@ int Session::onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData) {
         return prev->onSocketUp(sessionInfo, upData);
     }
 }
+
+void Session::releaseResource(SessionInfo *sessionInfo) {
+
+}

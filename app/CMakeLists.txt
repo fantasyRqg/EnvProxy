@@ -6,12 +6,12 @@ set(OPENSSL_DIR
 # add the open ssl crypto lib
 add_library(libcrypto STATIC IMPORTED)
 set_target_properties(libcrypto PROPERTIES IMPORTED_LOCATION
-    ${OPENSSL_DIR}/lib/libcrypto.a)
+    ${OPENSSL_DIR}/${ANDROID_ABI}/lib/libcrypto.a)
 
 # add the open ssl ssl lib
 add_library(libssl STATIC IMPORTED)
 set_target_properties(libssl PROPERTIES IMPORTED_LOCATION
-    ${OPENSSL_DIR}/lib/libssl.a)
+    ${OPENSSL_DIR}/${ANDROID_ABI}/lib/libssl.a)
 
 
 
@@ -44,7 +44,7 @@ add_library(libProxy
 
 # add to target_include_directories
 target_include_directories(libProxy PRIVATE
-                ${OPENSSL_DIR}/include)
+                ${OPENSSL_DIR}/${ANDROID_ABI}/include)
 
 find_library(log-lib log)
 

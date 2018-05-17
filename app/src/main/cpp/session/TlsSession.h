@@ -11,6 +11,8 @@
 
 struct TlsCtx;
 
+struct DataBuffer;
+
 class TlsSession : public Session {
 public:
     TlsSession();
@@ -25,9 +27,19 @@ public:
 
     int onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData) override;
 
+    void releaseResource(SessionInfo *sessionInfo) override;
+
 private:
     TlsCtx *mTunServer;
     TlsCtx *mClient;
+    DataBuffer *mPenddingData;
+
+
+    int handlePendingData(SessionInfo *sessionInfo);
+
+    void appendPendingData(DataBuffer *db);
+
+    int outClientData(SessionInfo *sessionInfo);
 };
 
 

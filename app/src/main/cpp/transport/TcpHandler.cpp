@@ -65,7 +65,6 @@ struct TcpStatus {
     uint8_t state;
 
     DataBuffer *toSocket;
-    DataBuffer *toTun;
 };
 
 
@@ -826,10 +825,9 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
             ALOGV("EPOLL in or out");
             // Always forward data
-            int fwd = 0;
             if (ev->events & EPOLLOUT) {
-                if (writeForwardData(sessionInfo, status) > 0) {
-                    fwd = 1;
+                if (writeForwardData(sessionInfo, status) <= 0) {
+                    ALOGW("%s, forward data nothing", str_session);
                 }
             }
 
@@ -907,7 +905,6 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
 #undef LOG_TAG
 #define LOG_TAG "writeForwardData"
-
     int fwdCount = 0;
 
     char source[INET6_ADDRSTRLEN + 1];
@@ -1059,7 +1056,7 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 
         status->state = TCP_LISTEN;
         status->toSocket = nullptr;
-        status->toTun = nullptr;
+//        status->toTun = nullptr;
 
 //        if (datalen) {
 //            ALOGW("%s SYN data", packet);
@@ -1185,7 +1182,7 @@ void TcpHandler::freeStatusData(SessionInfo *sessionInfo) {
     if (data != nullptr) {
         TcpStatus *s = static_cast<TcpStatus *>(data);
         freeLinkDataBuffer(sessionInfo, s->toSocket);
-        freeLinkDataBuffer(sessionInfo, s->toTun);
+//        freeLinkDataBuffer(sessionInfo, s->toTun);
 
         sessionInfo->bfree(static_cast<uint8_t *>(data));
     }

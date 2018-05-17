@@ -99,6 +99,8 @@ public:
     virtual int onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData);
 
 
+    virtual void releaseResource(SessionInfo *sessionInfo);
+
 public:
     Session *next;
     Session *prev;

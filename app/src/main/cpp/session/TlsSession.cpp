@@ -186,7 +186,7 @@ int krx_ssl_ctx_init(TlsCtx *k, int is_server) {
 }
 
 
-TlsSession::TlsSession() : mTunServer(nullptr), mClient(nullptr) {
+TlsSession::TlsSession() : mTunServer(nullptr), mClient(nullptr), mPenddingData(nullptr) {
     mTunServer = new TlsCtx();
 
     if (krx_ssl_ctx_init(mTunServer, 1) != 0) {
@@ -246,6 +246,7 @@ TlsSession::~TlsSession() {
 
 int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
     int tun_write_size = BIO_write(mTunServer->in_bio, downData->data, downData->size);
+
     if (tun_write_size != downData->size) {
         ALOGE("write tun server bio error");
         freeLinkDataBuffer(sessionInfo, downData);
@@ -273,7 +274,7 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
         //after do handshake has data to tun
         auto toTunSize = BIO_ctrl_pending(mTunServer->out_bio);
         if (toTunSize > 0) {
-            auto to_tun_data = createBaseOn(sessionInfo, toTunSize);
+            auto to_tun_data = createDataBuffer(sessionInfo, toTunSize);
             if (BIO_read(mTunServer->out_bio, to_tun_data->data, to_tun_data->size) !=
                 to_tun_data->size) {
                 freeLinkDataBuffer(sessionInfo, downData);
@@ -282,14 +283,14 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
                 return -1;
             }
             //write handshake data to tun
-            onTunUp(sessionInfo, to_tun_data);
+            prev->onSocketUp(sessionInfo, to_tun_data);
         }
     } else {
         //assume must have next session (httpSession)
         // handle ssl/tls data from tun
         auto d_size = SSL_pending(mTunServer->ssl);
         if (d_size > 0) {
-            auto h_data = createBaseOn(sessionInfo, static_cast<size_t>(d_size));
+            auto h_data = createDataBuffer(sessionInfo, static_cast<size_t>(d_size));
             if (SSL_read(mTunServer->ssl, h_data->data, h_data->size) != h_data->size) {
                 ALOGE("read tun server data fail");
                 freeLinkDataBuffer(sessionInfo, downData);
@@ -300,37 +301,142 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
             next->onTunDown(sessionInfo, h_data);
         }
 
-        freeLinkDataBuffer(sessionInfo, downData);
     }
+
+    freeLinkDataBuffer(sessionInfo, downData);
     return 0;
 }
 
 
 int TlsSession::onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) {
-// trigger client handshake
-//    int rCode = SSL_do_handshake(mClient->ssl);
-//    if (rCode <= 0) {
-//        ALOGE("tls client handshake error, %s",
-//              getSSLErrStr(SSL_get_error(mClient->ssl, rCode)));
-//        return 0;
-//    }
-//    auto p_size = BIO_ctrl_pending(mClient->out_bio);
-//    auto to_socket = createBaseOn(sessionInfo, p_size, downData);
-//    BIO_read(mClient->out_bio, to_socket->data, to_socket->size);
-//    prev->onTunUp(sessionInfo, to_socket);
 
+    if (!SSL_is_init_finished(mClient->ssl)) {
+        //client handshake not finish
+        int rCode = SSL_do_handshake(mClient->ssl);
+        if (rCode <= 0) {
+            ALOGE("tls client handshake error, %s",
+                  getSSLErrStr(SSL_get_error(mClient->ssl, rCode)));
+            return 0;
+        }
+        outClientData(sessionInfo);
 
-    return prev->onTunUp(sessionInfo, upData);
-}
+        if (upData != nullptr) {
+            appendPendingData(upData);
+        }
 
-int TlsSession::onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) {
-    if (next == nullptr) {
-        return onSocketUp(sessionInfo, downData);
+        return 0;
     } else {
-        return next->onSocketDown(sessionInfo, downData);
+        //ssl handshake has finished
+        //deal pendding data first,
+        appendPendingData(upData);
+        return handlePendingData(sessionInfo);
     }
 }
 
+int TlsSession::outClientData(SessionInfo *sessionInfo) {
+    auto p_size = BIO_ctrl_pending(mClient->out_bio);
+    if (p_size > 0) {
+        auto to_socket = createDataBuffer(sessionInfo, p_size);
+        BIO_read(mClient->out_bio, to_socket->data, to_socket->size);
+        if (prev->onTunUp(sessionInfo, to_socket) != 0) {
+            ALOGE("tls session onTunUp fail in outClientData");
+            return -1;
+        } else {
+            return static_cast<int>(p_size);
+        }
+    } else {
+        ALOGW("read content nothing");
+    }
+
+    return 0;
+}
+
+int TlsSession::onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) {
+    BIO_write(mClient->in_bio, downData->data, downData->size);
+
+    int result = 0;
+
+    if (!SSL_is_init_finished(mClient->ssl)) {
+        int code = SSL_do_handshake(mClient->ssl);
+        if (code <= 0) {
+            ALOGE("tls session client handshake error, %s",
+                  getSSLErrStr(SSL_get_error(mClient->ssl, code)));
+            result = -1;
+            goto out;
+        }
+
+        result = outClientData(sessionInfo);
+    } else {
+        auto clen = SSL_pending(mClient->ssl);
+        if (clen > 0) {
+            auto cData = createDataBuffer(sessionInfo, static_cast<size_t>(clen));
+            SSL_read(mClient->ssl, cData->data, cData->size);
+
+            result = next->onSocketDown(sessionInfo, cData);
+        }
+    }
+
+    out:
+    freeLinkDataBuffer(sessionInfo, downData);
+    return result;
+}
+
 int TlsSession::onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData) {
-    return prev->onSocketUp(sessionInfo, upData);
+    SSL_write(mTunServer->ssl, upData->data, upData->size);
+
+    auto oLen = BIO_ctrl_pending(mTunServer->out_bio);
+    auto oData = createDataBuffer(sessionInfo, static_cast<size_t>(oLen));
+    BIO_read(mTunServer->out_bio, oData->data, oData->size);
+
+    freeLinkDataBuffer(sessionInfo, upData);
+    return prev->onSocketUp(sessionInfo, oData);
+}
+
+
+void TlsSession::releaseResource(SessionInfo *sessionInfo) {
+    freeLinkDataBuffer(sessionInfo, mPenddingData);
+}
+
+/**
+ *  client must be init finished
+ * @param sessionInfo
+ * @return
+ */
+int TlsSession::handlePendingData(SessionInfo *sessionInfo) {
+
+    int result = 0;
+
+    while (mPenddingData != nullptr) {
+        if (SSL_write(mClient->ssl, mPenddingData->data, mPenddingData->size) !=
+            mPenddingData->size) {
+            ALOGE("tls session write pending data fail");
+            result = -1;
+            break;
+        }
+
+        if (outClientData(sessionInfo) < 0) {
+            break;
+        }
+
+        auto tmp = mPenddingData;
+        mPenddingData = mPenddingData->next;
+        tmp->next = nullptr;
+        freeLinkDataBuffer(sessionInfo, tmp);
+    }
+
+    return result;
+}
+
+void TlsSession::appendPendingData(DataBuffer *db) {
+    if (db == nullptr)
+        return;
+
+    if (mPenddingData == nullptr) {
+        mPenddingData = db;
+    } else {
+        auto pd = mPenddingData;
+        while (pd->next != nullptr) {
+            pd->next = db;
+        }
+    }
 }

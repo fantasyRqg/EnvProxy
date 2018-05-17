@@ -10,12 +10,12 @@ import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import java.io.IOException
+import java.security.KeyStore
+import java.security.KeyStoreException
+import java.security.NoSuchAlgorithmException
+
 
 class MainActivity : Activity() {
     companion object {
@@ -45,23 +45,25 @@ class MainActivity : Activity() {
 
 
         btn.setOnClickListener {
-            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
-                    .subscribeOn(Schedulers.io())
-                    .map {
-                        val client = OkHttpClient()
-                        val request = Request.Builder()
-                                .url(it)
-                                .build()
-                        client.newCall(request)
-                                .execute()
-                                .body()
-                    }
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe({
-                        tv_response.text = it?.charStream()?.readText()
-                    }, {
-                        tv_response.text = it.toString()
-                    })
+            //            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+//                    .subscribeOn(Schedulers.io())
+//                    .map {
+//                        val client = OkHttpClient()
+//                        val request = Request.Builder()
+//                                .url(it)
+//                                .build()
+//                        client.newCall(request)
+//                                .execute()
+//                                .body()
+//                    }
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe({
+//                        tv_response.text = it?.charStream()?.readText()
+//                    }, {
+//                        tv_response.text = it.toString()
+//                    })
+
+            checkCAInstalled()
         }
 
         LocalBroadcastManager.getInstance(this)
@@ -69,6 +71,37 @@ class MainActivity : Activity() {
 
         LocalBroadcastManager.getInstance(this)
                 .sendBroadcast(Intent(ProxyService.STATUS_BROADCAST_TRIGGER))
+    }
+
+
+    private fun checkCAInstalled(): Boolean {
+        try {
+            val ks = KeyStore.getInstance(KeyStore.getDefaultType())
+            if (ks != null) {
+                ks.load(null, null)
+                val aliases = ks.aliases()
+                while (aliases.hasMoreElements()) {
+                    val alias = aliases.nextElement() as String
+                    val cert = ks.getCertificate(alias) as java.security.cert.X509Certificate
+
+                    Log.d(TAG, "checkCAInstalled: ${cert.issuerDN}")
+//                    if (cert.issuerDN.name.contains("MyCert")) {
+//                        return true
+//                    }
+                }
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        } catch (e: KeyStoreException) {
+            e.printStackTrace()
+        } catch (e: NoSuchAlgorithmException) {
+            e.printStackTrace()
+        } catch (e: java.security.cert.CertificateException) {
+            e.printStackTrace()
+        }
+
+
+        return false
     }
 
     private val statusReceiver = object : BroadcastReceiver() {

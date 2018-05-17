@@ -20,14 +20,14 @@ _ANDROID_NDK="android-ndk-r9"
 
 # Set _ANDROID_EABI to the EABI you want to use. You can find the
 # list in $ANDROID_NDK_ROOT/toolchains. This value is always used.
-# _ANDROID_EABI="x86-4.6"
 # _ANDROID_EABI="arm-linux-androideabi-4.6"
-_ANDROID_EABI="arm-linux-androideabi-4.9"
+ _ANDROID_EABI="x86-4.9"
+#_ANDROID_EABI="arm-linux-androideabi-4.9"
 
 # Set _ANDROID_ARCH to the architecture you are building for.
 # This value is always used.
-# _ANDROID_ARCH=arch-x86
-_ANDROID_ARCH=arch-arm
+ _ANDROID_ARCH=arch-x86
+#_ANDROID_ARCH=arch-arm
 
 # Set _ANDROID_API to the API you want to use. You should set it
 # to one of: android-14, android-9, android-8, android-14, android-5
@@ -234,7 +234,7 @@ if [ ! -z "$VERBOSE" ] && [ "$VERBOSE" != "0" ]; then
 fi
 
 make clean
-./config shared no-ssl2 no-ssl3 no-comp no-hw no-engine --openssldir=$ANDROID_API --prefix=`pwd`/out
+./config shared no-ssl2 no-ssl3 no-comp no-hw no-engine --openssldir=$ANDROID_API --prefix=`pwd`/out/${_ANDROID_ARCH}
 make depend
 make all
-make install CC=$ANDROID_TOOLCHAIN/arm-linux-androideabi-gcc RANLIB=$ANDROID_TOOLCHAIN/arm-linux-androideabi-ranlib
+make install CC="${ANDROID_TOOLCHAIN}/${CROSS_COMPILE}gcc" RANLIB="${ANDROID_TOOLCHAIN}/${CROSS_COMPILE}ranlib"

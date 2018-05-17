@@ -33,6 +33,36 @@ int krx_ssl_verify_peer(int ok, X509_STORE_CTX *ctx) {
     return 1;
 }
 
+const char *getSSLErrStr(int e) {
+    switch (e) {
+        case SSL_ERROR_NONE :
+            return "SSL_ERROR_NONE";
+        case SSL_ERROR_SSL :
+            return "SSL_ERROR_SSL";
+        case SSL_ERROR_WANT_READ :
+            return "SSL_ERROR_WANT_READ";
+        case SSL_ERROR_WANT_WRITE :
+            return "SSL_ERROR_WANT_WRITE";
+        case SSL_ERROR_WANT_X509_LOOKUP :
+            return "SSL_ERROR_WANT_X509_LOOKUP";
+        case SSL_ERROR_SYSCALL :
+            return "SSL_ERROR_SYSCALL";
+        case SSL_ERROR_ZERO_RETURN :
+            return "SSL_ERROR_ZERO_RETURN";
+        case SSL_ERROR_WANT_CONNECT :
+            return "SSL_ERROR_WANT_CONNECT";
+        case SSL_ERROR_WANT_ACCEPT :
+            return "SSL_ERROR_WANT_ACCEPT";
+        case SSL_ERROR_WANT_ASYNC :
+            return "SSL_ERROR_WANT_ASYNC";
+        case SSL_ERROR_WANT_ASYNC_JOB :
+            return "SSL_ERROR_WANT_ASYNC_JOB";
+        case SSL_ERROR_WANT_CLIENT_HELLO_CB :
+            return "SSL_ERROR_WANT_CLIENT_HELLO_CB";
+        default:
+            return "UNKNOWN";
+    }
+}
 
 /* this sets up the SSL* */
 
@@ -176,7 +206,6 @@ TlsSession::TlsSession() : mTunServer(nullptr), mClient(nullptr) {
     if (krx_ssl_init(mClient, 0, nullptr) != 0) {
         ALOGE("init server ssl fail");
     }
-
 }
 
 
@@ -223,45 +252,74 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
         return -1;
     }
 
-    if (tun_write_size > 0) {
-        if (!SSL_is_init_finished(mTunServer->ssl)) {
-            SSL_do_handshake(mTunServer->ssl);
-            //after do handshake has data to tun
-            auto toTunSize = BIO_ctrl_pending(mTunServer->out_bio);
-            if (toTunSize > 0) {
-                auto to_tun_data = createBaseOn(sessionInfo, toTunSize, downData);
-                if (BIO_read(mTunServer->out_bio, to_tun_data->data, to_tun_data->size) !=
-                    to_tun_data->size) {
-                    freeLinkDataBuffer(sessionInfo, downData);
-                    freeLinkDataBuffer(sessionInfo, to_tun_data);
-                    ALOGE("read tun server handshake data fail");
-                    return -1;
-                }
-                onSocketUp(sessionInfo, to_tun_data);
-            }
-        } else {
-            //assume must have next session (httpSession)
-            // handle ssl/tls data from tun
-            auto d_size = SSL_pending(mTunServer->ssl);
-            if (d_size > 0) {
-                auto h_data = createBaseOn(sessionInfo, static_cast<size_t>(d_size), downData);
-                if (SSL_read(mTunServer->ssl, h_data->data, h_data->size) != h_data->size) {
-                    ALOGE("read tun server data fail");
-                    freeLinkDataBuffer(sessionInfo, downData);
-                    freeLinkDataBuffer(sessionInfo, h_data);
-                    return -1;
-                }
 
-                next->onTunDown(sessionInfo, h_data);
-            }
-        }
+    if (tun_write_size <= 0) {
+        ALOGE("write tun server bio error, write size %d, data size %u", tun_write_size,
+              downData->size);
+        freeLinkDataBuffer(sessionInfo, downData);
+        return -1;
     }
 
-    freeLinkDataBuffer(sessionInfo, downData);
+    if (!SSL_is_init_finished(mTunServer->ssl)) {
+        auto s_s_r = SSL_do_handshake(mTunServer->ssl);
+
+        if (s_s_r <= 0) {
+            ALOGE("server handshake error %s",
+                  getSSLErrStr(SSL_get_error(mTunServer->ssl, s_s_r)));
+            freeLinkDataBuffer(sessionInfo, downData);
+            return -1;
+        }
+
+        //after do handshake has data to tun
+        auto toTunSize = BIO_ctrl_pending(mTunServer->out_bio);
+        if (toTunSize > 0) {
+            auto to_tun_data = createBaseOn(sessionInfo, toTunSize);
+            if (BIO_read(mTunServer->out_bio, to_tun_data->data, to_tun_data->size) !=
+                to_tun_data->size) {
+                freeLinkDataBuffer(sessionInfo, downData);
+                freeLinkDataBuffer(sessionInfo, to_tun_data);
+                ALOGE("read tun server handshake data fail");
+                return -1;
+            }
+            //write handshake data to tun
+            onTunUp(sessionInfo, to_tun_data);
+        }
+    } else {
+        //assume must have next session (httpSession)
+        // handle ssl/tls data from tun
+        auto d_size = SSL_pending(mTunServer->ssl);
+        if (d_size > 0) {
+            auto h_data = createBaseOn(sessionInfo, static_cast<size_t>(d_size));
+            if (SSL_read(mTunServer->ssl, h_data->data, h_data->size) != h_data->size) {
+                ALOGE("read tun server data fail");
+                freeLinkDataBuffer(sessionInfo, downData);
+                freeLinkDataBuffer(sessionInfo, h_data);
+                return -1;
+            }
+
+            next->onTunDown(sessionInfo, h_data);
+        }
+
+        freeLinkDataBuffer(sessionInfo, downData);
+    }
     return 0;
 }
 
+
 int TlsSession::onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) {
+// trigger client handshake
+//    int rCode = SSL_do_handshake(mClient->ssl);
+//    if (rCode <= 0) {
+//        ALOGE("tls client handshake error, %s",
+//              getSSLErrStr(SSL_get_error(mClient->ssl, rCode)));
+//        return 0;
+//    }
+//    auto p_size = BIO_ctrl_pending(mClient->out_bio);
+//    auto to_socket = createBaseOn(sessionInfo, p_size, downData);
+//    BIO_read(mClient->out_bio, to_socket->data, to_socket->size);
+//    prev->onTunUp(sessionInfo, to_socket);
+
+
     return prev->onTunUp(sessionInfo, upData);
 }
 

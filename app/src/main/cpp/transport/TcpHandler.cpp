@@ -29,17 +29,17 @@
 #define LOG_TAG "TcpHandler"
 
 
-struct segment {
-    uint32_t seq;
-    uint16_t len;
-    uint16_t sent;
-    uint16_t r_len;  // data buffer
-    uint16_t r_sent; //data buffer
-    int psh;
-//    uint8_t *data;
-    DataBuffer *dataBuffer;
-    struct segment *next;
-};
+//struct segment {
+//    uint32_t seq;
+//    uint16_t len;
+//    uint16_t sent;
+//    uint16_t r_len;  // data buffer
+//    uint16_t r_sent; //data buffer
+//    int psh;
+////    uint8_t *data;
+//    DataBuffer *dataBuffer;
+//    struct segment *next;
+//};
 
 struct TcpStatus {
     int socket;
@@ -63,7 +63,9 @@ struct TcpStatus {
     uint64_t sent;
     uint64_t received;
     uint8_t state;
-    struct segment *forward;
+
+    DataBuffer *toSocket;
+    DataBuffer *toTun;
 };
 
 
@@ -197,7 +199,15 @@ int compare_u32(uint32_t s1, uint32_t s2) {
 }
 
 
-void queue_tcp(const SessionInfo *sessionInfo,
+int write_ack(const SessionInfo *sessionInfo, TcpStatus *status) {
+    if (write_tcp(sessionInfo, status, nullptr, 0, 0, 1, 0, 0) < 0) {
+        status->state = TCP_CLOSING;
+        return -1;
+    }
+    return 0;
+}
+
+void queue_tcp(SessionInfo *sessionInfo,
                const struct tcphdr *tcphdr,
                const char *str_session, TcpStatus *status,
                const uint8_t *data, uint16_t datalen) {
@@ -208,85 +218,41 @@ void queue_tcp(const SessionInfo *sessionInfo,
               seq - status->remote_start,
               seq + datalen - status->remote_start);
     else {
-        struct segment *p = nullptr;
-        struct segment *s = status->forward;
-        while (s != nullptr && compare_u32(s->seq, seq) < 0) {
-            p = s;
-            s = s->next;
-        }
-
-        if (s == nullptr || compare_u32(s->seq, seq) > 0) {
-//            ALOGD("%s queuing %u...%u",
-//                  str_session,
-//                  seq - status->remote_start,
-//                  seq + datalen - status->remote_start);
-
-            struct segment *n = reinterpret_cast<segment *>(
-                    sessionInfo->balloc(sizeof(struct segment))
-            );
-            n->seq = seq;
-            n->len = datalen;
-            n->sent = 0;
-            n->psh = tcphdr->psh;
-
-            n->r_len = 0;
-            n->r_sent = 0;
-            n->dataBuffer = nullptr;
-            //process sessions
-            DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(
-                    sizeof(DataBuffer)));
-            dbuff->size = datalen;
-            dbuff->data = sessionInfo->balloc(datalen);
-            memcpy(dbuff->data, data, datalen);
-            dbuff->next = nullptr;
-            dbuff->other = n;
-            dbuff->sent = 0;
-            sessionInfo->session->onTunDown(const_cast<SessionInfo *>(sessionInfo), dbuff);
+        //process sessions
+        DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(
+                sizeof(DataBuffer)));
+        dbuff->size = datalen;
+        dbuff->data = sessionInfo->balloc(datalen);
+        memcpy(dbuff->data, data, datalen);
+        dbuff->next = nullptr;
+        dbuff->sent = 0;
+        sessionInfo->session->onTunDown(sessionInfo, dbuff);
+        status->remote_seq = seq + datalen;
 
 
-            n->next = s;
 
-            if (p == nullptr)
-                status->forward = n;
-            else
-                p->next = n;
+        // Get receive window
+        uint32_t window = get_receive_window(status);
+        uint32_t prev = status->recv_window;
+        status->recv_window = window;
+        if ((prev == 0 && window > 0) || (prev > 0 && window == 0))
+            ALOGW("%s recv window %u > %u", str_session, prev, window);
 
-        } else if (s != nullptr && s->seq == seq) {
-            if (s->len == datalen)
-                ALOGW("%s segment already queued %u..%u",
-                      str_session,
-                      s->seq - status->remote_start,
-                      s->seq + s->len - status->remote_start);
-            else if (s->len < datalen) {
-                ALOGW("%s segment smaller %u..%u > %u",
-                      str_session,
-                      s->seq - status->remote_start,
-                      s->seq + s->len - status->remote_start,
-                      s->seq + datalen - status->remote_start);
-//                sessionInfo->bfree(s->data);
-//                s->data = sessionInfo->balloc(datalen);
-//                memcpy(s->data, data, datalen);
-            } else {
-                ALOGE("%s segment larger %u..%u < %u",
-                      str_session,
-                      s->seq - status->remote_start, s->seq + s->len - status->remote_start,
-                      s->seq + datalen - status->remote_start);
+        // Acknowledge forwarded data
+        if (prev == 0 && window > 0) {
+            if (status->toSocket == nullptr && status->state == TCP_CLOSE_WAIT) {
+                ALOGW("%s confirm FIN", str_session);
+                status->remote_seq++; // remote FIN
             }
-
+            if (write_ack(sessionInfo, status) >= 0)
+                sessionInfo->lastActive = time(nullptr);
         }
+
     }
 }
 
 int write_syn_ack(const SessionInfo *sessionInfo, TcpStatus *status) {
     if (write_tcp(sessionInfo, status, nullptr, 0, 1, 1, 0, 0) < 0) {
-        status->state = TCP_CLOSING;
-        return -1;
-    }
-    return 0;
-}
-
-int write_ack(const SessionInfo *sessionInfo, TcpStatus *status) {
-    if (write_tcp(sessionInfo, status, nullptr, 0, 0, 1, 0, 0) < 0) {
         status->state = TCP_CLOSING;
         return -1;
     }
@@ -392,7 +358,7 @@ void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
                 } else if (tcphdr->fin /* +ACK */) {
                     if (status->state == TCP_ESTABLISHED) {
                         ALOGW("%s FIN received", str_session);
-                        if (status->forward == nullptr) {
+                        if (status->toSocket == nullptr) {
                             status->remote_seq++; // remote FIN
                             if (write_ack(sessionInfo, status) >= 0)
                                 status->state = TCP_CLOSE_WAIT;
@@ -495,9 +461,9 @@ void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
 uint32_t get_receive_window(TcpStatus *s) {
     // Get data to forward size
     uint32_t toforward = 0;
-    struct segment *q = s->forward;
+    DataBuffer *q = s->toSocket;
     while (q != nullptr) {
-        toforward += (q->len - q->sent);
+        toforward += (q->size - q->sent);
         q = q->next;
     }
 
@@ -834,7 +800,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 //
 //                struct icmp_session sicmp;
 //                memset(&sicmp, 0, sizeof(struct icmp_session));
-//                sicmp.version = status->version;
+//                sicmp.version = sessionInfo->ipVersoin;
 //                if (status->version == 4) {
 //                    sicmp.saddr.ip4 = (__be32) status->saddr.ip4;
 //                    sicmp.daddr.ip4 = (__be32) status->daddr.ip4;
@@ -858,30 +824,13 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
             ALOGV("write tun syn act");
         } else {
 
-//            ALOGV("EPOLL in or out");
+            ALOGV("EPOLL in or out");
             // Always forward data
             int fwd = 0;
             if (ev->events & EPOLLOUT) {
                 if (writeForwardData(sessionInfo, status) > 0) {
                     fwd = 1;
                 }
-            }
-
-            // Get receive window
-            uint32_t window = get_receive_window(status);
-            uint32_t prev = status->recv_window;
-            status->recv_window = window;
-            if ((prev == 0 && window > 0) || (prev > 0 && window == 0))
-                ALOGW("%s recv window %u > %u", str_session, prev, window);
-
-            // Acknowledge forwarded data
-            if (fwd || (prev == 0 && window > 0)) {
-                if (fwd && status->forward == nullptr && status->state == TCP_CLOSE_WAIT) {
-                    ALOGW("%s confirm FIN", str_session);
-                    status->remote_seq++; // remote FIN
-                }
-                if (write_ack(sessionInfo, status) >= 0)
-                    sessionInfo->lastActive = time(nullptr);
             }
 
             if (status->state == TCP_ESTABLISHED || status->state == TCP_CLOSE_WAIT) {
@@ -906,7 +855,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                     } else if (bytes == 0) {
                         ALOGW("%s recv eof", str_session);
 
-                        if (status->forward == nullptr) {
+                        if (status->toSocket == nullptr) {
                             if (write_fin_ack(sessionInfo, status) >= 0) {
                                 ALOGW("%s FIN sent", str_session);
                                 status->local_seq++; // local FIN
@@ -941,7 +890,6 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                         dbuff->data = buffer;
                         dbuff->size = static_cast<uint16_t>(bytes);
                         dbuff->next = nullptr;
-                        dbuff->other = nullptr;
                         dbuff->sent = 0;
                         if (sessionInfo->session->onSocketDown(sessionInfo, dbuff) == 0) {
                             status->local_seq += bytes;
@@ -972,105 +920,71 @@ int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
         inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
     }
     char str_session[250];
-//    sprintf(str_session, "TCP socket from %s/%u to %s/%u %s loc %u rem %u",
-//            source, sessionInfo->sPort, dest, sessionInfo->dPort,
-//            strstate(status->state),
-//            status->local_seq - status->local_start,
-//            status->remote_seq - status->remote_start);
+    sprintf(str_session, "TCP socket from %s/%u to %s/%u %s loc %u rem %u",
+            source, sessionInfo->sPort, dest, sessionInfo->dPort,
+            strstate(status->state),
+            status->local_seq - status->local_start,
+            status->remote_seq - status->remote_start);
 
 
     uint32_t buffer_size = (uint32_t) get_receive_buffer(status);
 
-    bool breakSending = false;
 
-    while (status->forward != nullptr &&
-           status->forward->seq + status->forward->sent == status->remote_seq &&
-           status->forward->r_len - status->forward->r_sent < buffer_size) {
-//        ALOGD("%s fwd %u...%u sent %u",
-//              str_session,
-//              status->forward->seq - status->remote_start,
-//              status->forward->seq + status->forward->len - status->remote_start,
-//              status->forward->sent);
+    while (status->toSocket != nullptr &&
+           status->toSocket->size - status->toSocket->sent < buffer_size) {
+        ALOGD("%s write socket %u...%u sent %u",
+              str_session,
+              status->remote_seq,
+              status->toSocket->size,
+              status->toSocket->sent);
 
-        DataBuffer *dbuff = status->forward->dataBuffer;
-        auto seg = status->forward;
+//        DataBuffer *dbuff = status->toSocket;
+        auto dbuf = status->toSocket;
 
-        while (dbuff != nullptr) {
-            auto dsent = send(status->socket,
-                              seg->dataBuffer->data + seg->dataBuffer->sent,
-                              seg->dataBuffer->size - seg->dataBuffer->sent,
-                              (unsigned int) (MSG_NOSIGNAL | (status->forward->psh ? 0 : MSG_MORE))
-            );
+        auto dsent = send(status->socket,
+                          dbuf->data + dbuf->sent,
+                          dbuf->size - dbuf->sent,
+                          MSG_NOSIGNAL);
+//                          (unsigned int) (MSG_NOSIGNAL | (status->toSocket->psh ? 0 : MSG_MORE))
 
-            if (dsent < 0) {
-                ALOGE("%s send error %d: %s", str_session, errno, strerror(errno));
-                if (errno == EINTR || errno == EAGAIN) {
-                    // Retry later
-                    breakSending = true;
-                    break;
-                } else {
-                    write_rst(sessionInfo, status);
-                    breakSending = true;
-                    break;
-                }
+        if (dsent < 0) {
+            ALOGE("%s send error %d: %s", str_session, errno, strerror(errno));
+            if (errno == EINTR || errno == EAGAIN) {
+                // Retry later
+                break;
             } else {
-                seg->r_sent += dsent;
-                seg->dataBuffer->sent += dsent;
-                if (seg->dataBuffer->size == seg->dataBuffer->sent) {
-                    auto p_dbuff = dbuff;
-                    dbuff = dbuff->next;
-
-                    p_dbuff->next = nullptr;
-                    freeLinkDataBuffer(sessionInfo, p_dbuff);
-                } else {
-                    ALOGW("%s partial send %u/%u",
-                          str_session, seg->dataBuffer->sent, seg->dataBuffer->size);
-
-                    breakSending = true;
-                    break;
-                }
+                write_rst(sessionInfo, status);
+                break;
             }
-        }
+        } else {
+            dbuf->sent += dsent;
+            if (dbuf->size == dbuf->sent) {
+                auto p_dbuff = dbuf;
+                status->toSocket = dbuf->next;
 
-        if (breakSending) {
-            break;
-        }
-
-        //segment send finish
-        if (seg->r_len == seg->r_sent) {
-            fwdCount += seg->len;
-            buffer_size -= seg->r_sent;
-            status->sent += seg->len;
-            status->forward->sent += seg->len;
-            status->remote_seq = status->forward->seq + status->forward->sent;
-
-//            if (status->forward->len == status->forward->sent) {
-            segment *p = status->forward;
-            status->forward = status->forward->next;
-//                sessionInfo->bfree(p->data);
-            freeLinkDataBuffer(sessionInfo, p->dataBuffer);
-            sessionInfo->bfree(reinterpret_cast<uint8_t *>(p));
-//            } else {
-//                ALOGW("%s partial send %u/%u",
-//                      str_session, status->forward->sent, status->forward->len);
-//                break;
-//            }
+                p_dbuff->next = nullptr;
+                freeLinkDataBuffer(sessionInfo, p_dbuff);
+            } else {
+                ALOGW("%s partial send %u/%u",
+                      str_session, dbuf->sent, dbuf->size);
+                break;
+            }
         }
     }
 
 
 
     // Log data buffered
-    struct segment *seg = status->forward;
-    while (seg != nullptr) {
-        ALOGW("%s queued %u...%u sent %u",
-              str_session,
-              seg->seq - status->remote_start,
-              seg->seq + seg->len - status->remote_start,
-              seg->sent);
-
-        seg = seg->next;
-    }
+//    DataBuffer *b = status->toSocket;
+//    while (b != nullptr) {
+//        ALOGW("%s queued %u...%u sent %u",
+//              str_session,
+//              status->remote_seq - status->remote_start,
+//              b->seq + b->len - status->remote_start,
+//              b->sent);
+//
+//        b = b->next;
+//    }
     return fwdCount;
 
 #undef LOG_TAG
@@ -1144,7 +1058,8 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
         status->received = 0;
 
         status->state = TCP_LISTEN;
-        status->forward = nullptr;
+        status->toSocket = nullptr;
+        status->toTun = nullptr;
 
 //        if (datalen) {
 //            ALOGW("%s SYN data", packet);
@@ -1269,15 +1184,8 @@ void TcpHandler::freeStatusData(SessionInfo *sessionInfo) {
 
     if (data != nullptr) {
         TcpStatus *s = static_cast<TcpStatus *>(data);
-        if (s->forward != nullptr) {
-            segment *sf = s->forward;
-            while (sf != nullptr) {
-                auto tmp = sf;
-                sf = sf->next;
-                freeLinkDataBuffer(sessionInfo, tmp->dataBuffer);
-                sessionInfo->bfree(reinterpret_cast<uint8_t *>(tmp));
-            }
-        }
+        freeLinkDataBuffer(sessionInfo, s->toSocket);
+        freeLinkDataBuffer(sessionInfo, s->toTun);
 
         sessionInfo->bfree(static_cast<uint8_t *>(data));
     }
@@ -1314,11 +1222,10 @@ int TcpHandler::monitorSession(SessionInfo *sessionInfo) {
         }
 
         // Check for outgoing data
-        if (status->forward != NULL) {
+        if (status->toSocket != NULL) {
             uint32_t buffer_size = (uint32_t) get_receive_buffer(status);
 //            status->forward->seq + status->forward->sent == status->remote_seq &&
-            if (status->forward->dataBuffer == nullptr ||
-                status->forward->r_len - status->forward->r_sent < buffer_size) {
+            if (status->toSocket->size - status->toSocket->sent < buffer_size) {
                 events = events | EPOLLOUT;
 //            } else {
                 recheck = 1;
@@ -1501,21 +1408,19 @@ int TcpHandler::dataToSocket(SessionInfo *sessionInfo, DataBuffer *data) {
     if (data == nullptr) {
         return 0;
     }
+    TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
 
-    segment *seg = reinterpret_cast<segment *>(data->other);
-    if (seg->dataBuffer == nullptr) {
-        seg->dataBuffer = data;
-    } else {
-        auto ld = seg->dataBuffer;
-        while (ld->next != nullptr) ld = ld->next;
-        ld->next = data;
+    auto dbuf = status->toSocket;
+
+    if (dbuf == nullptr) {
+        status->toSocket = data;
+        return 0;
     }
 
-    DataBuffer *d = seg->dataBuffer;
-    while (d != nullptr) {
-        seg->r_len += d->size;
-        d->sent = 0;
-        d = d->next;
+    //find last
+    while (dbuf->next != nullptr) {
+        dbuf = dbuf->next;
     }
+    dbuf->next = data;
     return 0;
 }

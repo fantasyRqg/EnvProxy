@@ -120,17 +120,20 @@ struct SessionInfo {
     epoll_event ev;
 };
 
+#define DATABUFFER_DST_TUN 0;
+#define DATABUFFER_DST_SOCKET 1;
+
+
 struct DataBuffer {
     uint8_t *data;
     uint16_t size;
-    void *other;
     uint16_t sent;
     DataBuffer *next;
 };
 
 void freeLinkDataBuffer(SessionInfo *sessionInfo, DataBuffer *dbuff);
 
-DataBuffer *createBaseOn(SessionInfo *sessionInfo, size_t size, DataBuffer *b = nullptr);
+DataBuffer *createBaseOn(SessionInfo *sessionInfo, size_t size);
 
 
 // DNS

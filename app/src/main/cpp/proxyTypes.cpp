@@ -40,18 +40,12 @@ void freeLinkDataBuffer(SessionInfo *sessionInfo, DataBuffer *dbuff) {
     }
 }
 
-DataBuffer *createBaseOn(SessionInfo *sessionInfo, size_t size, DataBuffer *b) {
+DataBuffer *createBaseOn(SessionInfo *sessionInfo, size_t size) {
     DataBuffer *r = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(sizeof(DataBuffer)));
     r->next = nullptr;
     r->size = static_cast<uint16_t>(size);
     r->data = sessionInfo->balloc(sizeof(r->size));
-    if (b) {
-        r->sent = b->sent;
-        r->other = b->other;
-    } else {
-        r->sent = 0;
-        r->other = nullptr;
-    }
+    r->sent = 0;
 
     return r;
 }

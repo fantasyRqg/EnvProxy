@@ -144,7 +144,6 @@ void UdpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
     dbuff->data = sessionInfo->balloc(dbuff->size);
     memcpy(dbuff->data, pkt->payload, dbuff->size);
     dbuff->next = nullptr;
-    dbuff->other = nullptr;
     dbuff->sent = 0;
 
     if (sessionInfo->session->onTunDown(sessionInfo, dbuff) == 0) {
@@ -382,7 +381,6 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                 dbuff->size = static_cast<uint16_t>(bytes);
                 dbuff->next = nullptr;
                 dbuff->sent = 0;
-                dbuff->other = nullptr;
 
                 if (sessionInfo->session->onSocketDown(sessionInfo, dbuff) != 0) {
                     status->state = UDP_FINISHING;

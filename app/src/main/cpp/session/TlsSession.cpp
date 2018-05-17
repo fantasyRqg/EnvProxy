@@ -16,8 +16,8 @@
 struct TlsCtx {
     SSL_CTX *ctx;                                                                       /* main ssl context */
     SSL *ssl;                                                                           /* the SSL* which represents a "connection" */
-    BIO *in_bio;                                                                        /* we use memory read bios */
-    BIO *out_bio;                                                                       /* we use memory write bios */
+    BIO *write_bio;                                                                        /* we use memory read bios */
+    BIO *read_bio;                                                                       /* we use memory write bios */
 };
 
 typedef void (*info_callback)(const SSL *, int, int);
@@ -80,23 +80,23 @@ int krx_ssl_init(TlsCtx *k, int isserver, info_callback cb) {
     }
 
     /* bios */
-    k->in_bio = BIO_new(BIO_s_mem());
-    if (k->in_bio == NULL) {
+    k->write_bio = BIO_new(BIO_s_mem());
+    if (k->write_bio == NULL) {
         printf("Error: cannot allocate read bio.\n");
         return -2;
     }
     /* see: https://www.openssl.org/docs/crypto/BIO_s_mem.html */
-    BIO_set_mem_eof_return(k->in_bio, -1);
+    BIO_set_mem_eof_return(k->write_bio, -1);
 
-    k->out_bio = BIO_new(BIO_s_mem());
-    if (k->out_bio == NULL) {
+    k->read_bio = BIO_new(BIO_s_mem());
+    if (k->read_bio == NULL) {
         printf("Error: cannot allocate write bio.\n");
         return -3;
     }
     /* see: https://www.openssl.org/docs/crypto/BIO_s_mem.html */
-    BIO_set_mem_eof_return(k->out_bio, -1);
+    BIO_set_mem_eof_return(k->read_bio, -1);
 
-    SSL_set_bio(k->ssl, k->in_bio, k->out_bio);
+    SSL_set_bio(k->ssl, k->write_bio, k->read_bio);
 
     /* either use the server or client part of the protocol */
     if (isserver == 1) {
@@ -134,10 +134,10 @@ int krx_ssl_ctx_init(SessionInfo *sessionInfo, TlsCtx *k, int is_server) {
         return -2;
     }
 
-    if (is_server) {
-        /* the client doesn't have to send it's certificate */
-        SSL_CTX_set_verify(k->ctx, SSL_VERIFY_PEER, krx_ssl_verify_peer);
-    }
+//    if (!is_server) {
+    /* the client doesn't have to send it's certificate */
+    SSL_CTX_set_verify(k->ctx, SSL_VERIFY_PEER, krx_ssl_verify_peer);
+//    }
 
 
     /* enable srtp */
@@ -186,6 +186,61 @@ int krx_ssl_ctx_init(SessionInfo *sessionInfo, TlsCtx *k, int is_server) {
 }
 
 
+const char *getSSLCbMsg(int where) {
+    switch (where) {
+        case SSL_CB_LOOP:
+            return "SSL_CB_LOOP";
+        case SSL_CB_EXIT:
+            return "SSL_CB_EXIT";
+        case SSL_CB_READ:
+            return "SSL_CB_READ";
+        case SSL_CB_WRITE:
+            return "SSL_CB_WRITE";
+        case SSL_CB_ALERT:
+            return "SSL_CB_ALERT";
+        case SSL_CB_READ_ALERT:
+            return "SSL_CB_READ_ALERT";
+        case SSL_CB_WRITE_ALERT:
+            return "SSL_CB_WRITE_ALERT";
+        case SSL_CB_ACCEPT_LOOP:
+            return "SSL_CB_ACCEPT_LOOP";
+        case SSL_CB_ACCEPT_EXIT:
+            return "SSL_CB_ACCEPT_EXIT";
+        case SSL_CB_CONNECT_LOOP:
+            return "SSL_CB_CONNECT_LOOP";
+        case SSL_CB_CONNECT_EXIT:
+            return "SSL_CB_CONNECT_EXIT";
+        case SSL_CB_HANDSHAKE_START:
+            return "SSL_CB_HANDSHAKE_START";
+        case SSL_CB_HANDSHAKE_DONE:
+            return "SSL_CB_HANDSHAKE_DONE";
+
+        default:
+            return "SSL_CB_UNKNOWN";
+    }
+
+}
+
+void krx_ssl_info_callback(const SSL *ssl, int where, int ret, const char *name) {
+
+    if (ret == 0) {
+        printf("-- krx_ssl_info_callback: error occured.\n");
+        return;
+    }
+
+    ALOGV("+ %s %20.20s  - %30.30s  - %5.10s\n", name, getSSLCbMsg(where),
+          SSL_state_string_long(ssl), SSL_state_string(ssl));
+}
+
+void krx_ssl_server_info_callback(const SSL *ssl, int where, int ret) {
+    krx_ssl_info_callback(ssl, where, ret, "server");
+}
+
+void krx_ssl_client_info_callback(const SSL *ssl, int where, int ret) {
+    krx_ssl_info_callback(ssl, where, ret, "client");
+}
+
+
 TlsSession::TlsSession(SessionInfo *sessionInfo)
         : Session(sessionInfo), mTunServer(nullptr),
           mClient(nullptr), mPenddingData(nullptr) {
@@ -195,7 +250,7 @@ TlsSession::TlsSession(SessionInfo *sessionInfo)
         ALOGE("init server ctx fail");
     }
 
-    if (krx_ssl_init(mTunServer, 1, nullptr) != 0) {
+    if (krx_ssl_init(mTunServer, 1, krx_ssl_server_info_callback) != 0) {
         ALOGE("init server ssl fail");
     }
 
@@ -205,7 +260,7 @@ TlsSession::TlsSession(SessionInfo *sessionInfo)
         ALOGE("init server ctx fail");
     }
 
-    if (krx_ssl_init(mClient, 0, nullptr) != 0) {
+    if (krx_ssl_init(mClient, 0, krx_ssl_client_info_callback) != 0) {
         ALOGE("init server ssl fail");
     }
 }
@@ -223,14 +278,14 @@ void free_ctx(TlsCtx *ctx) {
         ctx->ssl = nullptr;
     }
 
-    if (ctx->in_bio) {
-        BIO_free(ctx->in_bio);
-        ctx->in_bio = nullptr;
+    if (ctx->write_bio) {
+        BIO_free(ctx->write_bio);
+        ctx->write_bio = nullptr;
     }
 
-    if (ctx->out_bio) {
-        BIO_free(ctx->out_bio);
-        ctx->out_bio = nullptr;
+    if (ctx->read_bio) {
+        BIO_free(ctx->read_bio);
+        ctx->read_bio = nullptr;
     }
 
     delete ctx;
@@ -246,7 +301,7 @@ TlsSession::~TlsSession() {
 }
 
 int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
-    int tun_write_size = BIO_write(mTunServer->in_bio, downData->data, downData->size);
+    int tun_write_size = BIO_write(mTunServer->write_bio, downData->data, downData->size);
 
     if (tun_write_size != downData->size) {
         ALOGE("write tun server bio error");
@@ -262,6 +317,16 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
         return -1;
     }
 
+    int o_size = BIO_ctrl_pending(mTunServer->read_bio);
+
+    if (o_size > 0) {
+        auto to_tun_data = createDataBuffer(sessionInfo, static_cast<size_t>(o_size));
+        BIO_read(mTunServer->read_bio, to_tun_data->data, to_tun_data->size);
+
+        //write data to tun
+        prev->onSocketUp(sessionInfo, to_tun_data);
+    }
+
     if (!SSL_is_init_finished(mTunServer->ssl)) {
         auto s_s_r = SSL_do_handshake(mTunServer->ssl);
 
@@ -273,16 +338,10 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
         }
 
         //after do handshake has data to tun
-        auto toTunSize = BIO_ctrl_pending(mTunServer->out_bio);
+        auto toTunSize = BIO_ctrl_pending(mTunServer->read_bio);
         if (toTunSize > 0) {
             auto to_tun_data = createDataBuffer(sessionInfo, toTunSize);
-            if (BIO_read(mTunServer->out_bio, to_tun_data->data, to_tun_data->size) !=
-                to_tun_data->size) {
-                freeLinkDataBuffer(sessionInfo, downData);
-                freeLinkDataBuffer(sessionInfo, to_tun_data);
-                ALOGE("read tun server handshake data fail");
-                return -1;
-            }
+            BIO_read(mTunServer->read_bio, to_tun_data->data, to_tun_data->size);
             //write handshake data to tun
             prev->onSocketUp(sessionInfo, to_tun_data);
         }
@@ -335,10 +394,10 @@ int TlsSession::onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) {
 }
 
 int TlsSession::outClientData(SessionInfo *sessionInfo) {
-    auto p_size = BIO_ctrl_pending(mClient->out_bio);
+    auto p_size = BIO_ctrl_pending(mClient->read_bio);
     if (p_size > 0) {
         auto to_socket = createDataBuffer(sessionInfo, p_size);
-        BIO_read(mClient->out_bio, to_socket->data, to_socket->size);
+        BIO_read(mClient->read_bio, to_socket->data, to_socket->size);
         if (prev->onTunUp(sessionInfo, to_socket) != 0) {
             ALOGE("tls session onTunUp fail in outClientData");
             return -1;
@@ -353,7 +412,7 @@ int TlsSession::outClientData(SessionInfo *sessionInfo) {
 }
 
 int TlsSession::onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) {
-    BIO_write(mClient->in_bio, downData->data, downData->size);
+    BIO_write(mClient->write_bio, downData->data, downData->size);
 
     int result = 0;
 
@@ -385,9 +444,9 @@ int TlsSession::onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) {
 int TlsSession::onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData) {
     SSL_write(mTunServer->ssl, upData->data, upData->size);
 
-    auto oLen = BIO_ctrl_pending(mTunServer->out_bio);
+    auto oLen = BIO_ctrl_pending(mTunServer->read_bio);
     auto oData = createDataBuffer(sessionInfo, static_cast<size_t>(oLen));
-    BIO_read(mTunServer->out_bio, oData->data, oData->size);
+    BIO_read(mTunServer->read_bio, oData->data, oData->size);
 
     freeLinkDataBuffer(sessionInfo, upData);
     return prev->onSocketUp(sessionInfo, oData);

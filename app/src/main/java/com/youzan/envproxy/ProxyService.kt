@@ -154,6 +154,8 @@ class ProxyService : VpnService() {
         builder.addRoute("2000::", 3) // unicast
 
         builder.addDnsServer("8.8.8.8")
+        builder.addDnsServer("114.114.114.114")
+
 //        builder.addDnsServer("172.17.1.235")
         return builder
     }

@@ -81,6 +81,7 @@ class MainActivity : Activity() {
                         tv_response.text = it
                     }, {
                         tv_response.text = it.toString()
+                        Log.e(TAG, "onCreate: ", it)
                     })
         }
 

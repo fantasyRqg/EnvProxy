@@ -28,6 +28,7 @@ jint getMTU(JNIEnv *, jclass) {
 void initNative(JNIEnv *env, jobject thiz) {
     auto p = new proxyEngine(SOCKT_MTU);
     env->SetLongField(thiz, nativeHandlerField, reinterpret_cast<jlong>(p));
+
 }
 
 void destroyNative(JNIEnv *env, jobject thiz) {

@@ -12,6 +12,7 @@
 #include <malloc.h>
 #include <jni.h>
 #include <sys/epoll.h>
+#include <openssl/ossl_typ.h>
 
 
 #define ICMP4_MAXMSG (IP_MAXPACKET - 20 - 8) // bytes (socket)
@@ -52,6 +53,7 @@ class BufferPool;
 
 class proxyEngine;
 
+
 struct ProxyContext {
     proxyEngine *engine;
     int tunFd;
@@ -61,8 +63,8 @@ struct ProxyContext {
     int maxSessions;
     int sessionCount;
 
-    char *keyPath;
-    char *certPath;
+    SSL_CTX *serverCtx;
+    SSL_CTX *clientCtx;
 };
 
 #define balloc context->bufferPool->allocBuffer

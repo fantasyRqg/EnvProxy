@@ -58,20 +58,95 @@ proxyEngine::~proxyEngine() {
 }
 
 
-void krx_begin() {
-    SSL_library_init();
-    SSL_load_error_strings();
-    ERR_load_BIO_strings();
-    OpenSSL_add_all_algorithms();
+//void ssl_begin() {
+//    SSL_library_init();
+//    SSL_load_error_strings();
+//    ERR_load_BIO_strings();
+//    OpenSSL_add_all_algorithms();
+//}
+//
+//void ssl_end() {
+//    CONF_modules_unload(1);
+//    ERR_free_strings();
+//    EVP_cleanup();
+//    sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
+//    CRYPTO_cleanup_all_ex_data();
+//    OPENSSL_thread_stop();
+//}
+
+int ssl_verify_peer(int ok, X509_STORE_CTX *ctx) {
+    return 1;
 }
 
-void krx_end() {
-    CONF_modules_unload(1);
-    ERR_free_strings();
-    EVP_cleanup();
-    sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
-    CRYPTO_cleanup_all_ex_data();
-    OPENSSL_thread_stop();
+int ssl_ctx_init(SSL_CTX **ctx, char *keyPath, char *certPath, int is_server) {
+
+    int r = 0;
+
+    /* create a new context using DTLS */
+    if (is_server) {
+        *ctx = SSL_CTX_new(TLS_server_method());
+    } else {
+        *ctx = SSL_CTX_new(TLS_client_method());
+    }
+    if (!*ctx) {
+        ALOGE("Error: cannot create SSL_CTX. ");
+        return -1;
+    }
+
+    /* set our supported ciphers */
+    r = SSL_CTX_set_cipher_list(*ctx, "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
+    if (r != 1) {
+        ALOGE("Error: cannot set the cipher list.");
+        return -2;
+    }
+
+    if (!is_server) {
+        /* the client doesn't have to send it's certificate */
+        SSL_CTX_set_verify(*ctx, SSL_VERIFY_PEER, ssl_verify_peer);
+    }
+
+
+    /* enable srtp */
+//    r = SSL_CTX_set_tlsext_use_srtp(*ctx, "SRTP_AES128_CM_SHA1_80");
+//    if (r != 0) {
+//        ALOGE("Error: cannot setup srtp.");
+//        return -3;
+//    }
+
+    if (is_server) {
+
+        ALOGV("cert path = %s, key path = %s", certPath, keyPath);
+
+        /* load key and certificate */
+        /* certificate file; contains also the public key */
+        r = SSL_CTX_use_certificate_file(*ctx, certPath, SSL_FILETYPE_PEM);
+        if (r != 1) {
+            ALOGE("Error: cannot load certificate file. ");
+            return -4;
+        }
+
+        /* load private key */
+        r = SSL_CTX_use_PrivateKey_file(*ctx, keyPath, SSL_FILETYPE_PEM);
+        if (r != 1) {
+
+            ALOGE("Error: cannot load private key file. ");
+            return -5;
+        }
+
+        /* check if the private key is valid */
+        r = SSL_CTX_check_private_key(*ctx);
+        if (r != 1) {
+            ALOGE("Error: checking the private key failed. ");
+            return -6;
+        }
+    }
+    return 0;
+}
+
+
+int ssl_err_callback(const char *str, size_t len, void *u) {
+    ALOGD("TlsSession ssl err %s", str);
+    return 0;
 }
 
 void proxyEngine::handleEvents() {
@@ -112,10 +187,15 @@ void proxyEngine::handleEvents() {
             mMTU,
             maxsessions,
             0,
-            mKeyPath,
-            mCertPath
+            nullptr,
+            nullptr
 
     };
+
+    ssl_ctx_init(&context.serverCtx, mKeyPath, mCertPath, 1);
+    ssl_ctx_init(&context.clientCtx, mKeyPath, mCertPath, 0);
+    ERR_print_errors_cb(ssl_err_callback, nullptr);
+
     //ip package factory
     IpPackageFactory ipPackageFactory(&context);
     TransportFactory transportFactory;
@@ -185,8 +265,6 @@ void proxyEngine::handleEvents() {
             ALOGD("Skipped session checks");
         }
 
-        //init open ssl
-        krx_begin();
 
         ALOGD("sessions ICMP %d UDP %d TCP %d max %d/%d/%d timeout %ld recheck %d",
               isessions, usessions, tsessions, sessions, maxsessions,
@@ -255,11 +333,11 @@ void proxyEngine::handleEvents() {
         mProtectMid = nullptr;
     }
 
-    //de-init
-    krx_end();
-
     free(mKeyPath);
     free(mCertPath);
+    SSL_CTX_free(context.serverCtx);
+    SSL_CTX_free(context.clientCtx);
+
 
     ALOGI("proxy stop");
 }
@@ -364,10 +442,12 @@ bool proxyEngine::protectSocket(int socket) {
 void proxyEngine::setKeyAndCertificate(const char *key, size_t keyLen, const char *cert,
                                        size_t certLen) {
 
-    mKeyPath = static_cast<char *>(malloc(keyLen));
+    mKeyPath = static_cast<char *>(malloc(keyLen + 1));
+    memset(mKeyPath, 0, keyLen + 1);
     memcpy(mKeyPath, key, keyLen);
 
-    mCertPath = static_cast<char *>(malloc(certLen));
+    mCertPath = static_cast<char *>(malloc(certLen + 1));
+    memset(mCertPath, 0, certLen + 1);
     memcpy(mCertPath, cert, certLen);
 
 }

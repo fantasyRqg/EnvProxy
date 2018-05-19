@@ -7,6 +7,9 @@
 #include <openssl/err.h>
 
 #include "TlsSession.h"
+
+//#define ENABLE_LOG
+
 #include "../log.h"
 #include "../proxyTypes.h"
 
@@ -16,22 +19,12 @@
 struct TlsCtx {
     SSL_CTX *ctx;                                                                       /* main ssl context */
     SSL *ssl;                                                                           /* the SSL* which represents a "connection" */
-    BIO *write_bio;                                                                        /* we use memory read bios */
-    BIO *read_bio;                                                                       /* we use memory write bios */
+    BIO *in_bio;                                                                        /* we use memory read bios */
+    BIO *out_bio;                                                                       /* we use memory write bios */
 };
 
 typedef void (*info_callback)(const SSL *, int, int);
 
-
-void get_err_msg(char *msg, size_t size) {
-    auto eb = BIO_new_mem_buf(msg, size);
-    ERR_print_errors(eb);
-    BIO_free(eb);
-}
-
-int krx_ssl_verify_peer(int ok, X509_STORE_CTX *ctx) {
-    return 1;
-}
 
 const char *getSSLErrStr(int e) {
     switch (e) {
@@ -66,11 +59,11 @@ const char *getSSLErrStr(int e) {
 
 /* this sets up the SSL* */
 
-int krx_ssl_init(TlsCtx *k, int isserver, info_callback cb) {
+int ssl_init(TlsCtx *k, int isserver, info_callback cb) {
     /* create SSL* */
     k->ssl = SSL_new(k->ctx);
     if (!k->ssl) {
-        printf("Error: cannot create new SSL*.\n");
+        ALOGE("Error: cannot create new SSL*.");
         return -1;
     }
 
@@ -80,108 +73,33 @@ int krx_ssl_init(TlsCtx *k, int isserver, info_callback cb) {
     }
 
     /* bios */
-    k->write_bio = BIO_new(BIO_s_mem());
-    if (k->write_bio == NULL) {
-        printf("Error: cannot allocate read bio.\n");
+    k->in_bio = BIO_new(BIO_s_mem());
+    if (k->in_bio == NULL) {
+        ALOGE("Error: cannot allocate read bio.");
         return -2;
     }
     /* see: https://www.openssl.org/docs/crypto/BIO_s_mem.html */
-    BIO_set_mem_eof_return(k->write_bio, -1);
+    BIO_set_mem_eof_return(k->in_bio, -1);
 
-    k->read_bio = BIO_new(BIO_s_mem());
-    if (k->read_bio == NULL) {
-        printf("Error: cannot allocate write bio.\n");
+    k->out_bio = BIO_new(BIO_s_mem());
+    if (k->out_bio == NULL) {
+        ALOGE("Error: cannot allocate write bio.");
         return -3;
     }
-    /* see: https://www.openssl.org/docs/crypto/BIO_s_mem.html */
-    BIO_set_mem_eof_return(k->read_bio, -1);
 
-    SSL_set_bio(k->ssl, k->write_bio, k->read_bio);
+    /* see: https://www.openssl.org/docs/crypto/BIO_s_mem.html */
+    BIO_set_mem_eof_return(k->out_bio, -1);
+
+    SSL_set0_wbio(k->ssl, k->out_bio);
+    SSL_set0_rbio(k->ssl, k->in_bio);
 
     /* either use the server or client part of the protocol */
-    if (isserver == 1) {
+    if (isserver) {
         SSL_set_accept_state(k->ssl);
     } else {
         SSL_set_connect_state(k->ssl);
     }
 
-    return 0;
-}
-
-int krx_ssl_ctx_init(SessionInfo *sessionInfo, TlsCtx *k, int is_server) {
-
-    int r = 0;
-
-    /* create a new context using DTLS */
-    if (is_server) {
-        k->ctx = SSL_CTX_new(TLS_server_method());
-    } else {
-        k->ctx = SSL_CTX_new(TLS_client_method());
-    }
-    if (!k->ctx) {
-        char errstr[250];
-        get_err_msg(errstr, sizeof(errstr));
-        ALOGE("Error: cannot create SSL_CTX. %s", errstr);
-        return -1;
-    }
-
-    /* set our supported ciphers */
-    r = SSL_CTX_set_cipher_list(k->ctx, "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
-    if (r != 1) {
-        char errstr[250];
-        get_err_msg(errstr, sizeof(errstr));
-        ALOGE("Error: cannot set the cipher list. %s", errstr);
-        return -2;
-    }
-
-//    if (!is_server) {
-    /* the client doesn't have to send it's certificate */
-    SSL_CTX_set_verify(k->ctx, SSL_VERIFY_PEER, krx_ssl_verify_peer);
-//    }
-
-
-    /* enable srtp */
-    r = SSL_CTX_set_tlsext_use_srtp(k->ctx, "SRTP_AES128_CM_SHA1_80");
-    if (r != 0) {
-        char errstr[250];
-        get_err_msg(errstr, sizeof(errstr));
-        printf("Error: cannot setup srtp. %s", errstr);
-        return -3;
-    }
-
-    if (is_server) {
-
-        ALOGV("cert path = %s, key path = %s", sessionInfo->context->certPath,
-              sessionInfo->context->keyPath);
-
-        /* load key and certificate */
-        /* certificate file; contains also the public key */
-        r = SSL_CTX_use_certificate_file(k->ctx, sessionInfo->context->certPath, SSL_FILETYPE_PEM);
-        if (r != 1) {
-            char err_msg[250];
-            get_err_msg(err_msg, sizeof(err_msg));
-            ALOGE("Error: cannot load certificate file. %s", err_msg);
-            return -4;
-        }
-
-        /* load private key */
-        r = SSL_CTX_use_PrivateKey_file(k->ctx, sessionInfo->context->keyPath, SSL_FILETYPE_PEM);
-        if (r != 1) {
-            char err_msg[250];
-            get_err_msg(err_msg, sizeof(err_msg));
-            ALOGE("Error: cannot load private key file. %s", err_msg);
-            return -5;
-        }
-
-        /* check if the private key is valid */
-        r = SSL_CTX_check_private_key(k->ctx);
-        if (r != 1) {
-            char err_msg[250];
-            get_err_msg(err_msg, sizeof(err_msg));
-            ALOGE("Error: checking the private key failed. %s", err_msg);
-            return -6;
-        }
-    }
     return 0;
 }
 
@@ -221,23 +139,23 @@ const char *getSSLCbMsg(int where) {
 
 }
 
-void krx_ssl_info_callback(const SSL *ssl, int where, int ret, const char *name) {
+void ssl_info_callback(const SSL *ssl, int where, int ret, const char *name) {
 
     if (ret == 0) {
-        printf("-- krx_ssl_info_callback: error occured.\n");
+        ALOGE("-- ssl_info_callback: error occured.");
         return;
     }
 
-    ALOGV("+ %s %20.20s  - %30.30s  - %5.10s\n", name, getSSLCbMsg(where),
+    ALOGV("+ %s %20.20s  - %30.30s  - %5.10s", name, getSSLCbMsg(where),
           SSL_state_string_long(ssl), SSL_state_string(ssl));
 }
 
-void krx_ssl_server_info_callback(const SSL *ssl, int where, int ret) {
-    krx_ssl_info_callback(ssl, where, ret, "server");
+void ssl_server_info_callback(const SSL *ssl, int where, int ret) {
+    ssl_info_callback(ssl, where, ret, "server");
 }
 
-void krx_ssl_client_info_callback(const SSL *ssl, int where, int ret) {
-    krx_ssl_info_callback(ssl, where, ret, "client");
+void ssl_client_info_callback(const SSL *ssl, int where, int ret) {
+    ssl_info_callback(ssl, where, ret, "client");
 }
 
 
@@ -246,21 +164,15 @@ TlsSession::TlsSession(SessionInfo *sessionInfo)
           mClient(nullptr), mPenddingData(nullptr) {
     mTunServer = new TlsCtx();
 
-    if (krx_ssl_ctx_init(sessionInfo, mTunServer, 1) != 0) {
-        ALOGE("init server ctx fail");
-    }
+    mTunServer->ctx = sessionInfo->context->serverCtx;
 
-    if (krx_ssl_init(mTunServer, 1, krx_ssl_server_info_callback) != 0) {
+    if (ssl_init(mTunServer, 1, ssl_server_info_callback) != 0) {
         ALOGE("init server ssl fail");
     }
 
     mClient = new TlsCtx();
-
-    if (krx_ssl_ctx_init(sessionInfo, mClient, 0) != 0) {
-        ALOGE("init server ctx fail");
-    }
-
-    if (krx_ssl_init(mClient, 0, krx_ssl_client_info_callback) != 0) {
+    mClient->ctx = sessionInfo->context->clientCtx;
+    if (ssl_init(mClient, 0, ssl_client_info_callback) != 0) {
         ALOGE("init server ssl fail");
     }
 }
@@ -278,14 +190,14 @@ void free_ctx(TlsCtx *ctx) {
         ctx->ssl = nullptr;
     }
 
-    if (ctx->write_bio) {
-        BIO_free(ctx->write_bio);
-        ctx->write_bio = nullptr;
+    if (ctx->in_bio) {
+        BIO_free(ctx->in_bio);
+        ctx->in_bio = nullptr;
     }
 
-    if (ctx->read_bio) {
-        BIO_free(ctx->read_bio);
-        ctx->read_bio = nullptr;
+    if (ctx->out_bio) {
+        BIO_free(ctx->out_bio);
+        ctx->out_bio = nullptr;
     }
 
     delete ctx;
@@ -301,7 +213,7 @@ TlsSession::~TlsSession() {
 }
 
 int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
-    int tun_write_size = BIO_write(mTunServer->write_bio, downData->data, downData->size);
+    int tun_write_size = BIO_write(mTunServer->in_bio, downData->data, downData->size);
 
     if (tun_write_size != downData->size) {
         ALOGE("write tun server bio error");
@@ -317,11 +229,11 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
         return -1;
     }
 
-    int o_size = BIO_ctrl_pending(mTunServer->read_bio);
+    int o_size = BIO_ctrl_pending(mTunServer->out_bio);
 
     if (o_size > 0) {
         auto to_tun_data = createDataBuffer(sessionInfo, static_cast<size_t>(o_size));
-        BIO_read(mTunServer->read_bio, to_tun_data->data, to_tun_data->size);
+        BIO_read(mTunServer->out_bio, to_tun_data->data, to_tun_data->size);
 
         //write data to tun
         prev->onSocketUp(sessionInfo, to_tun_data);
@@ -331,17 +243,19 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
         auto s_s_r = SSL_do_handshake(mTunServer->ssl);
 
         if (s_s_r <= 0) {
-            ALOGE("server handshake error %s",
-                  getSSLErrStr(SSL_get_error(mTunServer->ssl, s_s_r)));
-            freeLinkDataBuffer(sessionInfo, downData);
-            return -1;
+            auto e = SSL_get_error(mTunServer->ssl, s_s_r);
+            if (e != SSL_ERROR_WANT_READ) {
+                ALOGE("server handshake error %s", getSSLErrStr(e));
+                freeLinkDataBuffer(sessionInfo, downData);
+                return -1;
+            }
         }
 
         //after do handshake has data to tun
-        auto toTunSize = BIO_ctrl_pending(mTunServer->read_bio);
+        auto toTunSize = BIO_ctrl_pending(mTunServer->out_bio);
         if (toTunSize > 0) {
             auto to_tun_data = createDataBuffer(sessionInfo, toTunSize);
-            BIO_read(mTunServer->read_bio, to_tun_data->data, to_tun_data->size);
+            BIO_read(mTunServer->out_bio, to_tun_data->data, to_tun_data->size);
             //write handshake data to tun
             prev->onSocketUp(sessionInfo, to_tun_data);
         }
@@ -394,10 +308,10 @@ int TlsSession::onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) {
 }
 
 int TlsSession::outClientData(SessionInfo *sessionInfo) {
-    auto p_size = BIO_ctrl_pending(mClient->read_bio);
+    auto p_size = BIO_ctrl_pending(mClient->out_bio);
     if (p_size > 0) {
         auto to_socket = createDataBuffer(sessionInfo, p_size);
-        BIO_read(mClient->read_bio, to_socket->data, to_socket->size);
+        BIO_read(mClient->out_bio, to_socket->data, to_socket->size);
         if (prev->onTunUp(sessionInfo, to_socket) != 0) {
             ALOGE("tls session onTunUp fail in outClientData");
             return -1;
@@ -412,7 +326,7 @@ int TlsSession::outClientData(SessionInfo *sessionInfo) {
 }
 
 int TlsSession::onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) {
-    BIO_write(mClient->write_bio, downData->data, downData->size);
+    BIO_write(mClient->in_bio, downData->data, downData->size);
 
     int result = 0;
 
@@ -444,9 +358,9 @@ int TlsSession::onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) {
 int TlsSession::onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData) {
     SSL_write(mTunServer->ssl, upData->data, upData->size);
 
-    auto oLen = BIO_ctrl_pending(mTunServer->read_bio);
+    auto oLen = BIO_ctrl_pending(mTunServer->out_bio);
     auto oData = createDataBuffer(sessionInfo, static_cast<size_t>(oLen));
-    BIO_read(mTunServer->read_bio, oData->data, oData->size);
+    BIO_read(mTunServer->out_bio, oData->data, oData->size);
 
     freeLinkDataBuffer(sessionInfo, upData);
     return prev->onSocketUp(sessionInfo, oData);

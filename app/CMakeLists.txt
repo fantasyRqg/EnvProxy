@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.4.1)
 
 set(OPENSSL_DIR
-            ${CMAKE_SOURCE_DIR}/../openssl-1.1.1-pre5/out/)
+            ${CMAKE_SOURCE_DIR}/../openssl)
 
 # add the open ssl crypto lib
 add_library(libcrypto STATIC IMPORTED)

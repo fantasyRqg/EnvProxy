@@ -5,6 +5,7 @@
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <cstring>
 
 #include "TlsSession.h"
 
@@ -50,8 +51,8 @@ const char *getSSLErrStr(int e) {
             return "SSL_ERROR_WANT_ASYNC";
         case SSL_ERROR_WANT_ASYNC_JOB :
             return "SSL_ERROR_WANT_ASYNC_JOB";
-        case SSL_ERROR_WANT_CLIENT_HELLO_CB :
-            return "SSL_ERROR_WANT_CLIENT_HELLO_CB";
+//        case SSL_ERROR_WANT_CLIENT_HELLO_CB :
+//            return "SSL_ERROR_WANT_CLIENT_HELLO_CB";
         default:
             return "UNKNOWN";
     }
@@ -255,7 +256,12 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
         auto toTunSize = BIO_ctrl_pending(mTunServer->out_bio);
         if (toTunSize > 0) {
             auto to_tun_data = createDataBuffer(sessionInfo, toTunSize);
-            BIO_read(mTunServer->out_bio, to_tun_data->data, to_tun_data->size);
+
+            void *buf = malloc(toTunSize);
+            auto r_size = BIO_read(mTunServer->out_bio, buf, toTunSize);
+            memcpy(to_tun_data->data, buf, toTunSize);
+            free(buf);
+
             //write handshake data to tun
             prev->onSocketUp(sessionInfo, to_tun_data);
         }

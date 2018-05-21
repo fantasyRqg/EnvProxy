@@ -576,7 +576,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
     bool isIp4 = sessionInfo->ipVersoin == IPVERSION;
     if (isIp4) {
         len = sizeof(struct iphdr) + sizeof(struct tcphdr) + optlen + datalen;
-        buffer = static_cast<u_int8_t *>(sessionInfo->balloc(len));
+        buffer = sessionInfo->balloc(len);
         struct iphdr *ip4 = (struct iphdr *) buffer;
         tcp = (struct tcphdr *) (buffer + sizeof(struct iphdr));
         options = buffer + sizeof(struct iphdr) + sizeof(struct tcphdr);

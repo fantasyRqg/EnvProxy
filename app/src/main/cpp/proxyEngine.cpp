@@ -94,11 +94,11 @@ int ssl_ctx_init(SSL_CTX **ctx, char *keyPath, char *certPath, int is_server) {
     }
 
     /* set our supported ciphers */
-    r = SSL_CTX_set_cipher_list(*ctx, "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
-    if (r != 1) {
-        ALOGE("Error: cannot set the cipher list.");
-        return -2;
-    }
+//    r = SSL_CTX_set_cipher_list(*ctx, "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
+//    if (r != 1) {
+//        ALOGE("Error: cannot set the cipher list.");
+//        return -2;
+//    }
 
     if (!is_server) {
         /* the client doesn't have to send it's certificate */

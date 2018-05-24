@@ -76,7 +76,6 @@ class ProxyService : VpnService() {
         }.start()
     }
 
-
     private fun setKeyAndCertificate() {
         val pemDir = getDir(MainActivity.PEM_DIR, Context.MODE_PRIVATE)
         val keyFile = File(pemDir, MainActivity.PEM_ENV2_KEY)

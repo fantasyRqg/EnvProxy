@@ -252,6 +252,8 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
             }
         }
 
+        ERR_print_errors_fp(stderr);
+
         //after do handshake has data to tun
         auto toTunSize = BIO_ctrl_pending(mTunServer->out_bio);
         if (toTunSize > 0) {

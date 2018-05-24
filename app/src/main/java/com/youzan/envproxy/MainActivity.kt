@@ -39,6 +39,7 @@ class MainActivity : Activity() {
 
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -61,28 +62,31 @@ class MainActivity : Activity() {
 
 
         btn.setOnClickListener {
-            //            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
-            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
-//            Observable.just("https://www.baidu.com")
-                    .subscribeOn(Schedulers.io())
-                    .map {
-                        val client = OkHttpClient()
-                        val request = Request.Builder()
-                                .url(it)
-                                .build()
-                        client.newCall(request)
-                                .execute()
-                                .body()
-                                ?.charStream()
-                                ?.readText()
-                    }
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe({
-                        tv_response.text = it
-                    }, {
-                        tv_response.text = it.toString()
-                        Log.e(TAG, "onCreate: ", it)
-                    })
+            ProxyNative.getMTU()
+
+
+//            //            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+//            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
+////            Observable.just("https://www.baidu.com")
+//                    .subscribeOn(Schedulers.io())
+//                    .map {
+//                        val client = OkHttpClient()
+//                        val request = Request.Builder()
+//                                .url(it)
+//                                .build()
+//                        client.newCall(request)
+//                                .execute()
+//                                .body()
+//                                ?.charStream()
+//                                ?.readText()
+//                    }
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe({
+//                        tv_response.text = it
+//                    }, {
+//                        tv_response.text = it.toString()
+//                        Log.e(TAG, "onCreate: ", it)
+//                    })
         }
 
 

@@ -6,6 +6,8 @@
 #include "proxyEngine.h"
 #include "log.h"
 
+#include "test.h"
+
 
 #define SOCKT_MTU  10000
 
@@ -22,6 +24,8 @@ void initClass(JNIEnv *env, jclass clazz) {
 jint getMTU(JNIEnv *, jclass) {
 //    int result = a + b;
 //    ALOGI("%d + %d = %d", a, b, result);
+
+    testmain();
     return SOCKT_MTU;
 }
 

@@ -20,6 +20,7 @@ add_library(libProxy
 
             src/main/cpp/libProxy.cpp
             src/main/cpp/util.cpp
+            src/main/cpp/test.cpp
             src/main/cpp/BufferPool.cpp
             src/main/cpp/proxyTypes.cpp
             src/main/cpp/proxyEngine.cpp

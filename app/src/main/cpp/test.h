@@ -7,5 +7,8 @@
 
 int testmain();
 
+int testClient();
+
+int testServer();
 
 #endif //ENVPROXY_TEST_H

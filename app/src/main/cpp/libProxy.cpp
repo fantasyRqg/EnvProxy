@@ -25,7 +25,8 @@ jint getMTU(JNIEnv *, jclass) {
 //    int result = a + b;
 //    ALOGI("%d + %d = %d", a, b, result);
 
-    testmain();
+    testClient();
+//    testmain();
     return SOCKT_MTU;
 }
 

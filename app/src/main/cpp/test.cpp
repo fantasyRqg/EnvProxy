@@ -22,9 +22,9 @@
 #include <openssl/dh.h>
 #include <openssl/ssl.h>
 #include <openssl/conf.h>
-
-
-#include "log.h"
+#include <sys/socket.h>
+#include <linux/in.h>
+#include <arpa/inet.h>
 
 
 #define LOG_TAG "test"
@@ -32,12 +32,8 @@
 /* SSL debug */
 #define SSL_WHERE_INFO(ssl, w, flag, msg) {                \
     if(w & flag) {                                         \
-    ALOGD("+ %s: ", name);                              \
-    ALOGD("%20.20s", msg);                              \
-    ALOGD(" - %30.30s ", SSL_state_string_long(ssl));   \
-    ALOGD(" - %5.10s ", SSL_state_string(ssl));         \
-    ALOGD(" ");                                        \
-    }                                                      \
+            ALOGD("+ %s: %20.20s - %30.30s  - %5.10s ", name,msg,SSL_state_string_long(ssl),SSL_state_string(ssl)); \
+        }                                                      \
   }
 
 typedef void(*info_callback)(const SSL *ssl, int where, int ret);
@@ -110,7 +106,15 @@ int testmain() {
 
     /* encrypt some data and send it to the client */
     char buf[521] = {0};
-    sprintf(buf, "%s", "Hello world");
+    sprintf(buf, "%s", "Hello world , 1");
+    SSL_write(server.ssl, buf, sizeof(buf));
+    krx_ssl_handle_traffic(&server, &client);
+
+    sprintf(buf, "%s", "Hello world , server 1");
+    SSL_write(client.ssl, buf, sizeof(buf));
+    krx_ssl_handle_traffic(&client, &server);
+
+    sprintf(buf, "%s", "Hello world , client 2");
     SSL_write(server.ssl, buf, sizeof(buf));
     krx_ssl_handle_traffic(&server, &client);
 
@@ -121,11 +125,82 @@ int testmain() {
     return EXIT_SUCCESS;
 }
 
+
+int testClient() {
+    krx client;
+    /* init client. */
+    if (krx_ssl_ctx_init(&client, "client") < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if (krx_ssl_init(&client, 0, krx_ssl_client_info_callback) < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    int sock = socket(PF_INET, SOCK_STREAM, 0);
+
+    struct sockaddr_in addr4;
+
+    addr4.sin_family = AF_INET;
+    addr4.sin_addr.s_addr = inet_addr("172.17.8.90");
+    addr4.sin_port = htons(8081);
+
+    connect(sock, reinterpret_cast<const sockaddr *>(&addr4), sizeof(sockaddr_in));
+
+
+    char buf[2048];
+
+    //do handshake
+    SSL_do_handshake(client.ssl);
+    while (!SSL_is_init_finished(client.ssl)) {
+        auto outSize = BIO_ctrl_pending(client.out_bio);
+        if (outSize > 0) {
+            auto readSize = BIO_read(client.out_bio, buf, sizeof(buf));
+            send(sock, buf, static_cast<size_t>(readSize), 0);
+        }
+
+        auto recvSize = recv(sock, buf, sizeof(buf), 0);
+        ALOGV("recv sock %d", recvSize);
+        BIO_write(client.in_bio, buf, recvSize);
+        SSL_do_handshake(client.ssl);
+    }
+
+
+    ALOGI("handshake finish");
+
+    char httpReq[] = "GET / HTTP/1.1\n"
+            "Host: 172.17.8.90:8081\n"
+            "Connection: keep-alive\n"
+            "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\n"
+            "Upgrade-Insecure-Requests: 1\n"
+            "User-Agent: Mozilla/5.0 (Linux; Android 5.1; P80H(D4C7) Build/LMY47I; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/48.0.2564.106 Safari/537.36\n"
+            "Accept-Encoding: gzip, deflate\n"
+            "Accept-Language: zh-CN,en-US;q=0.8\n"
+            "X-Requested-With: com.android.browser";
+
+    auto sslWriteSize = SSL_write(client.ssl, httpReq, sizeof(httpReq));
+    auto roSize = BIO_read(client.out_bio, buf, sizeof(buf));
+    auto sendRSize = send(sock, buf, roSize, 0);
+    ALOGD("send request size %d", sendRSize);
+
+    auto rrSize = recv(sock, buf, sizeof(buf), 0);
+    BIO_write(client.in_bio, buf, rrSize);
+
+    auto prrSize = SSL_read(client.ssl, buf, sizeof(buf));
+    buf[prrSize + 1] = 0;
+    ALOGI("%s", buf);
+    return 0;
+}
+
+int testServer() {
+
+    return 0;
+}
+
 void krx_begin() {
-    SSL_library_init();
-    SSL_load_error_strings();
-    ERR_load_BIO_strings();
-    OpenSSL_add_all_algorithms();
+//    SSL_library_init();
+//    SSL_load_error_strings();
+//    ERR_load_BIO_strings();
+//    OpenSSL_add_all_algorithms();
 }
 
 void krx_end() {
@@ -143,7 +218,7 @@ int krx_ssl_ctx_init(krx *k, const char *keyname) {
     int r = 0;
 
     /* create a new context using DTLS */
-    k->ctx = SSL_CTX_new(DTLSv1_method());
+    k->ctx = SSL_CTX_new(TLS_method());
     if (!k->ctx) {
         ALOGD("Error: cannot create SSL_CTX. ");
         ERR_print_errors_fp(stderr);

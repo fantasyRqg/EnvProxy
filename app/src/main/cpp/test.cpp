@@ -25,6 +25,7 @@
 #include <sys/socket.h>
 #include <linux/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 
 #define LOG_TAG "test"
@@ -141,11 +142,15 @@ int testClient() {
     struct sockaddr_in addr4;
 
     addr4.sin_family = AF_INET;
-    addr4.sin_addr.s_addr = inet_addr("172.17.8.90");
+    addr4.sin_addr.s_addr = inet_addr("172.17.19.66");
     addr4.sin_port = htons(8081);
 
     connect(sock, reinterpret_cast<const sockaddr *>(&addr4), sizeof(sockaddr_in));
 
+    struct timeval timeout;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+//    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
     char buf[2048];
 
@@ -162,32 +167,52 @@ int testClient() {
         ALOGV("recv sock %d", recvSize);
         BIO_write(client.in_bio, buf, recvSize);
         SSL_do_handshake(client.ssl);
+
+
+        outSize = BIO_ctrl_pending(client.out_bio);
+        if (outSize > 0) {
+            auto readSize = BIO_read(client.out_bio, buf, sizeof(buf));
+            send(sock, buf, static_cast<size_t>(readSize), 0);
+        }
+    }
+
+    auto outSize = BIO_ctrl_pending(client.out_bio);
+    if (outSize > 0) {
+        auto readSize = BIO_read(client.out_bio, buf, sizeof(buf));
+        send(sock, buf, static_cast<size_t>(readSize), 0);
     }
 
 
     ALOGI("handshake finish");
 
-    char httpReq[] = "GET / HTTP/1.1\n"
-            "Host: 172.17.8.90:8081\n"
-            "Connection: keep-alive\n"
-            "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\n"
-            "Upgrade-Insecure-Requests: 1\n"
-            "User-Agent: Mozilla/5.0 (Linux; Android 5.1; P80H(D4C7) Build/LMY47I; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/48.0.2564.106 Safari/537.36\n"
-            "Accept-Encoding: gzip, deflate\n"
-            "Accept-Language: zh-CN,en-US;q=0.8\n"
-            "X-Requested-With: com.android.browser";
+    char httpReq[] = "GET / HTTP/1.1\r\nHost: 172.17.19.66:8081\r\n\r\n\r\n";
 
     auto sslWriteSize = SSL_write(client.ssl, httpReq, sizeof(httpReq));
+    ALOGD("write ssl pkt size = %d", sslWriteSize);
     auto roSize = BIO_read(client.out_bio, buf, sizeof(buf));
+    ALOGD("read client bio size %u", roSize);
     auto sendRSize = send(sock, buf, roSize, 0);
     ALOGD("send request size %d", sendRSize);
 
     auto rrSize = recv(sock, buf, sizeof(buf), 0);
+    ALOGD("data recv %d", rrSize);
+    if (rrSize < 0)
+        return 0;
+
     BIO_write(client.in_bio, buf, rrSize);
 
     auto prrSize = SSL_read(client.ssl, buf, sizeof(buf));
     buf[prrSize + 1] = 0;
     ALOGI("%s", buf);
+
+    SSL_shutdown(client.ssl);
+    roSize = BIO_read(client.out_bio, buf, sizeof(buf));
+    ALOGD("read client close bio size %u", roSize);
+    sendRSize = send(sock, buf, roSize, 0);
+    ALOGD("send request close size %d", sendRSize);
+
+    close(sock);
+
     return 0;
 }
 
@@ -226,12 +251,12 @@ int krx_ssl_ctx_init(krx *k, const char *keyname) {
     }
 
     /* set our supported ciphers */
-    r = SSL_CTX_set_cipher_list(k->ctx, "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
-    if (r != 1) {
-        ALOGD("Error: cannot set the cipher list. ");
-        ERR_print_errors_fp(stderr);
-        return -2;
-    }
+//    r = SSL_CTX_set_cipher_list(k->ctx, "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
+//    if (r != 1) {
+//        ALOGD("Error: cannot set the cipher list. ");
+//        ERR_print_errors_fp(stderr);
+//        return -2;
+//    }
 
     /* the client doesn't have to send it's certificate */
     SSL_CTX_set_verify(k->ctx, SSL_VERIFY_PEER, krx_ssl_verify_peer);

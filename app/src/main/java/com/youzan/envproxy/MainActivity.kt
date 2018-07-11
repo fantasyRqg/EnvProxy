@@ -12,11 +12,8 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -62,7 +59,11 @@ class MainActivity : Activity() {
 
 
         btn.setOnClickListener {
-            ProxyNative.getMTU()
+            Observable.just(1)
+                    .observeOn(Schedulers.io())
+                    .subscribe {
+                        ProxyNative.getMTU()
+                    }
 
 
 //            //            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
@@ -98,7 +99,7 @@ class MainActivity : Activity() {
                 .sendBroadcast(Intent(ProxyService.STATUS_BROADCAST_TRIGGER))
 
 
-        Observable.just(true)
+        val subscribe = Observable.just(true)
                 .observeOn(Schedulers.io())
                 .map {
                     makeSurePems()

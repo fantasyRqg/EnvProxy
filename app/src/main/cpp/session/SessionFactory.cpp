@@ -20,7 +20,6 @@
 #include "IcmpSession.h"
 #include "DnsSession.h"
 #include "HttpSession.h"
-#include "TlsSession.h"
 
 
 SessionFactory::SessionFactory(int maxSessionSize) : mMaxSessionSize(maxSessionSize),
@@ -115,18 +114,19 @@ static void buildSessionProcess(SessionInfo *si) {
                 http->next = nullptr;
 
                 tcp->next = http;
-            } else if (si->dPort == 443) {
-                auto tls = new TlsSession(si);
-                auto http = new HttpSession(si);
-                tls->next = http;
-                http->next = nullptr;
-                tls->prev = tcp;
-                http->prev = tls;
-
-                tcp->next = tls;
-            } else {
-                tcp->next = nullptr;
             }
+//            else if (si->dPort == 443) {
+//                auto tls = new TlsSession(si);
+//                auto http = new HttpSession(si);
+//                tls->next = http;
+//                http->next = nullptr;
+//                tls->prev = tcp;
+//                http->prev = tls;
+//
+//                tcp->next = tls;
+//            } else {
+//                tcp->next = nullptr;
+//            }
         }
             break;
         case IPPROTO_UDP: {

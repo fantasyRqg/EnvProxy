@@ -142,7 +142,7 @@ int testClient() {
     struct sockaddr_in addr4;
 
     addr4.sin_family = AF_INET;
-    addr4.sin_addr.s_addr = inet_addr("172.17.19.66");
+    addr4.sin_addr.s_addr = inet_addr("172.17.19.141");
     addr4.sin_port = htons(8081);
 
     connect(sock, reinterpret_cast<const sockaddr *>(&addr4), sizeof(sockaddr_in));

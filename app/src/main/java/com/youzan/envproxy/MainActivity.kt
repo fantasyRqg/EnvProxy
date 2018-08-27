@@ -12,8 +12,11 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -59,35 +62,36 @@ class MainActivity : Activity() {
 
 
         btn.setOnClickListener {
-            Observable.just(1)
-                    .observeOn(Schedulers.io())
-                    .subscribe {
-                        ProxyNative.getMTU()
-                    }
-
-
-//            //            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
-//            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
-////            Observable.just("https://www.baidu.com")
-//                    .subscribeOn(Schedulers.io())
-//                    .map {
-//                        val client = OkHttpClient()
-//                        val request = Request.Builder()
-//                                .url(it)
-//                                .build()
-//                        client.newCall(request)
-//                                .execute()
-//                                .body()
-//                                ?.charStream()
-//                                ?.readText()
+            //            Observable.just(1)
+//                    .observeOn(Schedulers.io())
+//                    .subscribe {
+//                        ProxyNative.getMTU()
 //                    }
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribe({
-//                        tv_response.text = it
-//                    }, {
-//                        tv_response.text = it.toString()
-//                        Log.e(TAG, "onCreate: ", it)
-//                    })
+
+            //            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
+//            Observable.just("https://www.baidu.com")
+                    .subscribeOn(Schedulers.io())
+                    .map {
+                        val client = OkHttpClient()
+                        val request = Request.Builder()
+                                .url(it)
+                                .build()
+                        client.newCall(request)
+                                .execute()
+                                .body()
+                                ?.charStream()
+                                ?.readText()
+                    }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        tv_response.text = it
+                    }, {
+                        tv_response.text = it.toString()
+                        Log.e(TAG, "onCreate: ", it)
+                    })
+
+
         }
 
 

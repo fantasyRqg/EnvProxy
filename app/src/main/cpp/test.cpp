@@ -270,8 +270,8 @@ int krx_ssl_ctx_init(krx *k, const char *keyname) {
     }
 
     /* load key and certificate */
-    char certfile[] = "/data/user/0/com.youzan.envproxy/app_pems/www.evn2.com.cert.pem";
-    char keyfile[] = "/data/user/0/com.youzan.envproxy/app_pems/www.env2.com.key.pem";
+    char certfile[] = "/data/user/0/com.rqg.envproxy/app_pems/www.evn2.com.cert.pem";
+    char keyfile[] = "/data/user/0/com.rqg.envproxy/app_pems/www.env2.com.key.pem";
 
     /* certificate file; contains also the public key */
     r = SSL_CTX_use_certificate_file(k->ctx, certfile, SSL_FILETYPE_PEM);

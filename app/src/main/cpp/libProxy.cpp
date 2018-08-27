@@ -102,7 +102,7 @@ void setKeyAndCertificate(JNIEnv *env, jobject thiz, jstring key, jstring certif
 
 //########################################################################################################################
 
-static const char *classPathName = "com/youzan/envproxy/ProxyNative";
+static const char *classPathName = "com/rqg/envproxy/ProxyNative";
 static JNINativeMethod methods[] = {
         {"getMTU",                "()I",                                     (void *) getMTU},
         {"initNative",            "()V",                                     (void *) initNative},
@@ -112,7 +112,7 @@ static JNINativeMethod methods[] = {
         {"startProxy_Native",     "()V",                                     (void *) startProxy},
         {"stopProxy_Native",      "()V",                                     (void *) stopProxy},
         {"isProxyRunning_Native", "()Z",                                     (void *) isProxyRunning},
-        {"setProxyService",       "(Lcom/youzan/envproxy/ProxyService;)V",   (void *) setProxyService},
+        {"setProxyService",       "(Lcom/rqg/envproxy/ProxyService;)V",      (void *) setProxyService},
         {"setKeyAndCertificate",  "(Ljava/lang/String;Ljava/lang/String;)V", (void *) setKeyAndCertificate},
 };
 

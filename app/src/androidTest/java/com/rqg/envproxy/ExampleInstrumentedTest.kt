@@ -1,4 +1,4 @@
-package com.youzan.envproxy
+package com.rqg.envproxy
 
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4

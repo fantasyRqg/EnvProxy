@@ -1,4 +1,4 @@
-package com.youzan.envproxy
+package com.rqg.envproxy
 
 import android.app.Notification
 import android.app.PendingIntent

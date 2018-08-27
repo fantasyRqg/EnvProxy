@@ -1,4 +1,4 @@
-package com.youzan.envproxy
+package com.rqg.envproxy
 
 import org.junit.Test
 

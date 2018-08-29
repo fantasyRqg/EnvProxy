@@ -153,8 +153,8 @@ void ssl_info_callback(const SSL *ssl, int where, int ret, const char *name) {
         return;
     }
 
-    ALOGV("+ %s %20.20s  - %30.30s  - %5.10s", name, getSSLCbMsg(where),
-          SSL_state_string_long(ssl), SSL_state_string(ssl));
+//    ALOGV("+ %s %20.20s  - %30.30s  - %5.10s", name, getSSLCbMsg(where),
+//          SSL_state_string_long(ssl), SSL_state_string(ssl));
 }
 
 void ssl_server_info_callback(const SSL *ssl, int where, int ret) {
@@ -220,11 +220,16 @@ void free_ctx(TlsCtx *ctx) {
 
 TlsSession::~TlsSession() {
     ALOGW("release TlsSession %p", this);
-    free_ctx(mTunServer);
-    mTunServer = nullptr;
+    if (mTunServer != nullptr) {
+        free_ctx(mTunServer);
+        mTunServer = nullptr;
+    }
 
-    free_ctx(mClient);
-    mClient = nullptr;
+    if (mClient != nullptr) {
+        free_ctx(mClient);
+        mClient = nullptr;
+    }
+
 }
 
 int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {

@@ -129,7 +129,7 @@ ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
     // Build packet
 //    if (cur->version == 4) {
     len = sizeof(struct iphdr) + datalen;
-    buffer = static_cast<u_int8_t *>(sessionInfo->balloc(len));
+    buffer = static_cast<u_int8_t *>(malloc(len));
     struct iphdr *ip4 = (struct iphdr *) buffer;
     if (datalen)
         memcpy(buffer + sizeof(struct iphdr), data, datalen);
@@ -185,7 +185,7 @@ ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
     if (res < 0) {
         ALOGW("ICMP write error %d: %s", errno, strerror(errno));
     }
-    sessionInfo->bfree(buffer);
+    free(buffer);
 
     if (res != len) {
         ALOGE("write %zu/%zu", res, len);
@@ -219,7 +219,7 @@ void IcmpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
             uint16_t blen = (uint16_t) (sessionInfo->ipVersoin == IPVERSION ? ICMP4_MAXMSG
                                                                             : ICMP6_MAXMSG);
-            uint8_t *buffer = static_cast<uint8_t *>(sessionInfo->balloc(blen));
+            uint8_t *buffer = static_cast<uint8_t *>(malloc(blen));
             ssize_t bytes = recv(status->socket, buffer, blen, 0);
             if (bytes < 0) {
                 // Socket error
@@ -277,14 +277,14 @@ void IcmpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                 if (write_icmp(sessionInfo, status, buffer, (size_t) bytes) < 0)
                     status->stop = 1;
             }
-            sessionInfo->bfree(buffer);
+            free(buffer);
         }
     }
 }
 
 
 void *IcmpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) {
-    IcmpStatus *s = reinterpret_cast<IcmpStatus *>(sessionInfo->balloc(sizeof(struct IcmpStatus)));
+    IcmpStatus *s = new IcmpStatus();
     s->id = sessionInfo->sPort;
     s->socket = socket(sessionInfo->protocol == IPVERSION ? PF_INET : PF_INET6, SOCK_DGRAM,
                        IPPROTO_ICMP);
@@ -316,7 +316,7 @@ void IcmpHandler::freeStatusData(SessionInfo *sessionInfo) {
     auto data = sessionInfo->tData;
     ALOGI("free ICMP status data %p", data);
     if (data != nullptr) {
-        sessionInfo->bfree(reinterpret_cast<uint8_t *>(data));
+        free(data);
     }
 }
 

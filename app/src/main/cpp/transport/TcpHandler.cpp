@@ -218,10 +218,9 @@ void queue_tcp(SessionInfo *sessionInfo,
               seq + datalen - status->remote_start);
     else {
         //process sessions
-        DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(
-                sizeof(DataBuffer)));
+        DataBuffer *dbuff = new DataBuffer();
         dbuff->size = datalen;
-        dbuff->data = sessionInfo->balloc(datalen);
+        dbuff->data = static_cast<uint8_t *>(malloc(datalen));
         memcpy(dbuff->data, data, datalen);
         dbuff->next = nullptr;
         dbuff->sent = 0;
@@ -576,7 +575,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
     bool isIp4 = sessionInfo->ipVersoin == IPVERSION;
     if (isIp4) {
         len = sizeof(struct iphdr) + sizeof(struct tcphdr) + optlen + datalen;
-        buffer = sessionInfo->balloc(len);
+        buffer = static_cast<u_int8_t *>(malloc(len));
         struct iphdr *ip4 = (struct iphdr *) buffer;
         tcp = (struct tcphdr *) (buffer + sizeof(struct iphdr));
         options = buffer + sizeof(struct iphdr) + sizeof(struct tcphdr);
@@ -711,7 +710,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
     }
 
 
-    sessionInfo->bfree(buffer);
+    free(buffer);
 
     if (res != len) {
         ALOGE("TCP write %zu/%zu", res, len);
@@ -840,7 +839,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
                     uint32_t buffer_size = (send_window > status->mss
                                             ? status->mss : send_window);
-                    uint8_t *buffer = sessionInfo->balloc(buffer_size);
+                    uint8_t *buffer = static_cast<uint8_t *>(malloc(buffer_size));
                     ssize_t bytes = recv(status->socket, buffer, (size_t) buffer_size, 0);
                     if (bytes < 0) {
                         // Socket error
@@ -849,7 +848,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                         if (errno != EINTR && errno != EAGAIN)
                             write_rst(sessionInfo, status);
 
-                        sessionInfo->bfree(buffer);
+                        free(buffer);
                     } else if (bytes == 0) {
                         ALOGW("%s recv eof", str_session);
 
@@ -874,7 +873,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                         if (close(status->socket))
                             ALOGE("%s close error %d: %s", str_session, errno, strerror(errno));
                         status->socket = -1;
-                        sessionInfo->bfree(buffer);
+                        free(buffer);
                     } else {
                         // Socket read data
                         ALOGD("%s recv bytes %zu", str_session, bytes);
@@ -882,8 +881,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
                         // Forward to tun
 
-                        DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(
-                                sizeof(DataBuffer)));
+                        DataBuffer *dbuff = new DataBuffer();
 
                         dbuff->data = buffer;
                         dbuff->size = static_cast<uint16_t>(bytes);
@@ -991,7 +989,7 @@ int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
 void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firstPkt) {
     struct tcphdr *tcphdr = reinterpret_cast<struct tcphdr *>(firstPkt->ipPackage->payload);
 
-    TcpStatus *status = reinterpret_cast<TcpStatus *>(sessionInfo->balloc(sizeof(TcpStatus)));
+    TcpStatus *status = new TcpStatus();
     status->socketConnected = false;
     status->skipFirst = true;
 
@@ -1184,7 +1182,7 @@ void TcpHandler::freeStatusData(SessionInfo *sessionInfo) {
         freeLinkDataBuffer(sessionInfo, s->toSocket);
 //        freeLinkDataBuffer(sessionInfo, s->toTun);
 
-        sessionInfo->bfree(static_cast<uint8_t *>(data));
+        free(data);
     }
 }
 

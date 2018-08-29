@@ -58,7 +58,7 @@ struct ProxyContext {
     proxyEngine *engine;
     int tunFd;
     int epollFd;
-    BufferPool *bufferPool;
+//    BufferPool *bufferPool;
     size_t mtu;
     int maxSessions;
     int sessionCount;
@@ -67,22 +67,22 @@ struct ProxyContext {
     SSL_CTX *clientCtx;
 };
 
-#define balloc context->bufferPool->allocBuffer
-#define bfree context->bufferPool->freeBuffer
+//#define balloc context->bufferPool->allocBuffer
+//#define bfree context->bufferPool->freeBuffer
 
 
 class IpHandler;
 
 class IpPackage {
 public:
-    uint8_t *pkt;
+    uint8_t *pkt = nullptr;
     size_t pktSize;
     IpAddr srcAddr;
     IpAddr dstAddr;
     uint8_t protocol;
-    uint8_t *payload;
+    uint8_t *payload = nullptr;
     size_t payloadSize;
-    IpHandler *handler;
+    IpHandler *handler = nullptr;
     int versoin;
 
 public:
@@ -94,12 +94,12 @@ class TransportHandler;
 
 class TransportPkt {
 public:
-    IpPackage *ipPackage;
-    uint8_t *payload;
+    IpPackage *ipPackage = nullptr;
+    uint8_t *payload = nullptr;
     size_t payloadSize;
     uint16_t sPort;
     uint16_t dPort;
-    TransportHandler *handler;
+    TransportHandler *handler = nullptr;
 
 public:
     ~TransportPkt();
@@ -109,18 +109,18 @@ public:
 class Session;
 
 struct SessionInfo {
-    TransportHandler *transportHandler;
-    IpHandler *ipHandler;
+    TransportHandler *transportHandler = nullptr;
+    IpHandler *ipHandler = nullptr;
     IpAddr srcAddr;
     IpAddr dstAddr;
     uint8_t protocol;
     uint16_t sPort;
     uint16_t dPort;
     int ipVersoin;
-    Session *session;
+    Session *session = nullptr;
     time_t lastActive;
-    ProxyContext *context;
-    SessionInfo *next;
+    ProxyContext *context = nullptr;
+    SessionInfo *next = nullptr;
     void *tData;
     epoll_event ev;
 };
@@ -130,10 +130,10 @@ struct SessionInfo {
 
 
 struct DataBuffer {
-    uint8_t *data;
+    uint8_t *data = nullptr;
     uint16_t size;
     uint16_t sent;
-    DataBuffer *next;
+    DataBuffer *next = nullptr;
 };
 
 void freeLinkDataBuffer(SessionInfo *sessionInfo, DataBuffer *dbuff);

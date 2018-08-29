@@ -6,6 +6,8 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <cstring>
+#include <netinet/in6.h>
+#include <arpa/inet.h>
 
 #include "TlsSession.h"
 
@@ -18,10 +20,10 @@
 #define LOG_TAG "TlsSession"
 
 struct TlsCtx {
-    SSL_CTX *ctx;                                                                       /* main ssl context */
-    SSL *ssl;                                                                           /* the SSL* which represents a "connection" */
-    BIO *in_bio;                                                                        /* we use memory read bios */
-    BIO *out_bio;                                                                       /* we use memory write bios */
+    SSL_CTX *ctx = nullptr;                                                                       /* main ssl context */
+    SSL *ssl = nullptr;                                                                           /* the SSL* which represents a "connection" */
+    BIO *in_bio = nullptr;                                                                        /* we use memory read bios */
+    BIO *out_bio = nullptr;                                                                       /* we use memory write bios */
 };
 
 typedef void (*info_callback)(const SSL *, int, int);
@@ -101,6 +103,10 @@ int ssl_init(TlsCtx *k, int isserver, info_callback cb) {
         SSL_set_connect_state(k->ssl);
     }
 
+    ALOGV("ssl_init: isserver %d, ctx %p , ssl %p , in_bio %p , out_bio %p", isserver, k->ctx,
+          k->ssl, k->in_bio, k->out_bio);
+
+
     return 0;
 }
 
@@ -176,9 +182,16 @@ TlsSession::TlsSession(SessionInfo *sessionInfo)
     if (ssl_init(mClient, 0, ssl_client_info_callback) != 0) {
         ALOGE("init server ssl fail");
     }
+
+    char dest[INET6_ADDRSTRLEN + 1];
+    inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, dest, sizeof(dest));
+    ALOGI("TlsSession %p new %s", this, dest);
 }
 
 void free_ctx(TlsCtx *ctx) {
+    ALOGD("free ctx %p, ctx %p , ssl %p , in_bio %p , out_bio %p", ctx, ctx->ctx,
+          ctx->ssl, ctx->in_bio, ctx->out_bio);
+
     if (ctx == nullptr)
         return;
 
@@ -206,6 +219,7 @@ void free_ctx(TlsCtx *ctx) {
 }
 
 TlsSession::~TlsSession() {
+    ALOGW("release TlsSession %p", this);
     free_ctx(mTunServer);
     mTunServer = nullptr;
 

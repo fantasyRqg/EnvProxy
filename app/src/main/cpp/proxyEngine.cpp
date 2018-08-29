@@ -183,7 +183,7 @@ void proxyEngine::handleEvents() {
             this,
             mTunFd,
             epoll_fd,
-            &bufferPool,
+//            &bufferPool,
             mMTU,
             maxsessions,
             0,
@@ -363,7 +363,7 @@ IpPackage *proxyEngine::checkTun(ProxyContext *context, epoll_event *pEvent,
     }
 
     if (pEvent->events & EPOLLIN) {
-        uint8_t *buffer = context->bufferPool->allocBuffer(context->mtu);
+        uint8_t *buffer = static_cast<uint8_t *>(malloc(context->mtu));
 
         if (buffer == nullptr) {
             ALOGW("buffer allocate failure, should not happen");
@@ -372,7 +372,7 @@ IpPackage *proxyEngine::checkTun(ProxyContext *context, epoll_event *pEvent,
 
         auto length = read(mTunFd, buffer, context->mtu);
         if (length < 0) {
-            context->bufferPool->freeBuffer(buffer);
+            free(buffer);
             ALOGE("tun %d read error %d: %s", mTunFd, errno, strerror(errno));
             if (errno == EINTR || errno == EAGAIN)
                 // Retry later
@@ -384,7 +384,7 @@ IpPackage *proxyEngine::checkTun(ProxyContext *context, epoll_event *pEvent,
             }
             return ipPkt;
         } else {
-            context->bufferPool->freeBuffer(buffer);
+            free(buffer);
             ALOGE("tun %d empty read", mTunFd);
             return nullptr;
         }

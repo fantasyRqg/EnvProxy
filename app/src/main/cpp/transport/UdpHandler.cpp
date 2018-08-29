@@ -139,9 +139,9 @@ void UdpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
 //        }
 //    }
 
-    DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(sizeof(DataBuffer)));
+    DataBuffer *dbuff = new DataBuffer();
     dbuff->size = static_cast<uint16_t>(pkt->payloadSize);
-    dbuff->data = sessionInfo->balloc(dbuff->size);
+    dbuff->data = static_cast<uint8_t *>(malloc(dbuff->size));
     memcpy(dbuff->data, pkt->payload, dbuff->size);
     dbuff->next = nullptr;
     dbuff->sent = 0;
@@ -225,7 +225,7 @@ ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
     // Build packet
 //    if (cur->version == 4) {
     len = sizeof(struct iphdr) + sizeof(struct udphdr) + datalen;
-    buffer = static_cast<u_int8_t *>(sessionInfo->balloc(len));
+    buffer = static_cast<u_int8_t *>(malloc(len));
     struct iphdr *ip4 = (struct iphdr *) buffer;
     udp = (struct udphdr *) (buffer + sizeof(struct iphdr));
     if (datalen)
@@ -316,7 +316,7 @@ ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
         ALOGW("UDP write error %d: %s", errno, strerror(errno));
     }
 
-    sessionInfo->bfree(buffer);
+    free(buffer);
 
     if (res != len) {
         ALOGE("write %zu/%zu", res, len);
@@ -348,7 +348,7 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
         if (ev->events & EPOLLIN) {
             sessionInfo->lastActive = time(NULL);
 
-            uint8_t *buffer = static_cast<uint8_t *>(sessionInfo->balloc(status->mss));
+            uint8_t *buffer = static_cast<uint8_t *>(malloc(status->mss));
             ssize_t bytes = recv(status->socket, buffer, status->mss, 0);
             if (bytes < 0) {
                 // Socket error
@@ -357,12 +357,12 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                 if (errno != EINTR && errno != EAGAIN)
                     status->state = UDP_FINISHING;
 
-                sessionInfo->bfree(buffer);
+                free(buffer);
             } else if (bytes == 0) {
                 ALOGW("UDP recv eof");
                 status->state = UDP_FINISHING;
 
-                sessionInfo->bfree(buffer);
+                free(buffer);
             } else {
                 // Socket read data
                 char dest[INET6_ADDRSTRLEN + 1];
@@ -375,8 +375,7 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                 status->received += bytes;
 
                 // Forward to tun
-                DataBuffer *dbuff = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(
-                        sizeof(DataBuffer)));
+                DataBuffer *dbuff = new DataBuffer();
                 dbuff->data = buffer;
                 dbuff->size = static_cast<uint16_t>(bytes);
                 dbuff->next = nullptr;
@@ -399,7 +398,7 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 
 
     // Register session
-    UdpStatus *status = reinterpret_cast<UdpStatus *>(sessionInfo->balloc(sizeof(UdpStatus)));
+    UdpStatus *status = new UdpStatus();
     ALOGV("UDP create status data %p", status);
 
     sessionInfo->lastActive = time(NULL);
@@ -441,7 +440,7 @@ void UdpHandler::freeStatusData(SessionInfo *sessionInfo) {
     ALOGI("free UDP status data %p", data);
 
     if (data != nullptr)
-        sessionInfo->bfree(reinterpret_cast<uint8_t *>(data));
+        free(data);
 }
 
 bool UdpHandler::isActive(SessionInfo *sessionInfo) {

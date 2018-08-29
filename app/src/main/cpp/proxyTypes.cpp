@@ -14,7 +14,7 @@ IpPackage::~IpPackage() {
     if (pkt != nullptr) {
         auto context = handler->getProxyContext();
         if (context != nullptr) {
-            context->bufferPool->freeBuffer(pkt);
+            free(pkt);
         }
         pkt = nullptr;
     }
@@ -35,16 +35,17 @@ void freeLinkDataBuffer(SessionInfo *sessionInfo, DataBuffer *dbuff) {
         auto tmp = d;
         d = d->next;
 
-        sessionInfo->bfree(tmp->data);
-        sessionInfo->bfree(reinterpret_cast<uint8_t *>(tmp));
+        free(tmp->data);
+
+        delete tmp;
     }
 }
 
 DataBuffer *createDataBuffer(SessionInfo *sessionInfo, size_t size) {
-    DataBuffer *r = reinterpret_cast<DataBuffer *>(sessionInfo->balloc(sizeof(DataBuffer)));
+    DataBuffer *r = new DataBuffer();
     r->next = nullptr;
     r->size = static_cast<uint16_t>(size);
-    r->data = sessionInfo->balloc(sizeof(r->size));
+    r->data = static_cast<uint8_t *>(malloc(r->size));
     r->sent = 0;
 
     return r;

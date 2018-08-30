@@ -194,15 +194,11 @@ void free_ctx(TlsCtx *ctx) {
 
     if (ctx == nullptr)
         return;
-
-    if (ctx->ctx) {
-        SSL_CTX_free(ctx->ctx);
-        ctx->ctx = nullptr;
-    }
-    if (ctx->ssl) {
-        SSL_free(ctx->ssl);
-        ctx->ssl = nullptr;
-    }
+//
+//    if (ctx->ctx) {
+//        SSL_CTX_free(ctx->ctx);
+//        ctx->ctx = nullptr;
+//    }
 
     if (ctx->in_bio) {
         BIO_free(ctx->in_bio);
@@ -213,6 +209,12 @@ void free_ctx(TlsCtx *ctx) {
         BIO_free(ctx->out_bio);
         ctx->out_bio = nullptr;
     }
+
+    if (ctx->ssl) {
+        SSL_free(ctx->ssl);
+        ctx->ssl = nullptr;
+    }
+
 
     delete ctx;
 

@@ -20,7 +20,7 @@ IpPackage *Ip4Handler::handlePackage(uint8_t *pkt, size_t pktSize) {
     IpPackage *p = new IpPackage();
 
     p->handler = this;
-    p->versoin = IPVERSION;
+    p->version = IPVERSION;
     p->dstAddr.ip4 = ip4hdr->daddr;
     p->srcAddr.ip4 = ip4hdr->saddr;
     p->pkt = pkt;

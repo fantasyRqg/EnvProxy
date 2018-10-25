@@ -8,10 +8,11 @@
 #include <cstring>
 #include <netinet/in6.h>
 #include <arpa/inet.h>
+#include <netinet/ip.h>
 
 #include "TlsSession.h"
 
-//#define ENABLE_LOG
+#define ENABLE_LOG
 
 #include "../log.h"
 #include "../proxyTypes.h"
@@ -103,8 +104,8 @@ int ssl_init(TlsCtx *k, int isserver, info_callback cb) {
         SSL_set_connect_state(k->ssl);
     }
 
-    ALOGV("ssl_init: isserver %d, ctx %p , ssl %p , in_bio %p , out_bio %p", isserver, k->ctx,
-          k->ssl, k->in_bio, k->out_bio);
+//    ALOGV("ssl_init: isserver %d, ctx %p , ssl %p , in_bio %p , out_bio %p", isserver, k->ctx,
+//          k->ssl, k->in_bio, k->out_bio);
 
 
     return 0;
@@ -153,8 +154,8 @@ void ssl_info_callback(const SSL *ssl, int where, int ret, const char *name) {
         return;
     }
 
-//    ALOGV("+ %s %20.20s  - %30.30s  - %5.10s", name, getSSLCbMsg(where),
-//          SSL_state_string_long(ssl), SSL_state_string(ssl));
+    ALOGV("+ %s %20.20s  - %30.30s  - %5.10s", name, getSSLCbMsg(where),
+          SSL_state_string_long(ssl), SSL_state_string(ssl));
 }
 
 void ssl_server_info_callback(const SSL *ssl, int where, int ret) {
@@ -183,32 +184,18 @@ TlsSession::TlsSession(SessionInfo *sessionInfo)
         ALOGE("init server ssl fail");
     }
 
-    char dest[INET6_ADDRSTRLEN + 1];
-    inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, dest, sizeof(dest));
-    ALOGI("TlsSession %p new %s", this, dest);
+
+    ADDR_TO_STR(sessionInfo)
+    ALOGI("TlsSession %p new from %s:%d to %s:%d", this, source, sessionInfo->sPort, dest,
+          sessionInfo->dPort);
 }
 
 void free_ctx(TlsCtx *ctx) {
-    ALOGD("free ctx %p, ctx %p , ssl %p , in_bio %p , out_bio %p", ctx, ctx->ctx,
-          ctx->ssl, ctx->in_bio, ctx->out_bio);
+//    ALOGD("free ctx %p, ctx %p , ssl %p , in_bio %p , out_bio %p", ctx, ctx->ctx,
+//          ctx->ssl, ctx->in_bio, ctx->out_bio);
 
     if (ctx == nullptr)
         return;
-//
-//    if (ctx->ctx) {
-//        SSL_CTX_free(ctx->ctx);
-//        ctx->ctx = nullptr;
-//    }
-
-    if (ctx->in_bio) {
-        BIO_free(ctx->in_bio);
-        ctx->in_bio = nullptr;
-    }
-
-    if (ctx->out_bio) {
-        BIO_free(ctx->out_bio);
-        ctx->out_bio = nullptr;
-    }
 
     if (ctx->ssl) {
         SSL_free(ctx->ssl);
@@ -231,10 +218,14 @@ TlsSession::~TlsSession() {
         free_ctx(mClient);
         mClient = nullptr;
     }
-
 }
 
 int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
+    ADDR_TO_STR(sessionInfo)
+    ALOGI("onTunDown %p new from %s:%d to %s:%d , data size = %u", this, source, sessionInfo->sPort,
+          dest,
+          sessionInfo->dPort, downData->size);
+
     int tun_write_size = BIO_write(mTunServer->in_bio, downData->data, downData->size);
 
     if (tun_write_size != downData->size) {
@@ -243,23 +234,23 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
         return -1;
     }
 
-
-    if (tun_write_size <= 0) {
-        ALOGE("write tun server bio error, write size %d, data size %u", tun_write_size,
-              downData->size);
-        freeLinkDataBuffer(sessionInfo, downData);
-        return -1;
-    }
-
-    int o_size = BIO_ctrl_pending(mTunServer->out_bio);
-
-    if (o_size > 0) {
-        auto to_tun_data = createDataBuffer(sessionInfo, static_cast<size_t>(o_size));
-        BIO_read(mTunServer->out_bio, to_tun_data->data, to_tun_data->size);
-
-        //write data to tun
-        prev->onSocketUp(sessionInfo, to_tun_data);
-    }
+//
+//    if (tun_write_size <= 0) {
+//        ALOGE("write tun server bio error, write size %d, data size %u", tun_write_size,
+//              downData->size);
+//        freeLinkDataBuffer(sessionInfo, downData);
+//        return -1;
+//    }
+//
+//    int o_size = BIO_ctrl_pending(mTunServer->out_bio);
+//
+//    if (o_size > 0) {
+//        auto to_tun_data = createDataBuffer(sessionInfo, static_cast<size_t>(o_size));
+//        BIO_read(mTunServer->out_bio, to_tun_data->data, to_tun_data->size);
+//
+//        //write data to tun
+//        prev->onSocketUp(sessionInfo, to_tun_data);
+//    }
 
     if (!SSL_is_init_finished(mTunServer->ssl)) {
         auto s_s_r = SSL_do_handshake(mTunServer->ssl);

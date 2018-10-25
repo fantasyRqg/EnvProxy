@@ -15,12 +15,14 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import okhttp3.*
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Proxy
 import java.security.KeyStore
 import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
@@ -73,7 +75,11 @@ class MainActivity : Activity() {
 //            Observable.just("https://www.baidu.com")
                     .subscribeOn(Schedulers.io())
                     .map {
-                        val client = OkHttpClient()
+                        val client = OkHttpClient.Builder()
+                                .retryOnConnectionFailure(false)
+//                                .eventListener(LogEventListener)
+                                .build()
+
                         val request = Request.Builder()
                                 .url(it)
                                 .build()
@@ -229,5 +235,90 @@ class MainActivity : Activity() {
             }
 
         }
+    }
+}
+
+
+object LogEventListener : EventListener() {
+    private const val TAG = "LogEventListener"
+
+    override fun connectFailed(call: Call?, inetSocketAddress: InetSocketAddress?, proxy: Proxy?, protocol: Protocol?, ioe: IOException?) {
+        Log.d(TAG, "connectFailed() called with: call = [ ${call} ], inetSocketAddress = [ ${inetSocketAddress} ], proxy = [ ${proxy} ], protocol = [ ${protocol} ], ioe = [ ${ioe} ]")
+    }
+
+    override fun responseHeadersStart(call: Call?) {
+        Log.d(TAG, "responseHeadersStart() called with: call = [ ${call} ]")
+    }
+
+    override fun connectionAcquired(call: Call?, connection: Connection?) {
+        Log.d(TAG, "connectionAcquired() called with: call = [ ${call} ], connection = [ ${connection} ]")
+    }
+
+    override fun connectionReleased(call: Call?, connection: Connection?) {
+        Log.d(TAG, "connectionReleased() called with: call = [ ${call} ], connection = [ ${connection} ]")
+    }
+
+    override fun callEnd(call: Call?) {
+        Log.d(TAG, "callEnd() called with: call = [ ${call} ]")
+    }
+
+    override fun requestHeadersStart(call: Call?) {
+        Log.d(TAG, "requestHeadersStart() called with: call = [ ${call} ]")
+    }
+
+    override fun requestBodyEnd(call: Call?, byteCount: Long) {
+        Log.d(TAG, "requestBodyEnd() called with: call = [ ${call} ], byteCount = [ ${byteCount} ]")
+    }
+
+    override fun requestBodyStart(call: Call?) {
+        Log.d(TAG, "requestBodyStart() called with: call = [ ${call} ]")
+    }
+
+    override fun callFailed(call: Call?, ioe: IOException?) {
+        Log.d(TAG, "callFailed() called with: call = [ ${call} ], ioe = [ ${ioe} ]")
+    }
+
+    override fun connectEnd(call: Call?, inetSocketAddress: InetSocketAddress?, proxy: Proxy?, protocol: Protocol?) {
+        Log.d(TAG, "connectEnd() called with: call = [ ${call} ], inetSocketAddress = [ ${inetSocketAddress} ], proxy = [ ${proxy} ], protocol = [ ${protocol} ]")
+    }
+
+    override fun responseBodyStart(call: Call?) {
+        Log.d(TAG, "responseBodyStart() called with: call = [ ${call} ]")
+    }
+
+    override fun secureConnectStart(call: Call?) {
+        Log.d(TAG, "secureConnectStart() called with: call = [ ${call} ]")
+    }
+
+    override fun dnsEnd(call: Call?, domainName: String?, inetAddressList: MutableList<InetAddress>?) {
+        Log.d(TAG, "dnsEnd() called with: call = [ ${call} ], domainName = [ ${domainName} ], inetAddressList = [ ${inetAddressList} ]")
+    }
+
+    override fun connectStart(call: Call?, inetSocketAddress: InetSocketAddress?, proxy: Proxy?) {
+        Log.d(TAG, "connectStart() called with: call = [ ${call} ], inetSocketAddress = [ ${inetSocketAddress} ], proxy = [ ${proxy} ]")
+    }
+
+    override fun requestHeadersEnd(call: Call?, request: Request?) {
+        Log.d(TAG, "requestHeadersEnd() called with: call = [ ${call} ], request = [ ${request} ]")
+    }
+
+    override fun responseHeadersEnd(call: Call?, response: Response?) {
+        Log.d(TAG, "responseHeadersEnd() called with: call = [ ${call} ], response = [ ${response} ]")
+    }
+
+    override fun callStart(call: Call?) {
+        Log.d(TAG, "callStart() called with: call = [ ${call} ]")
+    }
+
+    override fun responseBodyEnd(call: Call?, byteCount: Long) {
+        Log.d(TAG, "responseBodyEnd() called with: call = [ ${call} ], byteCount = [ ${byteCount} ]")
+    }
+
+    override fun dnsStart(call: Call?, domainName: String?) {
+        Log.d(TAG, "dnsStart() called with: call = [ ${call} ], domainName = [ ${domainName} ]")
+    }
+
+    override fun secureConnectEnd(call: Call?, handshake: Handshake?) {
+        Log.d(TAG, "secureConnectEnd() called with: call = [ ${call} ], handshake = [ ${handshake} ]")
     }
 }

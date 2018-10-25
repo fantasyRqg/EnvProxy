@@ -34,10 +34,10 @@
 
 #define ADDR_TO_STR(ipPkt)      char source[INET6_ADDRSTRLEN + 1]; \
                                 char dest[INET6_ADDRSTRLEN + 1]; \
-                                if (ipPkt->versoin == IPVERSION) { \
+                                if (ipPkt->version == IPVERSION) { \
                                     inet_ntop(AF_INET, &ipPkt->srcAddr.ip4, source, sizeof(source)); \
                                     inet_ntop(AF_INET, &ipPkt->dstAddr.ip4, dest, sizeof(dest)); \
-                                } else if (ipPkt->versoin == IPV6_VERSION) { \
+                                } else if (ipPkt->version == IPV6_VERSION) { \
                                     inet_ntop(AF_INET6, &ipPkt->srcAddr.ip6, source, sizeof(source)); \
                                     inet_ntop(AF_INET6, &ipPkt->dstAddr.ip6, dest, sizeof(dest)); \
                                 }

@@ -83,7 +83,7 @@ public:
     uint8_t *payload = nullptr;
     size_t payloadSize;
     IpHandler *handler = nullptr;
-    int versoin;
+    int version;
 
 public:
     ~IpPackage();
@@ -116,7 +116,7 @@ struct SessionInfo {
     uint8_t protocol;
     uint16_t sPort;
     uint16_t dPort;
-    int ipVersoin;
+    int version;
     Session *session = nullptr;
     time_t lastActive;
     ProxyContext *context = nullptr;

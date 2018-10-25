@@ -41,6 +41,7 @@ add_library(libProxy
             src/main/cpp/session/TcpSession.cpp
             src/main/cpp/session/UdpSession.cpp
             src/main/cpp/session/SessionFactory.cpp
+            src/main/cpp/CertManager.cpp
             )
 
 # add to target_include_directories

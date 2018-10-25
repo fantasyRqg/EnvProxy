@@ -69,7 +69,7 @@ void IcmpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pk
     // http://lwn.net/Articles/443051/
     icmp->icmp_id = ~icmp->icmp_id;
     uint16_t csum = 0;
-//    if (pkt->ipPackage->versoin == 6) {
+//    if (pkt->ipPackage->version == 6) {
 //        // Untested
 //        struct ip6_hdr_pseudo pseudo;
 //        memset(&pseudo, 0, sizeof(struct ip6_hdr_pseudo));
@@ -92,7 +92,7 @@ void IcmpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pk
 
     struct sockaddr_in server4;
     struct sockaddr_in6 server6;
-    bool isIp4 = pkt->ipPackage->versoin == IPVERSION;
+    bool isIp4 = pkt->ipPackage->version == IPVERSION;
     if (isIp4) {
         server4.sin_family = AF_INET;
         server4.sin_addr.s_addr = static_cast<__be32>(pkt->ipPackage->dstAddr.ip4);
@@ -164,7 +164,7 @@ ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
 //        memcpy(&(ip6->ip6_dst), &sessionInfo->srcAddr.ip6, 16);
 //    }
 
-    bool isIP4 = sessionInfo->ipVersoin == IPVERSION;
+    bool isIP4 = sessionInfo->version == IPVERSION;
     inet_ntop(isIP4 ? AF_INET : AF_INET6,
               isIP4 ? (const void *) &sessionInfo->srcAddr.ip4
                     : (const void *) &sessionInfo->srcAddr.ip6,
@@ -217,7 +217,7 @@ void IcmpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
         if (ev->events & EPOLLIN) {
             sessionInfo->lastActive = time(NULL);
 
-            uint16_t blen = (uint16_t) (sessionInfo->ipVersoin == IPVERSION ? ICMP4_MAXMSG
+            uint16_t blen = (uint16_t) (sessionInfo->version == IPVERSION ? ICMP4_MAXMSG
                                                                             : ICMP6_MAXMSG);
             uint8_t *buffer = static_cast<uint8_t *>(malloc(blen));
             ssize_t bytes = recv(status->socket, buffer, blen, 0);
@@ -234,7 +234,7 @@ void IcmpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
             } else {
                 // Socket read data
                 char dest[INET6_ADDRSTRLEN + 1];
-                if (sessionInfo->ipVersoin == IPVERSION)
+                if (sessionInfo->version == IPVERSION)
                     inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
                 else
                     inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
@@ -337,7 +337,7 @@ int IcmpHandler::checkSession(SessionInfo *sessionInfo) {
     if (status->stop || sessionInfo->lastActive + timeout < now) {
         char source[INET6_ADDRSTRLEN + 1];
         char dest[INET6_ADDRSTRLEN + 1];
-        if (sessionInfo->ipVersoin == IPVERSION) {
+        if (sessionInfo->version == IPVERSION) {
             inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
             inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
         } else {

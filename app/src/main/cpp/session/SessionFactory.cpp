@@ -54,16 +54,16 @@ static inline int ipv6_addr_cmp(const struct in6_addr *a1, const struct in6_addr
 }
 
 static inline bool matchSession(struct SessionInfo *session, TransportPkt *pkt) {
-    if (pkt->ipPackage->versoin != session->ipVersoin)
+    if (pkt->ipPackage->version != session->version)
         return false;
 
-    if (pkt->ipPackage->versoin == IPVERSION) {
+    if (pkt->ipPackage->version == IPVERSION) {
         return session->protocol == pkt->ipPackage->protocol
                && session->srcAddr.ip4 == pkt->ipPackage->srcAddr.ip4
                && session->dstAddr.ip4 == pkt->ipPackage->dstAddr.ip4
                && session->sPort == pkt->sPort
                && session->dPort == pkt->dPort;
-    } else if (pkt->ipPackage->versoin == IPV6_VERSION) {
+    } else if (pkt->ipPackage->version == IPV6_VERSION) {
         return session->protocol == pkt->ipPackage->protocol
                && ipv6_addr_cmp(&session->srcAddr.ip6, &pkt->ipPackage->srcAddr.ip6) == 0
                && ipv6_addr_cmp(&session->dstAddr.ip6, &pkt->ipPackage->dstAddr.ip6) == 0
@@ -115,7 +115,8 @@ static void buildSessionProcess(SessionInfo *si) {
                 http->next = nullptr;
 
                 tcp->next = http;
-            } else if (si->dPort == 443) {
+            }
+            else if (si->dPort == 443) {
                 auto tls = new TlsSession(si);
                 auto http = new HttpSession(si);
                 tls->next = http;
@@ -164,11 +165,11 @@ struct SessionInfo *SessionFactory::createSession(TransportPkt *pkt) {
     mSessions = s;
 
     IpPackage *ip = pkt->ipPackage;
-    s->ipVersoin = ip->versoin;
+    s->version = ip->version;
     s->dstAddr = ip->dstAddr;
     s->srcAddr = ip->srcAddr;
     s->protocol = ip->protocol;
-    s->ipVersoin = ip->versoin;
+    s->version = ip->version;
     s->context = ip->handler->getProxyContext();
     s->ipHandler = ip->handler;
 

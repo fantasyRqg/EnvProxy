@@ -315,7 +315,7 @@ void proxyEngine::handleEvents() {
                       (ev[i].events & EPOLLOUT) != 0,
                       (ev[i].events & EPOLLERR) != 0,
                       (ev[i].events & EPOLLHUP) != 0,
-                      si->ipVersoin,
+                      si->version,
                       si->protocol
                 );
                 //process socket data incoming

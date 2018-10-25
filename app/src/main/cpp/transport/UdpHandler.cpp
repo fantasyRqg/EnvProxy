@@ -162,7 +162,7 @@ int open_udp_socket(SessionInfo *sessionInfo, UdpStatus *status) {
 //        version = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
 
     // Get UDP socket
-    sock = socket(sessionInfo->ipVersoin == IPVERSION ? PF_INET : PF_INET6, SOCK_DGRAM,
+    sock = socket(sessionInfo->version == IPVERSION ? PF_INET : PF_INET6, SOCK_DGRAM,
                   IPPROTO_UDP);
     if (sock < 0) {
         ALOGE("UDP socket error %d: %s", errno, strerror(errno));
@@ -178,7 +178,7 @@ int open_udp_socket(SessionInfo *sessionInfo, UdpStatus *status) {
 
 
     // Check for broadcast/multicast
-    if (sessionInfo->ipVersoin == IPVERSION) {
+    if (sessionInfo->version == IPVERSION) {
         uint32_t broadcast4 = INADDR_BROADCAST;
         if (memcmp(&sessionInfo->dstAddr.ip4, &broadcast4, sizeof(broadcast4)) == 0) {
             ALOGW("UDP4 broadcast");
@@ -293,7 +293,7 @@ ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
     csum = calc_checksum(csum, data, datalen);
     udp->check = ~csum;
 
-    bool isIp4 = sessionInfo->ipVersoin == IPVERSION;
+    bool isIp4 = sessionInfo->version == IPVERSION;
     inet_ntop(isIp4 ? AF_INET : AF_INET6,
               (isIp4 ? (const void *) &sessionInfo->srcAddr.ip4
                      : (const void *) &sessionInfo->srcAddr.ip6),
@@ -366,7 +366,7 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
             } else {
                 // Socket read data
                 char dest[INET6_ADDRSTRLEN + 1];
-                if (sessionInfo->ipVersoin == IPVERSION)
+                if (sessionInfo->version == IPVERSION)
                     inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
                 else
                     inet_ntop(AF_INET6, &sessionInfo->dstAddr.ip6, dest, sizeof(dest));
@@ -403,7 +403,7 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 
     sessionInfo->lastActive = time(NULL);
 
-    int rversion = sessionInfo->ipVersoin;
+    int rversion = sessionInfo->version;
 //    if (redirect == NULL)
 //        rversion = status->version;
 //    else
@@ -458,7 +458,7 @@ int UdpHandler::checkSession(SessionInfo *sessionInfo) {
 
     char source[INET6_ADDRSTRLEN + 1];
     char dest[INET6_ADDRSTRLEN + 1];
-    if (sessionInfo->ipVersoin == IPVERSION) {
+    if (sessionInfo->version == IPVERSION) {
         inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
         inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
     } else {
@@ -563,7 +563,7 @@ int UdpHandler::dataToSocket(SessionInfo *sessionInfo, DataBuffer *data) {
     struct sockaddr_in addr4;
     struct sockaddr_in6 addr6;
 //    if (redirect == NULL) {
-    rversion = sessionInfo->ipVersoin;
+    rversion = sessionInfo->version;
     if (rversion == IPVERSION) {
         addr4.sin_family = AF_INET;
         addr4.sin_addr.s_addr = (__be32) sessionInfo->dstAddr.ip4;

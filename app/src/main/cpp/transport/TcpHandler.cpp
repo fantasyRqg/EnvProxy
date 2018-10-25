@@ -224,8 +224,9 @@ void queue_tcp(SessionInfo *sessionInfo,
         memcpy(dbuff->data, data, datalen);
         dbuff->next = nullptr;
         dbuff->sent = 0;
-        sessionInfo->session->onTunDown(sessionInfo, dbuff);
+        //keep remote_seq change before onTunDown
         status->remote_seq = seq + datalen;
+        sessionInfo->session->onTunDown(sessionInfo, dbuff);
 
 
 
@@ -282,15 +283,15 @@ void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
 
     char packet[250];
     getPackageStr(pkt, status, packet);
+//
+//    if (status->skipFirst) {
+//        status->skipFirst = false;
+//        // first pkt handle by createStatus
+//        ALOGV("%s, skip first pkt process", packet);
+//        return;
+//    }
 
-    if (status->skipFirst) {
-        status->skipFirst = false;
-        // first pkt handle by createStatus
-        ALOGV("%s, skip first pkt process", packet);
-        return;
-    }
-
-    ALOGD("%s", packet);
+    ALOGV("processTransportPkt %s", packet);
 
     const uint8_t tcpoptlen = (uint8_t) ((tcphdr->doff - 5) * 4);
     size_t tcphdrSize = sizeof(struct tcphdr);
@@ -350,9 +351,14 @@ void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
         } else {
             if (!tcphdr->ack || ntohl(tcphdr->ack_seq) == status->local_seq) {
                 if (tcphdr->syn) {
-                    ALOGW("%s repeated SYN", str_session);
                     // The socket is probably not opened yet
-
+                    if (status->skipFirst) {
+                        status->skipFirst = false;
+                        // first pkt handle by createStatus
+//                        ALOGV("%s, skip first pkt process", packet);
+                    } else {
+                        ALOGW("%s repeated SYN", str_session);
+                    }
                 } else if (tcphdr->fin /* +ACK */) {
                     if (status->state == TCP_ESTABLISHED) {
                         ALOGW("%s FIN received", str_session);
@@ -435,7 +441,7 @@ void TcpHandler::processTransportPkt(SessionInfo *sessionInfo, TransportPkt *pkt
 
                     return;
                 } else {
-                    ALOGE("%s future ACK", str_session);
+                    ALOGE("%s future ACK %u", str_session, ack - status->local_seq);
                     write_rst(sessionInfo, status);
                     return;
                 }
@@ -482,7 +488,7 @@ int get_receive_buffer(TcpStatus *s);
 
 int open_tcp_socket(const struct SessionInfo *sessionInfo) {
     int sock;
-    int version = sessionInfo->ipVersoin;
+    int version = sessionInfo->version;
 //    if (redirect == nullptr) {
 //        if (*socks5_addr && socks5_port)
 //            version = (strstr(socks5_addr, ":") == nullptr ? 4 : 6);
@@ -572,7 +578,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
     // Build packet
     int optlen = (syn ? 4 + 3 + 1 : 0);
     uint8_t *options;
-    bool isIp4 = sessionInfo->ipVersoin == IPVERSION;
+    bool isIp4 = sessionInfo->version == IPVERSION;
     if (isIp4) {
         len = sizeof(struct iphdr) + sizeof(struct tcphdr) + optlen + datalen;
         buffer = static_cast<u_int8_t *>(malloc(len));
@@ -656,7 +662,7 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
         *(options) = 2; // MSS
         *(options + 1) = 4; // total option length
         *((uint16_t *) (options + 2)) = get_default_mss(sessionInfo->context,
-                                                        sessionInfo->ipVersoin);
+                                                        sessionInfo->version);
 
         *(options + 4) = 3; // window scale
         *(options + 5) = 3; // total option length
@@ -685,14 +691,14 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
               dest, sizeof(dest));
 
     // Send packet
-    ALOGD("TCP sending%s%s%s%s to tun %s/%u seq %u ack %u data %zu",
+    ALOGD("write_tcp TCP sending%s%s%s%s to tun %s/%u seq %u ack %u data %zu",
           (tcp->syn ? " SYN" : ""),
           (tcp->ack ? " ACK" : ""),
           (tcp->fin ? " FIN" : ""),
           (tcp->rst ? " RST" : ""),
           dest, ntohs(tcp->dest),
-          sessionInfo->sPort,
-//          ntohl(tcp->seq) - status->local_start,
+//          sessionInfo->sPort,
+          ntohl(tcp->seq) - status->local_start,
           ntohl(tcp->ack_seq) - status->remote_start,
           datalen);
 
@@ -755,7 +761,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
 
     char source[INET6_ADDRSTRLEN + 1];
     char dest[INET6_ADDRSTRLEN + 1];
-    if (sessionInfo->ipVersoin == IPVERSION) {
+    if (sessionInfo->version == IPVERSION) {
         inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
         inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
     } else {
@@ -888,7 +894,7 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
                         dbuff->next = nullptr;
                         dbuff->sent = 0;
                         if (sessionInfo->session->onSocketDown(sessionInfo, dbuff) == 0) {
-                            status->local_seq += bytes;
+//                            status->local_seq += bytes;
                         }
                     }
                 }
@@ -907,7 +913,7 @@ int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
 
     char source[INET6_ADDRSTRLEN + 1];
     char dest[INET6_ADDRSTRLEN + 1];
-    if (sessionInfo->ipVersoin == IPVERSION) {
+    if (sessionInfo->version == IPVERSION) {
         inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
         inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
     } else {
@@ -1005,7 +1011,7 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
     if (tcphdr->syn) {
         // Decode options
         // http://www.iana.org/assignments/tcp-parameters/tcp-parameters.xhtml#tcp-parameters-1
-        uint16_t mss = get_default_mss(sessionInfo->context, firstPkt->ipPackage->versoin);
+        uint16_t mss = get_default_mss(sessionInfo->context, firstPkt->ipPackage->version);
         uint8_t ws = 0;
         int optlen = tcpoptlen;
         uint8_t *options = (uint8_t *) tcpoptions;
@@ -1037,7 +1043,7 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
         // Register session
         sessionInfo->protocol = IPPROTO_TCP;
         sessionInfo->lastActive = time(nullptr);
-        sessionInfo->ipVersoin = firstPkt->ipPackage->versoin;
+        sessionInfo->version = firstPkt->ipPackage->version;
 
         status->mss = mss;
         status->recv_scale = ws;
@@ -1114,7 +1120,7 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 //                addr6.sin6_port = htons(socks5_port);
 //            }
 //        } else {
-        if (sessionInfo->ipVersoin == IPVERSION) {
+        if (sessionInfo->version == IPVERSION) {
             addr4.sin_family = AF_INET;
             addr4.sin_addr.s_addr = (__be32) sessionInfo->dstAddr.ip4;
             addr4.sin_port = htons(sessionInfo->dPort);
@@ -1141,9 +1147,9 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 
 // Initiate connect
         int err = connect(status->socket,
-                          (sessionInfo->ipVersoin == IPVERSION ? (const struct sockaddr *) &addr4
-                                                               : (const struct sockaddr *) &addr6),
-                          (socklen_t) (sessionInfo->ipVersoin == IPVERSION
+                          (sessionInfo->version == IPVERSION ? (const struct sockaddr *) &addr4
+                                                             : (const struct sockaddr *) &addr6),
+                          (socklen_t) (sessionInfo->version == IPVERSION
                                        ? sizeof(struct sockaddr_in)
                                        : sizeof(struct sockaddr_in6)));
         if (err < 0 && errno != EINPROGRESS) {
@@ -1256,7 +1262,7 @@ void closeSocket(SessionInfo *sessionInfo, TcpStatus *status) {
 
     char source[INET6_ADDRSTRLEN + 1];
     char dest[INET6_ADDRSTRLEN + 1];
-    if (sessionInfo->ipVersoin == IPVERSION) {
+    if (sessionInfo->version == IPVERSION) {
         inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
         inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
     } else {
@@ -1299,7 +1305,7 @@ int TcpHandler::checkSession(SessionInfo *sessionInfo) {
 
     char source[INET6_ADDRSTRLEN + 1];
     char dest[INET6_ADDRSTRLEN + 1];
-    if (sessionInfo->ipVersoin == IPVERSION) {
+    if (sessionInfo->version == IPVERSION) {
         inet_ntop(AF_INET, &sessionInfo->srcAddr.ip4, source, sizeof(source));
         inet_ntop(AF_INET, &sessionInfo->dstAddr.ip4, dest, sizeof(dest));
     } else {
@@ -1389,6 +1395,8 @@ int TcpHandler::dataToTun(SessionInfo *sessionInfo, DataBuffer *data) {
             freeLinkDataBuffer(sessionInfo, d);
             return -1;
         }
+
+        status->local_seq += d->size;
 
         auto tmp = d;
         d = d->next;

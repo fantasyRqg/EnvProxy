@@ -87,4 +87,6 @@ public class ProxyNative {
     private static native void initClass();
 
     public static native int getMTU();
+
+    public static native String genRsaAes256l2048();
 }

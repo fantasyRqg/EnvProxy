@@ -62,9 +62,6 @@ struct ProxyContext {
     size_t mtu;
     int maxSessions;
     int sessionCount;
-
-    SSL_CTX *serverCtx;
-    SSL_CTX *clientCtx;
 };
 
 //#define balloc context->bufferPool->allocBuffer
@@ -190,5 +187,11 @@ typedef struct dns_rr {
     __be32 ttl;
     __be16 rdlength;
 } __packed dns_rr;
+
+
+typedef struct SSLCert{
+    SSL_CTX *serverCtx;
+    SSL_CTX *clientCtx;
+};
 
 #endif //ENVPROXY_PROXYTYPES_H

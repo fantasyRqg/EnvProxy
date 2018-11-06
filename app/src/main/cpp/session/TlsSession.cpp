@@ -172,14 +172,14 @@ TlsSession::TlsSession(SessionInfo *sessionInfo)
           mClient(nullptr), mPenddingData(nullptr) {
     mTunServer = new TlsCtx();
 
-    mTunServer->ctx = sessionInfo->context->serverCtx;
+//    mTunServer->ctx = sessionInfo->context->serverCtx;
 
     if (ssl_init(mTunServer, 1, ssl_server_info_callback) != 0) {
         ALOGE("init server ssl fail");
     }
 
     mClient = new TlsCtx();
-    mClient->ctx = sessionInfo->context->clientCtx;
+//    mClient->ctx = sessionInfo->context->clientCtx;
     if (ssl_init(mClient, 0, ssl_client_info_callback) != 0) {
         ALOGE("init server ssl fail");
     }

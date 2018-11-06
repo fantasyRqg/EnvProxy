@@ -9,12 +9,14 @@
 #include <string>
 #include <openssl/ossl_typ.h>
 
+struct SSLCert;
+
 class CertManager {
 public:
-    SSL_CTX *getSSLCtx(std::string hostName);
+    SSLCert *getSSLCtx(std::string hostName);
 
 private:
-    std::map<std::string, SSL_CTX *> certMap;
+    std::map<std::string, SSLCert *> certMap;
 };
 
 

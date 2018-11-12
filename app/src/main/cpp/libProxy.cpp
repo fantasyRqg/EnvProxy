@@ -7,7 +7,7 @@
 #include "jni.h"
 #include "proxyEngine.h"
 #include "log.h"
-#include "ssl/genrsa.h"
+#include "ssl/ssl.h"
 
 
 #define SOCKT_MTU  10000
@@ -82,14 +82,16 @@ void createRootCa(JNIEnv *env, jobject thiz, jstring name) {
 jstring genRsaAes256l2048(JNIEnv *env, jclass) {
     auto bio = genrsaAes256l2048();
 
-    if (bio != nullptr) {
-        auto len = BIO_ctrl_pending(bio);
-        char *data = static_cast<char *>(malloc(len + 1));
-        memset(data, 0, len + 1);
-        BIO_read(bio, data, len);
-        BIO_free_all(bio);
-        return env->NewStringUTF(data);
-    }
+    req_main(bio);
+
+//    if (bio != nullptr) {
+//        auto len = BIO_ctrl_pending(bio);
+//        char *data = static_cast<char *>(malloc(len + 1));
+//        memset(data, 0, len + 1);
+//        BIO_read(bio, data, len);
+//        BIO_free_all(bio);
+//        return env->NewStringUTF(data);
+//    }
 
     return nullptr;
 }

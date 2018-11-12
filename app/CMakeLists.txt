@@ -43,6 +43,7 @@ add_library(libProxy
             src/main/cpp/session/SessionFactory.cpp
             src/main/cpp/CertManager.cpp
             src/main/cpp/ssl/genrsa.cpp
+            src/main/cpp/ssl/req.cpp
 
             )
 

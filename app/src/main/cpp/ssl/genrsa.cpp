@@ -9,6 +9,7 @@
 #include <openssl/pem.h>
 #include <cstring>
 #include "../log.h"
+#include "ssl.h"
 
 # define DEFBITS 2048
 # define DEFPRIMES 2
@@ -16,8 +17,6 @@
 #define LOG_TAG "genrsa"
 
 static int genrsa_cb(int p, int n, BN_GENCB *cb);
-
-int password_callback(char *buf, int bufsiz, int verify, void *cb_tmp);
 
 BIO *genrsa_main() {
 

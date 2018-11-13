@@ -78,7 +78,7 @@ int rand_serial(BIGNUM *b, ASN1_INTEGER *ai) {
     return ret;
 }
 
-int req_main(BIO *pkeyBio) {
+int req_main(BIO *pkeyBio, bool isReq) {
     ASN1_INTEGER *serial = NULL;
     EVP_PKEY *pkey = NULL;
     EVP_PKEY_CTX *genctx = NULL;
@@ -108,8 +108,13 @@ int req_main(BIO *pkeyBio) {
     days = 3000;
     opt_md("sha256", &md_alg);
     digest = md_alg;
-    extensions = "v3_ca";
     req_conf = app_load_config();
+
+    if (isReq) {
+        extensions = NULL;
+    } else {
+        extensions = "v3_ca";
+    }
 
 
     if (!ASN1_STRING_set_default_mask_asc("utf8only")) {
@@ -178,7 +183,11 @@ int req_main(BIO *pkeyBio) {
 
 
     out = BIO_new(BIO_s_mem());
-    PEM_write_bio_X509(out, x509ss);
+    if (isReq) {
+        PEM_write_bio_X509_REQ(out, req);
+    } else {
+        PEM_write_bio_X509(out, x509ss);
+    }
     outLen = BIO_ctrl_pending(out);
     outStr = static_cast<char *>(malloc(outLen + 1));
     BIO_read(out, outStr, outLen);

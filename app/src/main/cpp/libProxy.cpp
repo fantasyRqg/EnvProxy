@@ -82,7 +82,7 @@ void createRootCa(JNIEnv *env, jobject thiz, jstring name) {
 jstring genRsaAes256l2048(JNIEnv *env, jclass) {
     auto bio = genrsaAes256l2048();
 
-    req_main(bio);
+    req_main(bio, true);
 
 //    if (bio != nullptr) {
 //        auto len = BIO_ctrl_pending(bio);

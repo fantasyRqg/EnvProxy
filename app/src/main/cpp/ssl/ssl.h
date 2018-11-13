@@ -19,7 +19,7 @@
 
 BIO *genrsaAes256l2048();
 
-int req_main(BIO *pkeyBio);
+int req_main(BIO *pkeyBio, bool isReq);
 
 int password_callback(char *buf, int bufsiz, int verify, void *cb_tmp);
 

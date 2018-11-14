@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include <openssl/bio.h>
 #include <cstring>
+#include <unistd.h>
 #include "jni.h"
 #include "proxyEngine.h"
 #include "log.h"
-#include "ssl/ssl.h"
 
 
 #define SOCKT_MTU  10000
@@ -80,9 +80,8 @@ void createRootCa(JNIEnv *env, jobject thiz, jstring name) {
 
 
 jstring genRsaAes256l2048(JNIEnv *env, jclass) {
-    auto bio = genrsaAes256l2048();
 
-    req_main(bio, true);
+//    system()
 
 //    if (bio != nullptr) {
 //        auto len = BIO_ctrl_pending(bio);

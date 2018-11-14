@@ -12,19 +12,21 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.*
-import java.io.File
+import okhttp3.EventListener
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.security.KeyStore
 import java.security.KeyStoreException
+import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import java.util.*
 
 
 class MainActivity : Activity() {
@@ -33,19 +35,16 @@ class MainActivity : Activity() {
         private const val REQUEST_CONNECT = 0
         private const val REQUEST_INSTALL_CERT = 1
 
-        const val PEM_CHAIN_CERT = "ca-chain.cert.pem"
-        const val PEM_ENV2_KEY = "www.env2.com.key.pem"
-        const val PEM_ENV2_CERT = "www.evn2.com.cert.pem"
-        const val PEM_DIR = "pems"
-
+        val ROOT_CA_FINGERPRINT_SHA1 = "7E05BA80BEC8098FE4EAF636499F9E86FE2FCBDC".hexStringToByteArray()
     }
 
+    private val sslCmd by lazy { SSLCmd(this) }
+    private var sslCmdReady = false
+    private var sslRootCertReady = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-
 
         tcp_count.text = getString(R.string.tcp_count, 0)
         udp_count.text = getString(R.string.udp_count, 0)
@@ -109,15 +108,33 @@ class MainActivity : Activity() {
         val subscribe = Observable.just(true)
                 .observeOn(Schedulers.io())
                 .map {
-                    makeSurePems()
+                    sslCmdReady = sslCmd.prepareOpenSSLExecutable()
                     it
                 }
-                .filter {
-                    !checkCAInstalled()
+                .map {
+                    if (!checkCAInstalled()) {
+                        installCa()
+                    }
+
+                    it
                 }
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    installCa()
+                    updateRootCertStatus()
                 }
+    }
+
+
+    private fun updateRootCertStatus() {
+        sslRootCertReady = checkCAInstalled()
+
+        if (sslRootCertReady) {
+            cert_status.text = "root cert ready"
+            cert_status.setBackgroundResource(R.drawable.bg_green_stroke)
+        } else {
+            cert_status.text = "root cert not install"
+            cert_status.setBackgroundResource(R.drawable.bg_red_stroke)
+        }
     }
 
     private fun installCa() {
@@ -126,53 +143,25 @@ class MainActivity : Activity() {
         intent.putExtra(KeyChain.EXTRA_NAME, "envProxy")
 
 
-        val file = File(getDir(PEM_DIR, Context.MODE_PRIVATE), PEM_CHAIN_CERT)
+        val file = sslCmd.rootCert
         val fis = FileInputStream(file)
         val bytesArray = ByteArray(file.length().toInt())
         fis.read(bytesArray)
         intent.putExtra(KeyChain.EXTRA_CERTIFICATE, bytesArray)
-
         startActivityForResult(intent, REQUEST_INSTALL_CERT)
-    }
-
-
-    private fun makeSurePems() {
-        val pemDir = getDir(PEM_DIR, Context.MODE_PRIVATE)
-        checkPemFile(pemDir, PEM_CHAIN_CERT)
-        checkPemFile(pemDir, PEM_ENV2_CERT)
-        checkPemFile(pemDir, PEM_ENV2_KEY)
-    }
-
-    private fun checkPemFile(pemDir: File, name: String) {
-        val chainFile = File(pemDir, name)
-        if (!chainFile.exists()) {
-            val fos = FileOutputStream(chainFile)
-            val fis = assets.open(name)
-            val buffer = ByteArray(1024)
-            var read: Int
-            while (true) {
-                read = fis.read(buffer);
-                if (read != -1)
-                    fos.write(buffer, 0, read)
-                else
-                    break;
-            }
-
-            fos.close()
-            fis.close()
-        }
     }
 
     private fun checkCAInstalled(): Boolean {
         try {
             val ks = KeyStore.getInstance("AndroidCAStore")
+            val sha1Md = MessageDigest.getInstance("SHA1")
             if (ks != null) {
                 ks.load(null, null)
                 val aliases = ks.aliases()
                 while (aliases.hasMoreElements()) {
                     val alias = aliases.nextElement() as String
                     val cert = ks.getCertificate(alias) as java.security.cert.X509Certificate
-                    if (cert.issuerDN.name.contains("www.env.com")) {
+                    if (Arrays.equals(sha1Md.digest(cert.encoded), ROOT_CA_FINGERPRINT_SHA1)) {
                         return true
                     }
                 }
@@ -219,19 +208,22 @@ class MainActivity : Activity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_CONNECT && resultCode == RESULT_OK) {
-            when (requestCode) {
-                REQUEST_CONNECT -> {
+        Log.d(TAG, "onActivityResult() called with: requestCode = [ ${requestCode} ], resultCode = [ ${resultCode} ], data = [ ${data} ]")
+        when (requestCode) {
+            REQUEST_CONNECT -> {
+                if (resultCode == RESULT_OK) {
                     val intent = Intent(this, ProxyService::class.java)
                     intent.putExtra(ProxyService.PROXY_CMD, ProxyService.CMD_START)
                     ContextCompat.startForegroundService(this, intent)
                 }
-                REQUEST_INSTALL_CERT -> {
-                    Log.d(TAG, "onActivityResult: cert installed")
-                }
-            }
 
+            }
+            REQUEST_INSTALL_CERT -> {
+                Log.d(TAG, "onActivityResult: cert installed")
+                updateRootCertStatus()
+            }
         }
+
     }
 }
 

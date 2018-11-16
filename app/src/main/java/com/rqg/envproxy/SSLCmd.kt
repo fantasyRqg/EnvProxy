@@ -3,8 +3,8 @@ package com.rqg.envproxy
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import java.io.File
-import java.io.FileOutputStream
+import java.io.*
+
 
 /**
  * * Created by rqg on 2018/11/14.
@@ -30,6 +30,10 @@ class SSLCmd(val context: Context) {
         File(workingDir.absolutePath + "/ca.cert.pem")
     }
 
+    val rootKey by lazy {
+        File(workingDir.absolutePath + "/ca.key.pem")
+    }
+
     private val opensslExecutable by lazy {
         File(workingDir.absolutePath + "/openssl")
     }
@@ -38,7 +42,21 @@ class SSLCmd(val context: Context) {
         File(workingDir.absolutePath + "/openssl.cnf")
     }
 
+    private val priDir by lazy {
+        File(workingDir.absolutePath + "/private")
+    }
+
+    private val certsDir by lazy {
+        File(workingDir.absolutePath + "/certs")
+    }
+
+    private val csrDir by lazy {
+        File(workingDir.absolutePath + "/csr")
+    }
+
     fun prepareOpenSSLExecutable(): Boolean {
+        Log.d(TAG, "prepareOpenSSLExecutable: " + workingDir.absoluteFile)
+
         if (!workingDir.exists() && !workingDir.mkdirs()) {
             Log.e(TAG, "prepareOpenSSLExecutable: prepare working dir failure")
             return false
@@ -49,12 +67,21 @@ class SSLCmd(val context: Context) {
             return false
         }
 
-        if (!opensslExecutable.exists()
-                && !copyFileFromAssetToWorkingDir("openssl")
-                && (opensslExecutable.canExecute() || opensslExecutable.setExecutable(true, true))) {
+        if (!rootKey.exists() && !copyFileFromAssetToWorkingDir("ca.key.pem")) {
+            Log.e(TAG, "prepareOpenSSLExecutable: copy root key file failure")
+            return false
+        }
+
+        if (!opensslExecutable.exists() && !copyFileFromAssetToWorkingDir("openssl")) {
             Log.e(TAG, "prepareOpenSSLExecutable: prepare openssl executable file failure")
             return false
         }
+
+        if (!opensslExecutable.canExecute() && !opensslExecutable.setExecutable(true)) {
+            Log.e(TAG, "prepareOpenSSLExecutable: cannot set openssl excutable")
+            return false
+        }
+
 
         if (!sslCnf.exists() && !copyFileFromAssetToWorkingDir("openssl.cnf")) {
             Log.e(TAG, "prepareOpenSSLExecutable: preapre openssl cnf file failure")
@@ -62,9 +89,66 @@ class SSLCmd(val context: Context) {
         }
 
 
+        if (!priDir.exists() && !priDir.mkdir()) {
+            Log.e(TAG, "prepareOpenSSLExecutable: create private dir failure")
+            return false
+        }
+
+        if (!certsDir.exists() && !certsDir.mkdir()) {
+            Log.e(TAG, "prepareOpenSSLExecutable: create certs dir failure")
+            return false
+        }
+
+        if (!csrDir.exists() && !csrDir.mkdir()) {
+            Log.e(TAG, "prepareOpenSSLExecutable: create csr dir failure")
+            return false
+        }
+
+        val indexFile = File(workingDir.absolutePath + "/index.txt")
+        if (!indexFile.exists() && !indexFile.createNewFile()) {
+            Log.e(TAG, "prepareOpenSSLExecutable: create index file failure")
+            return false
+        }
+
+        val serialFile = File(workingDir.absolutePath + "/serial")
+        if (!serialFile.exists() && !createSerialFile(serialFile)) {
+            Log.e(TAG, "prepareOpenSSLExecutable: create serial file failure")
+            return false
+        }
+
+
+        val newcertsDir = File(workingDir.absolutePath + "/newcerts")
+        if (!newcertsDir.exists() && !newcertsDir.mkdir()) {
+            Log.e(TAG, "prepareOpenSSLExecutable: create newcerts file failure")
+            return false
+        }
+
+
         return true
     }
 
+
+    private fun createSerialFile(serialFile: File): Boolean {
+        if (!serialFile.createNewFile()) {
+            return false
+        }
+
+        val outputStream = FileOutputStream(serialFile)
+        try {
+            val writer = outputStream.bufferedWriter()
+            writer.write("1000")
+            writer.newLine()
+            writer.flush()
+            outputStream.close()
+        } catch (e: Exception) {
+            Log.e(TAG, "createSerialFile: ", e)
+            return false
+        } finally {
+            outputStream.close();
+        }
+
+        return true
+    }
 
     private fun copyFileFromAssetToWorkingDir(assetFileName: String): Boolean {
         val inputStream = context.assets.open(assetFileName)
@@ -92,5 +176,69 @@ class SSLCmd(val context: Context) {
         }
 
         return false
+    }
+
+
+    private fun readStream(outputStream: InputStream): String {
+        val bufferedReader = BufferedReader(InputStreamReader(outputStream))
+
+        // Grab the results
+        val outBuffer = StringBuilder()
+        var line: String?
+        while (true) {
+            line = bufferedReader.readLine()
+            if (line == null)
+                break
+
+            outBuffer.append(line + "\n")
+        }
+
+        return outBuffer.toString()
+    }
+
+    fun runCmd(cmd: String): Int {
+        try {
+            val cmdProc = Runtime.getRuntime().exec(cmd, null, workingDir)
+            cmdProc.waitFor()
+
+            val normalMsg = readStream(cmdProc.inputStream)
+
+            val errMsg = readStream(cmdProc.errorStream)
+
+            Log.d(TAG, "runCmd: $cmd \n")
+            if (normalMsg.isNotEmpty()) {
+                Log.d(TAG, "runCmd: $normalMsg")
+            }
+
+            if (errMsg.isNotEmpty()) {
+                Log.e(TAG, "runCmd: $errMsg")
+            }
+
+            return cmdProc.exitValue()
+        } catch (e: Exception) {
+            Log.e(TAG, "runCmd: ", e)
+            return -1
+        }
+
+    }
+
+    fun test() {
+        Log.d(TAG, "test:  start test")
+        var r = 0
+        r = runCmd("${opensslExecutable.absolutePath} genrsa -aes256 -passout pass:1234567890 -out ${priDir.absolutePath}/www.example.com.key.pem 2048")
+        if (r != 0) {
+            Log.e(TAG, "test: genrsa failure")
+            return
+        }
+        r = runCmd("${opensslExecutable.absolutePath} req -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -key ${priDir.absolutePath}/www.example.com.key.pem -new -sha256 -out ${csrDir.absolutePath}/www.example.com.csr.pem -subj /C=CN/ST=HangZhou/L=West_Lake/O=YZ/OU=Retail/CN=www.ex.com")
+        if (r != 0) {
+            Log.e(TAG, "test: req failure")
+            return
+        }
+        r = runCmd("${opensslExecutable.absolutePath} ca -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -extensions server_cert -days 3000 -notext -md sha256 -in ${csrDir.absolutePath}/www.example.com.csr.pem -out ${certsDir.absolutePath}/www.example.com.cert.pem")
+        if (r != 0) {
+            Log.e(TAG, "test: ca failure")
+            return
+        }
     }
 }

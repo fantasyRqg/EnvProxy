@@ -61,14 +61,13 @@ class MainActivity : Activity() {
         }
 
 
-        btn.setOnClickListener {
-            //            Observable.just(1)
+//        btn.setOnClickListener {
+        //            Observable.just(1)
 //                    .observeOn(Schedulers.io())
 //                    .subscribe {
 //                        ProxyNative.getMTU()
 //                    }
-            Log.d(TAG, "onCreate: \n" + ProxyNative.genRsaAes256l2048())
-            //            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+        //            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
 //            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
 ////            Observable.just("https://www.baidu.com")
 //                    .subscribeOn(Schedulers.io())
@@ -94,8 +93,15 @@ class MainActivity : Activity() {
 //                        tv_response.text = it.toString()
 //                        Log.e(TAG, "onCreate: ", it)
 //                    })
-        }
+//        }
 
+        btn.setOnClickListener {
+            Observable.just(1)
+                    .subscribeOn(Schedulers.io())
+                    .subscribe { _ ->
+                        sslCmd.test()
+                    }
+        }
 
 
         LocalBroadcastManager.getInstance(this)

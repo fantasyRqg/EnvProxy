@@ -54,6 +54,11 @@ class SSLCmd(val context: Context) {
         File(workingDir.absolutePath + "/csr")
     }
 
+
+    private val basePrivateKey by lazy {
+        File(workingDir.absolutePath + "/base_private_key.key.pem")
+    }
+
     fun prepareOpenSSLExecutable(): Boolean {
         Log.d(TAG, "prepareOpenSSLExecutable: " + workingDir.absoluteFile)
 
@@ -120,6 +125,12 @@ class SSLCmd(val context: Context) {
         val newcertsDir = File(workingDir.absolutePath + "/newcerts")
         if (!newcertsDir.exists() && !newcertsDir.mkdir()) {
             Log.e(TAG, "prepareOpenSSLExecutable: create newcerts file failure")
+            return false
+        }
+
+
+        if (!basePrivateKey.exists() && runCmd("${opensslExecutable.absolutePath} genrsa -aes256 -passout pass:1234567890 -out ${basePrivateKey.absolutePath} 2048") != 0) {
+            Log.e(TAG, "prepareOpenSSLExecutable: generate base private key failure")
             return false
         }
 
@@ -222,23 +233,42 @@ class SSLCmd(val context: Context) {
 
     }
 
-    fun test() {
-        Log.d(TAG, "test:  start test")
+
+    fun genenrateSignedCert(url: String): Int {
         var r = 0
-        r = runCmd("${opensslExecutable.absolutePath} genrsa -aes256 -passout pass:1234567890 -out ${priDir.absolutePath}/www.example.com.key.pem 2048")
-        if (r != 0) {
-            Log.e(TAG, "test: genrsa failure")
-            return
-        }
-        r = runCmd("${opensslExecutable.absolutePath} req -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -key ${priDir.absolutePath}/www.example.com.key.pem -new -sha256 -out ${csrDir.absolutePath}/www.example.com.csr.pem -subj /C=CN/ST=HangZhou/L=West_Lake/O=YZ/OU=Retail/CN=www.ex.com")
+
+        r = runCmd("${opensslExecutable.absolutePath} req -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -key ${basePrivateKey.absolutePath} -new -sha256 -out ${csrDir.absolutePath}/${url}.csr.pem -subj /C=CN/ST=HangZhou/L=West_Lake/O=YZ/OU=Retail/CN=${url}")
         if (r != 0) {
             Log.e(TAG, "test: req failure")
-            return
+            return r
         }
-        r = runCmd("${opensslExecutable.absolutePath} ca -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -extensions server_cert -days 3000 -notext -md sha256 -in ${csrDir.absolutePath}/www.example.com.csr.pem -out ${certsDir.absolutePath}/www.example.com.cert.pem")
+        r = runCmd("${opensslExecutable.absolutePath} ca -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -extensions server_cert -days 3000 -notext -md sha256 -in ${csrDir.absolutePath}/${url}.csr.pem -out ${certsDir.absolutePath}/${url}.cert.pem")
         if (r != 0) {
             Log.e(TAG, "test: ca failure")
-            return
+            return r
         }
+
+
+        return r
     }
+
+//    fun test() {
+//        Log.d(TAG, "test:  start test")
+//        var r = 0
+//        r = runCmd("${opensslExecutable.absolutePath} genrsa -aes256 -passout pass:1234567890 -out ${priDir.absolutePath}/www.example.com.key.pem 2048")
+//        if (r != 0) {
+//            Log.e(TAG, "test: genrsa failure")
+//            return
+//        }
+//        r = runCmd("${opensslExecutable.absolutePath} req -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -key ${priDir.absolutePath}/www.example.com.key.pem -new -sha256 -out ${csrDir.absolutePath}/www.example.com.csr.pem -subj /C=CN/ST=HangZhou/L=West_Lake/O=YZ/OU=Retail/CN=www.ex.com")
+//        if (r != 0) {
+//            Log.e(TAG, "test: req failure")
+//            return
+//        }
+//        r = runCmd("${opensslExecutable.absolutePath} ca -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -extensions server_cert -days 3000 -notext -md sha256 -in ${csrDir.absolutePath}/www.example.com.csr.pem -out ${certsDir.absolutePath}/www.example.com.cert.pem")
+//        if (r != 0) {
+//            Log.e(TAG, "test: ca failure")
+//            return
+//        }
+//    }
 }

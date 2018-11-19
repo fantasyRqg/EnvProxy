@@ -99,7 +99,12 @@ class MainActivity : Activity() {
             Observable.just(1)
                     .subscribeOn(Schedulers.io())
                     .subscribe { _ ->
-                        sslCmd.test()
+                        sslCmd.genenrateSignedCert("www.test.com")
+                        sslCmd.genenrateSignedCert("www.aa.sn")
+                        sslCmd.genenrateSignedCert("www.fajl.ua")
+                        sslCmd.genenrateSignedCert("www.aa.com")
+                        sslCmd.genenrateSignedCert("*.balj.com")
+                        sslCmd.genenrateSignedCert("www.fafa.com")
                     }
         }
 

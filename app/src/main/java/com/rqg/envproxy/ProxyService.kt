@@ -34,7 +34,7 @@ class ProxyService : VpnService() {
         const val NOTIFICATION_CHANNEL = "EnvProxy"
     }
 
-    val proxyNative = ProxyNative(this)
+    private val proxyNative by lazy { ProxyNative(this) }
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -80,7 +80,7 @@ class ProxyService : VpnService() {
 //        val keyFile = File(pemDir, MainActivity.PEM_ENV2_KEY)
 //        val certFile = File(pemDir, MainActivity.PEM_ENV2_CERT)
 
-//        proxyNative.setKeyAndCertificate(keyFile.absolutePath, certFile.absolutePath)
+//        proxyNative.setKeyAndCertsDir(keyFile.absolutePath, certFile.absolutePath)
     }
 
     private val triggerReceiver = object : BroadcastReceiver() {

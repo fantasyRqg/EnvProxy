@@ -35,6 +35,7 @@ add_library(libProxy
         src/main/cpp/session/Session.cpp
         src/main/cpp/session/DnsSession.cpp
         src/main/cpp/session/HttpSession.cpp
+        src/main/cpp/session/tls_server_name.cpp
         src/main/cpp/session/TlsSession.cpp
         src/main/cpp/session/IcmpSession.cpp
         src/main/cpp/session/TcpSession.cpp

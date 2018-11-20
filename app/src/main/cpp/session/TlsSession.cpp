@@ -11,6 +11,8 @@
 #include <netinet/ip.h>
 
 #include "TlsSession.h"
+#include "tls_server_name.h"
+
 
 #define ENABLE_LOG
 
@@ -169,26 +171,31 @@ void ssl_client_info_callback(const SSL *ssl, int where, int ret) {
 
 TlsSession::TlsSession(SessionInfo *sessionInfo)
         : Session(sessionInfo), mTunServer(nullptr),
-          mClient(nullptr), mPenddingData(nullptr) {
+          mClient(nullptr), mPendingData(nullptr), mSessionInfo(sessionInfo) {
+
+
+}
+
+int TlsSession::initSSL(SSLCert *sslCert) {
     mTunServer = new TlsCtx();
-
-//    mTunServer->ctx = sessionInfo->context->serverCtx;
-
+    mTunServer->ctx = sslCert->serverCtx;
     if (ssl_init(mTunServer, 1, ssl_server_info_callback) != 0) {
         ALOGE("init server ssl fail");
     }
 
     mClient = new TlsCtx();
-//    mClient->ctx = sessionInfo->context->clientCtx;
+    mClient->ctx = sslCert->clientCtx;
     if (ssl_init(mClient, 0, ssl_client_info_callback) != 0) {
         ALOGE("init server ssl fail");
     }
 
+    ADDR_TO_STR(mSessionInfo)
+    ALOGI("TlsSession %p new from %s:%d to %s:%d", this, source, mSessionInfo->sPort, dest,
+          mSessionInfo->dPort);
 
-    ADDR_TO_STR(sessionInfo)
-    ALOGI("TlsSession %p new from %s:%d to %s:%d", this, source, sessionInfo->sPort, dest,
-          sessionInfo->dPort);
+    return 0;
 }
+
 
 void free_ctx(TlsCtx *ctx) {
 //    ALOGD("free ctx %p, ctx %p , ssl %p , in_bio %p , out_bio %p", ctx, ctx->ctx,
@@ -225,6 +232,26 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
     ALOGI("onTunDown %p new from %s:%d to %s:%d , data size = %u", this, source, sessionInfo->sPort,
           dest,
           sessionInfo->dPort, downData->size);
+
+
+    if (mTunServer == nullptr || mClient == nullptr) {
+        char *hostName = nullptr;
+
+        if (parse_tls_header(downData->data, downData->size, &hostName) > 0) {
+            auto cert = mSessionInfo->context->certManager->getSSLCtx(hostName);
+            free(hostName);
+
+            if (cert == nullptr) {
+                ALOGW("tls session start without client hello");
+                return -1;
+            }
+
+            initSSL(cert);
+        } else {
+            ALOGW("tls session start without client hello");
+            return -1;
+        }
+    }
 
     int tun_write_size = BIO_write(mTunServer->in_bio, downData->data, downData->size);
 
@@ -388,7 +415,7 @@ int TlsSession::onSocketUp(SessionInfo *sessionInfo, DataBuffer *upData) {
 
 
 void TlsSession::releaseResource(SessionInfo *sessionInfo) {
-    freeLinkDataBuffer(sessionInfo, mPenddingData);
+    freeLinkDataBuffer(sessionInfo, mPendingData);
 }
 
 /**
@@ -400,9 +427,9 @@ int TlsSession::handlePendingData(SessionInfo *sessionInfo) {
 
     int result = 0;
 
-    while (mPenddingData != nullptr) {
-        if (SSL_write(mClient->ssl, mPenddingData->data, mPenddingData->size) !=
-            mPenddingData->size) {
+    while (mPendingData != nullptr) {
+        if (SSL_write(mClient->ssl, mPendingData->data, mPendingData->size) !=
+            mPendingData->size) {
             ALOGE("tls session write pending data fail");
             result = -1;
             break;
@@ -412,8 +439,8 @@ int TlsSession::handlePendingData(SessionInfo *sessionInfo) {
             break;
         }
 
-        auto tmp = mPenddingData;
-        mPenddingData = mPenddingData->next;
+        auto tmp = mPendingData;
+        mPendingData = mPendingData->next;
         tmp->next = nullptr;
         freeLinkDataBuffer(sessionInfo, tmp);
     }
@@ -425,12 +452,50 @@ void TlsSession::appendPendingData(DataBuffer *db) {
     if (db == nullptr)
         return;
 
-    if (mPenddingData == nullptr) {
-        mPenddingData = db;
+    if (mPendingData == nullptr) {
+        mPendingData = db;
     } else {
-        auto pd = mPenddingData;
+        auto pd = mPendingData;
         while (pd->next != nullptr) {
             pd->next = db;
         }
     }
+}
+
+
+static int parse_server_name_extension(const uint8_t *data, size_t data_len,
+                                       char **hostname) {
+    size_t pos = 2; /* skip server name list length */
+    size_t len;
+
+    while (pos + 3 < data_len) {
+        len = ((size_t) data[pos + 1] << 8) +
+              (size_t) data[pos + 2];
+
+        if (pos + 3 + len > data_len)
+            return -5;
+
+        switch (data[pos]) { /* name type */
+            case 0x00: /* host_name */
+                *hostname = static_cast<char *>(malloc(len + 1));
+                if (*hostname == NULL) {
+                    ALOGE("malloc() failure");
+                    return -4;
+                }
+
+                strncpy(*hostname, (const char *) (data + pos + 3), len);
+
+                (*hostname)[len] = '\0';
+
+                return len;
+            default:
+                ALOGD("Unknown server name extension name type: %d", data[pos]);
+        }
+        pos += 3 + len;
+    }
+    /* Check we ended where we expected to */
+    if (pos != data_len)
+        return -5;
+
+    return -2;
 }

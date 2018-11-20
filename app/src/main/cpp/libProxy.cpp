@@ -54,46 +54,34 @@ jboolean isProxyRunning(JNIEnv *env, jobject thiz) {
     return (jboolean) (getProxyEngine(env, thiz)->isProxyRunning());
 }
 
-void setProxyService(JNIEnv *env, jobject thiz, jobject proxyService) {
-    getProxyEngine(env, thiz)->setJniEnv(env, proxyService);
+void setProxyService(JNIEnv *env, jobject thiz, jobject proxyService, jobject sslCmd) {
+    getProxyEngine(env, thiz)->setJniEnv(env, proxyService, sslCmd);
 }
 
-void setKeyAndCertificate(JNIEnv *env, jobject thiz, jstring key, jstring certificate) {
+void setKeyAndCertificate(JNIEnv *env, jobject thiz, jstring key, jstring certsDir) {
     auto *nKey = env->GetStringUTFChars(key, 0);
     auto keyLen = env->GetStringUTFLength(key);
-    auto *nCert = env->GetStringUTFChars(certificate, 0);
-    auto certLen = env->GetStringUTFLength(certificate);
-    getProxyEngine(env, thiz)->setKeyAndCertificate(reinterpret_cast<const char *>(nKey),
-                                                    static_cast<size_t>(keyLen),
-                                                    reinterpret_cast<const char *>(nCert),
-                                                    static_cast<size_t>(certLen));
+    auto *nCert = env->GetStringUTFChars(certsDir, 0);
+    auto certLen = env->GetStringUTFLength(certsDir);
 
+    char *ck = static_cast<char *>(malloc(keyLen + 1));
+    char *cc = static_cast<char *>(malloc(certLen + 1));
+
+    memset(ck, 0, keyLen + 1);
+    memset(cc, 0, certLen + 1);
+    memcpy(ck, nKey, keyLen);
+    memcpy(cc, nCert, certLen);
+
+    getProxyEngine(env, thiz)->setKeyAndCertWorkingDir(nCert, nKey);
 
     env->ReleaseStringUTFChars(key, nKey);
-    env->ReleaseStringUTFChars(certificate, nCert);
+    env->ReleaseStringUTFChars(certsDir, nCert);
+
+    free(ck);
+    free(cc);
 }
 
 
-void createRootCa(JNIEnv *env, jobject thiz, jstring name) {
-
-}
-
-
-jstring genRsaAes256l2048(JNIEnv *env, jclass) {
-
-//    system()
-
-//    if (bio != nullptr) {
-//        auto len = BIO_ctrl_pending(bio);
-//        char *data = static_cast<char *>(malloc(len + 1));
-//        memset(data, 0, len + 1);
-//        BIO_read(bio, data, len);
-//        BIO_free_all(bio);
-//        return env->NewStringUTF(data);
-//    }
-
-    return nullptr;
-}
 
 
 
@@ -122,17 +110,16 @@ jstring genRsaAes256l2048(JNIEnv *env, jclass) {
 
 static const char *classPathName = "com/rqg/envproxy/ProxyNative";
 static JNINativeMethod methods[] = {
-        {"getMTU",                "()I",                                     (void *) getMTU},
-        {"initNative",            "()V",                                     (void *) initNative},
-        {"initClass",             "()V",                                     (void *) initClass},
-        {"destroyNative",         "()V",                                     (void *) destroyNative},
-        {"setVpnFd",              "(I)V",                                    (void *) setVpnFd},
-        {"startProxy_Native",     "()V",                                     (void *) startProxy},
-        {"stopProxy_Native",      "()V",                                     (void *) stopProxy},
-        {"isProxyRunning_Native", "()Z",                                     (void *) isProxyRunning},
-        {"setProxyService",       "(Lcom/rqg/envproxy/ProxyService;)V",      (void *) setProxyService},
-        {"setKeyAndCertificate",  "(Ljava/lang/String;Ljava/lang/String;)V", (void *) setKeyAndCertificate},
-        {"genRsaAes256l2048",     "()Ljava/lang/String;",                    (void *) genRsaAes256l2048},
+        {"getMTU",                "()I",                                                         (void *) getMTU},
+        {"initNative",            "()V",                                                         (void *) initNative},
+        {"initClass",             "()V",                                                         (void *) initClass},
+        {"destroyNative",         "()V",                                                         (void *) destroyNative},
+        {"setVpnFd",              "(I)V",                                                        (void *) setVpnFd},
+        {"startProxy_Native",     "()V",                                                         (void *) startProxy},
+        {"stopProxy_Native",      "()V",                                                         (void *) stopProxy},
+        {"isProxyRunning_Native", "()Z",                                                         (void *) isProxyRunning},
+        {"setProxyService",       "(Lcom/rqg/envproxy/ProxyService;Lcom/rqg/envproxy/SSLCmd;)V", (void *) setProxyService},
+        {"setKeyAndCertsDir",     "(Ljava/lang/String;Ljava/lang/String;)V",                     (void *) setKeyAndCertificate},
 };
 
 /*

@@ -13,6 +13,8 @@ struct TlsCtx;
 
 struct DataBuffer;
 
+class SSLCert;
+
 class TlsSession : public Session {
 public:
 
@@ -31,9 +33,11 @@ public:
     void releaseResource(SessionInfo *sessionInfo) override;
 
 private:
-    TlsCtx *mTunServer;
-    TlsCtx *mClient;
-    DataBuffer *mPenddingData;
+    TlsCtx *mTunServer = nullptr;
+    TlsCtx *mClient = nullptr;
+    DataBuffer *mPendingData = nullptr;
+
+    SessionInfo *mSessionInfo = nullptr;
 
 
     int handlePendingData(SessionInfo *sessionInfo);
@@ -41,6 +45,8 @@ private:
     void appendPendingData(DataBuffer *db);
 
     int outClientData(SessionInfo *sessionInfo);
+
+    int initSSL(SSLCert *sslCert);
 };
 
 

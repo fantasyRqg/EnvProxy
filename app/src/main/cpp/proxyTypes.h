@@ -13,6 +13,7 @@
 #include <jni.h>
 #include <sys/epoll.h>
 #include <openssl/ossl_typ.h>
+#include "CertManager.h"
 
 
 #define ICMP4_MAXMSG (IP_MAXPACKET - 20 - 8) // bytes (socket)
@@ -58,10 +59,10 @@ struct ProxyContext {
     proxyEngine *engine;
     int tunFd;
     int epollFd;
-//    BufferPool *bufferPool;
     size_t mtu;
     int maxSessions;
     int sessionCount;
+    CertManager *certManager;
 };
 
 //#define balloc context->bufferPool->allocBuffer
@@ -189,7 +190,7 @@ typedef struct dns_rr {
 } __packed dns_rr;
 
 
-typedef struct SSLCert{
+typedef struct SSLCert {
     SSL_CTX *serverCtx;
     SSL_CTX *clientCtx;
 } SSLCert;

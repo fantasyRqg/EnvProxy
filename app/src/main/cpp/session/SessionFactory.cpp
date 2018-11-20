@@ -125,7 +125,8 @@ static void buildSessionProcess(SessionInfo *si) {
                 http->prev = tls;
 
                 tcp->next = tls;
-            } else {
+            }
+            else {
                 tcp->next = nullptr;
             }
         }

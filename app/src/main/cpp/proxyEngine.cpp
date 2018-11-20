@@ -49,31 +49,8 @@ proxyEngine::proxyEngine(size_t mtu)
 }
 
 proxyEngine::~proxyEngine() {
-    if (mJniEnv != nullptr && mProxyService != nullptr) {
-        mJniEnv->DeleteGlobalRef(mProxyService);
-        mJniEnv = nullptr;
-        mProxyService = nullptr;
-        mProtectMid = nullptr;
-    }
+    cleanJni();
 }
-
-
-//void ssl_begin() {
-//    SSL_library_init();
-//    SSL_load_error_strings();
-//    ERR_load_BIO_strings();
-//    OpenSSL_add_all_algorithms();
-//}
-//
-//void ssl_end() {
-//    CONF_modules_unload(1);
-//    ERR_free_strings();
-//    EVP_cleanup();
-//    sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
-//    CRYPTO_cleanup_all_ex_data();
-//    OPENSSL_thread_stop();
-//}
-
 
 void proxyEngine::handleEvents() {
     mRunning = true;
@@ -105,14 +82,15 @@ void proxyEngine::handleEvents() {
 
     BufferPool bufferPool;
 
+
     ProxyContext context = {
             this,
             mTunFd,
             epoll_fd,
-//            &bufferPool,
             mMTU,
             maxsessions,
-            0};
+            0,
+            certManager};
 
 
     //ip package factory
@@ -207,7 +185,8 @@ void proxyEngine::handleEvents() {
 
                 //tun event
                 auto ipPkt = checkTun(&context, &ev[i], &ipPackageFactory);
-                if (ipPkt == nullptr) continue;
+                if (ipPkt == nullptr)
+                    continue;
 
 
                 auto tPkt = transportFactory.handleIpPkt(ipPkt);
@@ -245,15 +224,8 @@ void proxyEngine::handleEvents() {
     }
 
     // clean up jni env
-    if (mJniEnv != nullptr && mProxyService != nullptr) {
-        mJniEnv->DeleteGlobalRef(mProxyService);
-        mJniEnv = nullptr;
-        mProxyService = nullptr;
-        mProtectMid = nullptr;
-    }
+    cleanJni();
 
-    free(mKeyPath);
-    free(mCertPath);
 
     ALOGI("proxy stop");
 }
@@ -319,7 +291,7 @@ bool proxyEngine::isProxyRunning() {
     return mRunning;
 }
 
-void proxyEngine::setJniEnv(JNIEnv *env, jobject proxyService) {
+void proxyEngine::setJniEnv(JNIEnv *env, jobject proxyService, jobject sslCmd) {
     mJniEnv = env;
     mProxyService = mJniEnv->NewGlobalRef(proxyService);
 
@@ -327,8 +299,7 @@ void proxyEngine::setJniEnv(JNIEnv *env, jobject proxyService) {
     jclass cls = mJniEnv->GetObjectClass(mProxyService);
     if (cls == NULL) {
         ALOGE("protect socket failed to get class");
-        mJniEnv = nullptr;
-        mProxyService = nullptr;
+        cleanJni();
         return;
     }
 
@@ -336,10 +307,28 @@ void proxyEngine::setJniEnv(JNIEnv *env, jobject proxyService) {
     mProtectMid = mJniEnv->GetMethodID(cls, "protect", "(I)Z");
     if (mProtectMid == NULL) {
         ALOGE("protect socket failed to get method");
-        mJniEnv = nullptr;
-        mProxyService = nullptr;
+        cleanJni();
         return;
     }
+
+
+    mSSLCmd = mJniEnv->NewGlobalRef(sslCmd);
+    jclass sslClazz = mJniEnv->GetObjectClass(mSSLCmd);
+    if (sslClazz == NULL) {
+        ALOGE("sslCmd failed to get class");
+        cleanJni();
+        return;
+    }
+
+    mGenerateCertMid = mJniEnv->GetMethodID(sslClazz, "generateSignedCert",
+                                            "(Ljava/lang/String;)I");
+
+    if (mGenerateCertMid == NULL) {
+        ALOGE("sslCmd failed to get generate cert method");
+        cleanJni();
+        return;
+    }
+
 }
 
 bool proxyEngine::protectSocket(int socket) {
@@ -355,15 +344,34 @@ bool proxyEngine::protectSocket(int socket) {
     return true;
 }
 
-void proxyEngine::setKeyAndCertificate(const char *key, size_t keyLen, const char *cert,
-                                       size_t certLen) {
 
-    mKeyPath = static_cast<char *>(malloc(keyLen + 1));
-    memset(mKeyPath, 0, keyLen + 1);
-    memcpy(mKeyPath, key, keyLen);
+int proxyEngine::generateCerts(const char *hostName) {
+    auto hostStr = mJniEnv->NewStringUTF(hostName);
+    auto r = mJniEnv->CallIntMethod(mSSLCmd, mGenerateCertMid, hostStr);
+    return r;
+}
 
-    mCertPath = static_cast<char *>(malloc(certLen + 1));
-    memset(mCertPath, 0, certLen + 1);
-    memcpy(mCertPath, cert, certLen);
 
+void proxyEngine::cleanJni() {
+    if (mJniEnv != nullptr) {
+        if (mProxyService != nullptr) {
+            mJniEnv->DeleteGlobalRef(mProxyService);
+            mProxyService = nullptr;
+            mProtectMid = nullptr;
+        }
+
+        if (mSSLCmd != nullptr) {
+            mJniEnv->DeleteGlobalRef(mSSLCmd);
+            mSSLCmd = nullptr;
+            mGenerateCertMid = nullptr;
+        }
+
+    }
+
+    mJniEnv = nullptr;
+
+}
+
+void proxyEngine::setKeyAndCertWorkingDir(const char *certsDir, const char *keyFilePath) {
+    certManager = new CertManager(this, certsDir, keyFilePath);
 }

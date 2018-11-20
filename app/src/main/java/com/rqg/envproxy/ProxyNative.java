@@ -1,12 +1,16 @@
 package com.rqg.envproxy;
 
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
+
+import java.io.File;
 
 /**
  * * Created by rqg on 03/04/2018.
  */
 public class ProxyNative {
     static {
+        Log.d("Test", "static initializer: " + SSLCmd.class.getName());
         System.loadLibrary("libProxy");
 
         initClass();
@@ -35,8 +39,8 @@ public class ProxyNative {
             throw new RuntimeException("not set Vpn fd");
         }
 
-        setProxyService(mProxyService);
-
+        setProxyService(mProxyService, SSLCmd.INSTANCE);
+        setKeyAndCertsDir(SSLCmd.INSTANCE.getBasePrivateKey().getAbsolutePath(), SSLCmd.INSTANCE.getCertsDir().getAbsolutePath() + File.separator);
         setVpnFd(mVpnFd.getFd());
 
         startProxy_Native();
@@ -70,7 +74,7 @@ public class ProxyNative {
 
     private native void initNative();
 
-    private native void setProxyService(ProxyService proxyService);
+    private native void setProxyService(ProxyService proxyService, SSLCmd sslCmd);
 
     private native void destroyNative();
 
@@ -80,7 +84,7 @@ public class ProxyNative {
 
     private native void stopProxy_Native();
 
-    public native void setKeyAndCertificate(String key, String certificate);
+    public native void setKeyAndCertsDir(String key, String certDir);
 
     private native boolean isProxyRunning_Native();
 

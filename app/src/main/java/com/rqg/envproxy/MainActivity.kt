@@ -38,7 +38,6 @@ class MainActivity : Activity() {
         val ROOT_CA_FINGERPRINT_SHA1 = "7E05BA80BEC8098FE4EAF636499F9E86FE2FCBDC".hexStringToByteArray()
     }
 
-    private val sslCmd by lazy { SSLCmd(this) }
     private var sslCmdReady = false
     private var sslRootCertReady = false
 
@@ -61,51 +60,33 @@ class MainActivity : Activity() {
         }
 
 
-//        btn.setOnClickListener {
-        //            Observable.just(1)
-//                    .observeOn(Schedulers.io())
-//                    .subscribe {
-//                        ProxyNative.getMTU()
-//                    }
-        //            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
-//            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
-////            Observable.just("https://www.baidu.com")
-//                    .subscribeOn(Schedulers.io())
-//                    .map {
-//                        val client = OkHttpClient.Builder()
-//                                .retryOnConnectionFailure(false)
-////                                .eventListener(LogEventListener)
-//                                .build()
-//
-//                        val request = Request.Builder()
-//                                .url(it)
-//                                .build()
-//                        client.newCall(request)
-//                                .execute()
-//                                .body()
-//                                ?.charStream()
-//                                ?.readText()
-//                    }
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribe({
-//                        tv_response.text = it
-//                    }, {
-//                        tv_response.text = it.toString()
-//                        Log.e(TAG, "onCreate: ", it)
-//                    })
-//        }
-
         btn.setOnClickListener {
-            Observable.just(1)
+            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+//            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
+//            Observable.just("https://www.baidu.com")
                     .subscribeOn(Schedulers.io())
-                    .subscribe { _ ->
-                        sslCmd.genenrateSignedCert("www.test.com")
-                        sslCmd.genenrateSignedCert("www.aa.sn")
-                        sslCmd.genenrateSignedCert("www.fajl.ua")
-                        sslCmd.genenrateSignedCert("www.aa.com")
-                        sslCmd.genenrateSignedCert("*.balj.com")
-                        sslCmd.genenrateSignedCert("www.fafa.com")
+                    .map {
+                        val client = OkHttpClient.Builder()
+                                .retryOnConnectionFailure(false)
+//                                .eventListener(LogEventListener)
+                                .build()
+
+                        val request = Request.Builder()
+                                .url(it)
+                                .build()
+                        client.newCall(request)
+                                .execute()
+                                .body()
+                                ?.charStream()
+                                ?.readText()
                     }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        tv_response.text = it
+                    }, {
+                        tv_response.text = it.toString()
+                        Log.e(TAG, "onCreate: ", it)
+                    })
         }
 
 
@@ -119,7 +100,7 @@ class MainActivity : Activity() {
         val subscribe = Observable.just(true)
                 .observeOn(Schedulers.io())
                 .map {
-                    sslCmdReady = sslCmd.prepareOpenSSLExecutable()
+                    sslCmdReady = SSLCmd.prepareOpenSSLExecutable()
                     it
                 }
                 .map {
@@ -154,7 +135,7 @@ class MainActivity : Activity() {
         intent.putExtra(KeyChain.EXTRA_NAME, "envProxy")
 
 
-        val file = sslCmd.rootCert
+        val file = SSLCmd.rootCert
         val fis = FileInputStream(file)
         val bytesArray = ByteArray(file.length().toInt())
         fis.read(bytesArray)

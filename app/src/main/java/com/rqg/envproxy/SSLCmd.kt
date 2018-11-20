@@ -1,6 +1,5 @@
 package com.rqg.envproxy
 
-import android.content.Context
 import android.os.Build
 import android.util.Log
 import java.io.*
@@ -10,16 +9,15 @@ import java.io.*
  * * Created by rqg on 2018/11/14.
  */
 
-class SSLCmd(val context: Context) {
-    companion object {
-        private const val TAG = "SSLCmd"
-    }
+object SSLCmd {
+
+    private const val TAG = "SSLCmd"
 
     private val workingDir by lazy {
         val appDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            context.dataDir
+            App.get().dataDir
         } else {
-            context.filesDir
+            App.get().filesDir
         }
 
         File(appDir.absolutePath + "/openssl")
@@ -46,7 +44,7 @@ class SSLCmd(val context: Context) {
         File(workingDir.absolutePath + "/private")
     }
 
-    private val certsDir by lazy {
+    val certsDir by lazy {
         File(workingDir.absolutePath + "/certs")
     }
 
@@ -55,7 +53,7 @@ class SSLCmd(val context: Context) {
     }
 
 
-    private val basePrivateKey by lazy {
+    val basePrivateKey by lazy {
         File(workingDir.absolutePath + "/base_private_key.key.pem")
     }
 
@@ -162,7 +160,7 @@ class SSLCmd(val context: Context) {
     }
 
     private fun copyFileFromAssetToWorkingDir(assetFileName: String): Boolean {
-        val inputStream = context.assets.open(assetFileName)
+        val inputStream = App.get().assets.open(assetFileName)
         val outputStream = FileOutputStream(workingDir.absolutePath + "/" + assetFileName)
 
         try {
@@ -234,7 +232,7 @@ class SSLCmd(val context: Context) {
     }
 
 
-    fun genenrateSignedCert(url: String): Int {
+    fun generateSignedCert(url: String): Int {
         var r = 0
 
         r = runCmd("${opensslExecutable.absolutePath} req -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -key ${basePrivateKey.absolutePath} -new -sha256 -out ${csrDir.absolutePath}/${url}.csr.pem -subj /C=CN/ST=HangZhou/L=West_Lake/O=YZ/OU=Retail/CN=${url}")

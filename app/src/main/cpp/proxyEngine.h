@@ -20,6 +20,8 @@ class IpPackage;
 
 struct ProxyContext;
 
+class CertManager;
+
 class proxyEngine {
 public:
     proxyEngine(size_t mtu);
@@ -32,8 +34,14 @@ public:
 
     bool isProxyRunning();
 
+    void setJniEnv(JNIEnv *env, jobject proxyService, jobject sslCmd
+    );
 
-    void setKeyAndCertificate(const char *key, size_t keyLen, const char *cert, size_t certLen);
+    bool protectSocket(int socket);
+
+    int generateCerts(const char *hostName);
+
+    void setKeyAndCertWorkingDir(const char *certsDir, const char *keyFilePath);
 
 public:
     int mTunFd = -1;
@@ -41,24 +49,22 @@ public:
     size_t mMTU = 1000;
 
 
-public:
-    void setJniEnv(JNIEnv *env, jobject proxyService);
-
-    bool protectSocket(int socket);
-
 private:
     JNIEnv *mJniEnv;
     jobject mProxyService;
     jmethodID mProtectMid;
+    jobject mSSLCmd;
+    jmethodID mGenerateCertMid;
 
-    char *mKeyPath;
-    char *mCertPath;
+    CertManager *certManager = nullptr;
 
 private:
     IpPackage *
     checkTun(ProxyContext *context, epoll_event *pEvent, IpPackageFactory *ipPackageFactory);
 
     void logPkt(const IpPackage *ipPkt, const TransportPkt *tPkt) const;
+
+    void cleanJni();
 };
 
 

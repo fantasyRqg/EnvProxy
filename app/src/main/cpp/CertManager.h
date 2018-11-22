@@ -22,6 +22,10 @@ public:
 
     SSLCert *getSSLCtx(char *hostName);
 
+    const SSLCert *const getCommonCert();
+
+    EVP_PKEY * getBaseKey();
+
     virtual ~CertManager();
 
 private:
@@ -42,6 +46,9 @@ private:
 
 
     SSL_CTX *commonClientCtx = nullptr;
+    SSL_CTX *commonServerCtx = nullptr;
+    SSLCert *commonCert = nullptr;
+    EVP_PKEY *baseKey = nullptr;
 
 
 };

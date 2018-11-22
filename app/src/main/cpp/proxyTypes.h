@@ -193,6 +193,7 @@ typedef struct dns_rr {
 typedef struct SSLCert {
     SSL_CTX *serverCtx;
     SSL_CTX *clientCtx;
+    X509 *cert;
 } SSLCert;
 
 #endif //ENVPROXY_PROXYTYPES_H

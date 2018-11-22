@@ -11,7 +11,6 @@
 #include <netinet/ip.h>
 
 #include "TlsSession.h"
-#include "tls_server_name.h"
 
 
 #define ENABLE_LOG
@@ -171,12 +170,13 @@ void ssl_client_info_callback(const SSL *ssl, int where, int ret) {
 
 TlsSession::TlsSession(SessionInfo *sessionInfo)
         : Session(sessionInfo), mTunServer(nullptr),
-          mClient(nullptr), mPendingData(nullptr), mSessionInfo(sessionInfo) {
+          mClient(nullptr), mPendingData(nullptr) {
 
-
+    initSSL(sessionInfo);
 }
 
-int TlsSession::initSSL(SSLCert *sslCert) {
+int TlsSession::initSSL(SessionInfo *sessionInfo) {
+    auto sslCert = sessionInfo->context->certManager->getCommonCert();
     mTunServer = new TlsCtx();
     mTunServer->ctx = sslCert->serverCtx;
     if (ssl_init(mTunServer, 1, ssl_server_info_callback) != 0) {
@@ -189,10 +189,9 @@ int TlsSession::initSSL(SSLCert *sslCert) {
         ALOGE("init server ssl fail");
     }
 
-    ADDR_TO_STR(mSessionInfo)
-    ALOGI("TlsSession %p new from %s:%d to %s:%d", this, source, mSessionInfo->sPort, dest,
-          mSessionInfo->dPort);
-
+    ADDR_TO_STR(sessionInfo)
+    ALOGI("TlsSession %p new from %s:%d to %s:%d", this, source, sessionInfo->sPort, dest,
+          sessionInfo->dPort);
     return 0;
 }
 
@@ -233,26 +232,6 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
           dest,
           sessionInfo->dPort, downData->size);
 
-
-    if (mTunServer == nullptr || mClient == nullptr) {
-        char *hostName = nullptr;
-
-        if (parse_tls_header(downData->data, downData->size, &hostName) > 0) {
-            auto cert = mSessionInfo->context->certManager->getSSLCtx(hostName);
-            free(hostName);
-
-            if (cert == nullptr) {
-                ALOGW("tls session start without client hello");
-                return -1;
-            }
-
-            initSSL(cert);
-        } else {
-            ALOGW("tls session start without client hello");
-            return -1;
-        }
-    }
-
     int tun_write_size = BIO_write(mTunServer->in_bio, downData->data, downData->size);
 
     if (tun_write_size != downData->size) {
@@ -287,11 +266,12 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
             if (e != SSL_ERROR_WANT_READ) {
                 ALOGE("server handshake error %s", getSSLErrStr(e));
                 freeLinkDataBuffer(sessionInfo, downData);
+                ERR_PRINT_ERRORS_LOG();
                 return -1;
             }
         }
 
-        ERR_print_errors_fp(stderr);
+
 
         //after do handshake has data to tun
         auto toTunSize = BIO_ctrl_pending(mTunServer->out_bio);

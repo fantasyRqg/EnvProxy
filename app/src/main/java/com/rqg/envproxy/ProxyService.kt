@@ -21,11 +21,9 @@ class ProxyService : VpnService() {
         const val STATUS_BROADCAST = "STATUS_BROADCAST"
         const val STATUS_BROADCAST_TRIGGER = "STATUS_BROADCAST_TRIGGER"
 
-
         const val PROXY_STATUS = "PROXY_STATUS"
         const val STATUS_RUNNING = 1
         const val STATUS_STOPED = 2
-
 
         const val PROXY_CMD = "PROXY_CMD"
         const val CMD_START = 1

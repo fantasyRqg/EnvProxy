@@ -37,7 +37,6 @@ private:
     TlsCtx *mClient = nullptr;
     DataBuffer *mPendingData = nullptr;
 
-    SessionInfo *mSessionInfo = nullptr;
 
 
     int handlePendingData(SessionInfo *sessionInfo);
@@ -46,7 +45,7 @@ private:
 
     int outClientData(SessionInfo *sessionInfo);
 
-    int initSSL(SSLCert *sslCert);
+    int initSSL(SessionInfo *sessionInfo);
 };
 
 

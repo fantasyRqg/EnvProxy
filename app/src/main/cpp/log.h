@@ -21,7 +21,6 @@
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
 
-
 #else
 
 #define ALOGV(...)
@@ -41,5 +40,18 @@
                                     inet_ntop(AF_INET6, &ipPkt->srcAddr.ip6, source, sizeof(source)); \
                                     inet_ntop(AF_INET6, &ipPkt->dstAddr.ip6, dest, sizeof(dest)); \
                                 }
+
+
+#define ERR_PRINT_ERRORS_LOG() BIO *errB = BIO_new(BIO_s_mem()); \
+                                ERR_print_errors(errB); \
+                                auto eLen = BIO_ctrl_pending(errB); \
+                                if (eLen > 0) { \
+                                char *err = static_cast<char *>(malloc(eLen + 1)); \
+                                memset(err, 0, eLen + 1); \
+                                BIO_read(errB, err, eLen); \
+                                ALOGE("ERR_print_errors: %s", err); \
+                                free(err); \
+                                } \
+                                BIO_free_all(errB)
 
 #endif //ENVPROXY_LOG_H

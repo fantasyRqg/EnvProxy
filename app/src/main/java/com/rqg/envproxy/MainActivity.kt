@@ -35,7 +35,7 @@ class MainActivity : Activity() {
         private const val REQUEST_CONNECT = 0
         private const val REQUEST_INSTALL_CERT = 1
 
-        val ROOT_CA_FINGERPRINT_SHA1 = "7E05BA80BEC8098FE4EAF636499F9E86FE2FCBDC".hexStringToByteArray()
+        val ROOT_CA_FINGERPRINT_SHA1 = "C20B596423AF562AD943300C5D7768E4553DEE32".hexStringToByteArray()
     }
 
     private var sslCmdReady = false

@@ -24,38 +24,24 @@ object SSLCmd {
     }
 
 
-    val rootCert by lazy {
-        File(workingDir.absolutePath + "/ca.cert.pem")
-    }
+    private val intermediateCert by lazy { File(workingDir.absolutePath + "/ca.cert.pem") }
 
-    val rootKey by lazy {
-        File(workingDir.absolutePath + "/ca.key.pem")
-    }
+    private val intermediateKey by lazy { File(workingDir.absolutePath + "/ca.key.pem") }
 
-    private val opensslExecutable by lazy {
-        File(workingDir.absolutePath + "/openssl")
-    }
+    val rootCert by lazy { File(workingDir.absolutePath + "/root.cert.pem") }
 
-    private val sslCnf by lazy {
-        File(workingDir.absolutePath + "/openssl.cnf")
-    }
+    private val opensslExecutable by lazy { File(workingDir.absolutePath + "/openssl") }
 
-    private val priDir by lazy {
-        File(workingDir.absolutePath + "/private")
-    }
+    private val sslCnf by lazy { File(workingDir.absolutePath + "/openssl.cnf") }
 
-    val certsDir by lazy {
-        File(workingDir.absolutePath + "/certs")
-    }
+    private val priDir by lazy { File(workingDir.absolutePath + "/private") }
 
-    private val csrDir by lazy {
-        File(workingDir.absolutePath + "/csr")
-    }
+    val certsDir by lazy { File(workingDir.absolutePath + "/certs") }
+
+    private val csrDir by lazy { File(workingDir.absolutePath + "/csr") }
 
 
-    val basePrivateKey by lazy {
-        File(workingDir.absolutePath + "/base_private_key.key.pem")
-    }
+    val basePrivateKey by lazy { File(workingDir.absolutePath + "/base_private_key.key.pem") }
 
     fun prepareOpenSSLExecutable(): Boolean {
         Log.d(TAG, "prepareOpenSSLExecutable: " + workingDir.absoluteFile)
@@ -65,13 +51,18 @@ object SSLCmd {
             return false
         }
 
-        if (!rootCert.exists() && !copyFileFromAssetToWorkingDir("ca.cert.pem")) {
+        if (!rootCert.exists() && !copyFileFromAssetToWorkingDir("root.cert.pem")) {
             Log.e(TAG, "prepareOpenSSLExecutable: copy root cert file failure")
             return false
         }
 
-        if (!rootKey.exists() && !copyFileFromAssetToWorkingDir("ca.key.pem")) {
-            Log.e(TAG, "prepareOpenSSLExecutable: copy root key file failure")
+        if (!intermediateCert.exists() && !copyFileFromAssetToWorkingDir("ca.cert.pem")) {
+            Log.e(TAG, "prepareOpenSSLExecutable: copy intermediate cert file failure")
+            return false
+        }
+
+        if (!intermediateKey.exists() && !copyFileFromAssetToWorkingDir("ca.key.pem")) {
+            Log.e(TAG, "prepareOpenSSLExecutable: copy intermediate key file failure")
             return false
         }
 
@@ -235,16 +226,22 @@ object SSLCmd {
     fun generateSignedCert(url: String): Int {
         var r = 0
 
-        r = runCmd("${opensslExecutable.absolutePath} req -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -key ${basePrivateKey.absolutePath} -new -sha256 -out ${csrDir.absolutePath}/${url}.csr.pem -subj /C=CN/ST=HangZhou/L=West_Lake/O=YZ/OU=Retail/CN=${url}")
+        r = runCmd("${opensslExecutable.absolutePath} req -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -key ${basePrivateKey.absolutePath} -new -sha256 -out ${csrDir.absolutePath}/${url}.csr.pem -subj /C=CN/ST=HangZhou/L=West_Lake/O=YZ/OU=Retail/CN=${url} -addext subjectAltName=DNS:${url}")
         if (r != 0) {
-            Log.e(TAG, "test: req failure")
+            Log.e(TAG, "generateSignedCert: req failure")
             return r
         }
         r = runCmd("${opensslExecutable.absolutePath} ca -batch -passin pass:1234567890 -config ${sslCnf.absolutePath} -extensions server_cert -days 3000 -notext -md sha256 -in ${csrDir.absolutePath}/${url}.csr.pem -out ${certsDir.absolutePath}/${url}.cert.pem")
         if (r != 0) {
-            Log.e(TAG, "test: ca failure")
+            Log.e(TAG, "generateSignedCert: ca failure")
             return r
         }
+
+//        r = runCmd("cat ${intermediateCert.absolutePath} >> ${certsDir.absolutePath}/${url}.cert.pem")
+//        if (r != 0) {
+//            Log.e(TAG, "generateSignedCert: append intermediate cert failure")
+//            return r
+//        }
 
 
         return r

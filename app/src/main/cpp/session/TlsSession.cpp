@@ -20,6 +20,7 @@
 
 
 #define LOG_TAG "TlsSession"
+#define READ_BUFFER_SIZE  1024 * 16
 
 struct TlsCtx {
     SSL_CTX *ctx = nullptr;                                                                       /* main ssl context */
@@ -30,6 +31,7 @@ struct TlsCtx {
 
 typedef void (*info_callback)(const SSL *, int, int);
 
+void free_ctx(TlsCtx *ctx);
 
 const char *getSSLErrStr(int e) {
     switch (e) {
@@ -173,6 +175,26 @@ TlsSession::TlsSession(SessionInfo *sessionInfo)
           mClient(nullptr), mPendingData(nullptr) {
 
     initSSL(sessionInfo);
+
+    mReadBuffer = static_cast<uint8_t *>(malloc(READ_BUFFER_SIZE));
+}
+
+
+TlsSession::~TlsSession() {
+    ALOGW("release TlsSession %p", this);
+    if (mTunServer != nullptr) {
+        free_ctx(mTunServer);
+        mTunServer = nullptr;
+    }
+
+    if (mClient != nullptr) {
+        free_ctx(mClient);
+        mClient = nullptr;
+    }
+
+    if (mReadBuffer != nullptr) {
+        free(mReadBuffer);
+    }
 }
 
 int TlsSession::initSSL(SessionInfo *sessionInfo) {
@@ -211,19 +233,6 @@ void free_ctx(TlsCtx *ctx) {
 
     delete ctx;
 
-}
-
-TlsSession::~TlsSession() {
-    ALOGW("release TlsSession %p", this);
-    if (mTunServer != nullptr) {
-        free_ctx(mTunServer);
-        mTunServer = nullptr;
-    }
-
-    if (mClient != nullptr) {
-        free_ctx(mClient);
-        mClient = nullptr;
-    }
 }
 
 int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
@@ -270,38 +279,33 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
                 return -1;
             }
         }
-
-
-
-        //after do handshake has data to tun
-        auto toTunSize = BIO_ctrl_pending(mTunServer->out_bio);
-        if (toTunSize > 0) {
-            auto to_tun_data = createDataBuffer(sessionInfo, toTunSize);
-
-            void *buf = malloc(toTunSize);
-            auto r_size = BIO_read(mTunServer->out_bio, buf, toTunSize);
-            memcpy(to_tun_data->data, buf, toTunSize);
-            free(buf);
-
-            //write handshake data to tun
-            prev->onSocketUp(sessionInfo, to_tun_data);
-        }
     } else {
         //assume must have next session (httpSession)
         // handle ssl/tls data from tun
-        auto d_size = SSL_pending(mTunServer->ssl);
+        auto d_size = SSL_read(mTunServer->ssl, mReadBuffer, READ_BUFFER_SIZE);
+        ALOGD("ssl read size: %u", d_size);
         if (d_size > 0) {
             auto h_data = createDataBuffer(sessionInfo, static_cast<size_t>(d_size));
-            if (SSL_read(mTunServer->ssl, h_data->data, h_data->size) != h_data->size) {
-                ALOGE("read tun server data fail");
-                freeLinkDataBuffer(sessionInfo, downData);
-                freeLinkDataBuffer(sessionInfo, h_data);
-                return -1;
-            }
-
+            memcpy(h_data->data, mReadBuffer, d_size);
             next->onTunDown(sessionInfo, h_data);
+        } else {
+            ERR_PRINT_ERRORS_LOG();
+            prev->onSocketUp(sessionInfo, NULL);
         }
+    }
 
+    //after do handshake has data to tun
+    auto toTunSize = BIO_ctrl_pending(mTunServer->out_bio);
+    if (toTunSize > 0) {
+        auto to_tun_data = createDataBuffer(sessionInfo, toTunSize);
+
+        void *buf = malloc(toTunSize);
+        auto r_size = BIO_read(mTunServer->out_bio, buf, toTunSize);
+        memcpy(to_tun_data->data, buf, toTunSize);
+        free(buf);
+
+        //write handshake data to tun
+        prev->onSocketUp(sessionInfo, to_tun_data);
     }
 
     freeLinkDataBuffer(sessionInfo, downData);

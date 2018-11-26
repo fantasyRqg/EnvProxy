@@ -226,8 +226,8 @@ void queue_tcp(SessionInfo *sessionInfo,
         dbuff->sent = 0;
         //keep remote_seq change before onTunDown
         status->remote_seq = seq + datalen;
-        sessionInfo->session->onTunDown(sessionInfo, dbuff);
 
+        sessionInfo->session->onTunDown(sessionInfo, dbuff);
 
 
         // Get receive window
@@ -1384,10 +1384,13 @@ time_t TcpHandler::checkTimeout(SessionInfo *sessionInfo, time_t timeout, int de
 
 
 int TcpHandler::dataToTun(SessionInfo *sessionInfo, DataBuffer *data) {
+    TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
+
     if (data == nullptr) {
+        //notify client data received, maybe do extra actions
+        write_ack(sessionInfo, status);
         return 0;
     }
-    TcpStatus *status = static_cast<TcpStatus *>(sessionInfo->tData);
 
     auto d = data;
     while (d != nullptr) {

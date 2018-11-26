@@ -36,7 +36,7 @@ private:
     TlsCtx *mTunServer = nullptr;
     TlsCtx *mClient = nullptr;
     DataBuffer *mPendingData = nullptr;
-
+    uint8_t *mReadBuffer = nullptr;
 
 
     int handlePendingData(SessionInfo *sessionInfo);

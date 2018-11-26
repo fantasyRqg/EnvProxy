@@ -26,6 +26,8 @@ import java.security.KeyStore
 import java.security.KeyStoreException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import java.security.cert.CertificateParsingException
+import java.security.cert.X509Certificate
 import java.util.*
 
 
@@ -217,6 +219,32 @@ class MainActivity : Activity() {
         }
 
     }
+
+    private fun getSubjectAltNames(certificate: X509Certificate, type: Int): List<String> {
+        val result = ArrayList<String>()
+        try {
+            Log.d(TAG, "getSubjectAltNames: ${certificate.subjectDN.name}")
+            val subjectAltNames = certificate.subjectAlternativeNames ?: return emptyList()
+            for (subjectAltName in subjectAltNames) {
+                val entry = subjectAltName as List<*>
+                if (entry == null || entry.size < 2) {
+                    continue
+                }
+                val altNameType = entry[0] as Int ?: continue
+                if (altNameType == type) {
+                    val altName = entry[1] as String
+                    if (altName != null) {
+                        result.add(altName)
+                    }
+                }
+            }
+            return result
+        } catch (e: CertificateParsingException) {
+            Log.e(TAG, "getSubjectAltNames: ", e)
+            return emptyList()
+        }
+
+    }
 }
 
 
@@ -302,4 +330,6 @@ object LogEventListener : EventListener() {
     override fun secureConnectEnd(call: Call?, handshake: Handshake?) {
         Log.d(TAG, "secureConnectEnd() called with: call = [ ${call} ], handshake = [ ${handshake} ]")
     }
+
+
 }

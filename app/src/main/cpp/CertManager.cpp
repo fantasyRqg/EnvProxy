@@ -220,7 +220,8 @@ SSLCert *CertManager::getSSLCtx(char *hostName) {
 
     //check memory cache
     if (cert == nullptr) {
-        char *path = static_cast<char *>(malloc(strlen(certsDirPath) + strlen(hostName) + sizeof(PEM_FILE_SUFFIX)));
+        char *path = static_cast<char *>(malloc(
+                strlen(certsDirPath) + strlen(hostName) + sizeof(PEM_FILE_SUFFIX)));
         strcpy(path, certsDirPath);
         strcat(path, hostName);
         strcat(path, PEM_FILE_SUFFIX);

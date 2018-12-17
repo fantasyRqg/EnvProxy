@@ -36,6 +36,14 @@ int HttpSession::onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) {
 }
 
 int HttpSession::onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) {
+    ADDR_TO_STR(sessionInfo)
+    ALOGV("onSocketDown %p new from %s:%d to %s:%d , data size = %u", this, source,
+          sessionInfo->sPort,
+          dest,
+          sessionInfo->dPort, downData->size);
+
+    ALOGV("%s", downData->data);
+
     return onSocketUp(sessionInfo, downData);
 }
 

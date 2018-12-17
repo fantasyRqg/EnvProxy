@@ -65,7 +65,6 @@ const char *getSSLErrStr(int e) {
 }
 
 /* this sets up the SSL* */
-
 int ssl_init(TlsCtx *k, int isserver, info_callback cb) {
     /* create SSL* */
     k->ssl = SSL_new(k->ctx);
@@ -157,7 +156,7 @@ void ssl_info_callback(const SSL *ssl, int where, int ret, const char *name) {
         return;
     }
 
-    ALOGV("+ %s %20.20s  - %30.30s  - %5.10s", name, getSSLCbMsg(where),
+    ALOGV("+ %s %20.20s  - %30s  - %5.10s", name, getSSLCbMsg(where),
           SSL_state_string_long(ssl), SSL_state_string(ssl));
 }
 
@@ -283,7 +282,6 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
         //assume must have next session (httpSession)
         // handle ssl/tls data from tun
         auto d_size = SSL_read(mTunServer->ssl, mReadBuffer, READ_BUFFER_SIZE);
-        ALOGD("ssl read size: %u", d_size);
         if (d_size > 0) {
             auto h_data = createDataBuffer(sessionInfo, static_cast<size_t>(d_size));
             memcpy(h_data->data, mReadBuffer, d_size);
@@ -314,11 +312,11 @@ int TlsSession::onTunDown(SessionInfo *sessionInfo, DataBuffer *downData) {
 
 
 int TlsSession::onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) {
-
+    ALOGV("tsl onTunUp");
     if (!SSL_is_init_finished(mClient->ssl)) {
         //client handshake not finish
         int rCode = SSL_do_handshake(mClient->ssl);
-        if (rCode <= 0) {
+        if (rCode <= 0 && SSL_get_error(mClient->ssl, rCode) != SSL_ERROR_WANT_READ) {
             ALOGE("tls client handshake error, %s",
                   getSSLErrStr(SSL_get_error(mClient->ssl, rCode)));
             return 0;
@@ -329,7 +327,7 @@ int TlsSession::onTunUp(SessionInfo *sessionInfo, DataBuffer *upData) {
             appendPendingData(upData);
         }
 
-        return 0;
+        return handlePendingData(sessionInfo);
     } else {
         //ssl handshake has finished
         //deal pendding data first,
@@ -357,13 +355,23 @@ int TlsSession::outClientData(SessionInfo *sessionInfo) {
 }
 
 int TlsSession::onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) {
-    BIO_write(mClient->in_bio, downData->data, downData->size);
-
     int result = 0;
+
+    auto rdLen = BIO_write(mClient->in_bio, downData->data, downData->size);
+
+    ALOGD("onSocketDown raw data size: %u,  write in client out-bio data size: %d", downData->size,
+          rdLen);
+
+    if (rdLen != downData->size) {
+        ALOGE("write server data to client in-bio failure, size: %d", downData->size);
+        result = -1;
+        goto out;
+    }
+
 
     if (!SSL_is_init_finished(mClient->ssl)) {
         int code = SSL_do_handshake(mClient->ssl);
-        if (code <= 0) {
+        if (code <= 0 && SSL_get_error(mClient->ssl, code) != SSL_ERROR_WANT_READ) {
             ALOGE("tls session client handshake error, %s",
                   getSSLErrStr(SSL_get_error(mClient->ssl, code)));
             result = -1;
@@ -371,13 +379,24 @@ int TlsSession::onSocketDown(SessionInfo *sessionInfo, DataBuffer *downData) {
         }
 
         result = outClientData(sessionInfo);
+        if (result == 0) {
+            result = handlePendingData(sessionInfo);
+        }
     } else {
-        auto clen = SSL_pending(mClient->ssl);
+        memset(mReadBuffer, 0, READ_BUFFER_SIZE);
+        auto clen = SSL_read(mClient->ssl, mReadBuffer, READ_BUFFER_SIZE);
+
+        ALOGV("read readable data from server, size: %d", clen);
+
         if (clen > 0) {
             auto cData = createDataBuffer(sessionInfo, static_cast<size_t>(clen));
-            SSL_read(mClient->ssl, cData->data, cData->size);
-
+            memcpy(cData->data, mReadBuffer, clen);
             result = next->onSocketDown(sessionInfo, cData);
+        } else {
+            ALOGE("decrypting server data failure, server send data size: %u", downData->size);
+            ERR_PRINT_ERRORS_LOG();
+            result = -1;
+            goto out;
         }
     }
 
@@ -408,6 +427,11 @@ void TlsSession::releaseResource(SessionInfo *sessionInfo) {
  * @return
  */
 int TlsSession::handlePendingData(SessionInfo *sessionInfo) {
+    if (!SSL_is_init_finished(mClient->ssl)) {
+        return 0;
+    }
+
+    ALOGV("send data to real server, %p", mPendingData);
 
     int result = 0;
 

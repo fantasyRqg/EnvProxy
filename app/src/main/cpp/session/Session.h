@@ -5,12 +5,12 @@
 /**
  *
  *                    Tun                                            socket
- *                     /\                                               /\
+ *                     /∧                                               /∧
  *                    /  \                                             /  \
  *                   /    \                                           /    \
  *                  /      \                                         /      \
  *                 ∨        \                                       ∨        \
- *           onTunDown    onSockUp                           onSocketDown  onTunUp
+ *           onTunDown   onSocketUp                          onSocketDown  onTunUp
  *               |           ∧                                    |           ∧
  *               ∨           |                                    ∨           |
  *          --------------------------------------------------------------------------------
@@ -18,7 +18,7 @@
  *          --------------------------------------------------------------------------------
  *               |           ∧                                    |           ∧
  *               |           |                                    |           |
- *           onTunDown    onSockUp                           onSocketDown  onTunUp
+ *           onTunDown   onSocketUp                          onSocketDown  onTunUp
  *               |           |                                    |           |
  *               ∨           |                                    ∨           |
  *          --------------------------------------------------------------------------------

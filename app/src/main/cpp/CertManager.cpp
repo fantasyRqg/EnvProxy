@@ -76,9 +76,9 @@ int ssl_ctx_init(SSL_CTX **ctx, const char *keyPath, const char *certPath, int i
 
     /* create a new context using DTLS */
     if (is_server) {
-        *ctx = SSL_CTX_new(TLS_server_method());
+        *ctx = SSL_CTX_new(TLSv1_2_server_method());
     } else {
-        *ctx = SSL_CTX_new(TLS_client_method());
+        *ctx = SSL_CTX_new(TLSv1_2_client_method());
     }
     if (!*ctx) {
         ALOGE("Error: cannot create SSL_CTX. ");
@@ -99,11 +99,11 @@ int ssl_ctx_init(SSL_CTX **ctx, const char *keyPath, const char *certPath, int i
 
 
     /* enable srtp */
-    r = SSL_CTX_set_tlsext_use_srtp(*ctx, "SRTP_AES128_CM_SHA1_80");
-    if (r != 0) {
-        ALOGE("Error: cannot setup srtp.");
-        return -3;
-    }
+//    r = SSL_CTX_set_tlsext_use_srtp(*ctx, "SRTP_AES128_CM_SHA1_80");
+//    if (r != 0) {
+//        ALOGE("Error: cannot setup srtp.");
+//        return -3;
+//    }
 
     if (is_server) {
 

@@ -958,6 +958,7 @@ int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
                 break;
             }
         } else {
+            fwdCount += dsent;
             dbuf->sent += dsent;
             if (dbuf->size == dbuf->sent) {
                 auto p_dbuff = dbuf;
@@ -1388,7 +1389,9 @@ int TcpHandler::dataToTun(SessionInfo *sessionInfo, DataBuffer *data) {
 
     if (data == nullptr) {
         //notify client data received, maybe do extra actions
-        write_ack(sessionInfo, status);
+        if (write_ack(sessionInfo, status)) {
+            status->local_seq++;
+        }
         return 0;
     }
 

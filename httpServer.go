@@ -23,6 +23,6 @@ func main() {
         fmt.Fprintf(w, "Hi")
     })
 
-    log.Fatal(http.ListenAndServeTLS("0.0.0.0:8081", "www.evn2.com.cert.pem", "www.env2.com.key.pem",nil))
+    log.Fatal(http.ListenAndServeTLS("0.0.0.0:443", "www.evn2.com.cert.pem", "www.env2.com.key.pem",nil))
     // log.Fatal(http.ListenAndServe("0.0.0.0:8081",nil))
 }

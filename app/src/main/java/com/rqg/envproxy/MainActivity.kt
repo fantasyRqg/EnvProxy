@@ -62,8 +62,8 @@ class MainActivity : Activity() {
         }
 
         btn.setOnClickListener {
-            Observable.just("https://olympic.qima-inc.com/hi")
-//            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+//            Observable.just("https://olympic.qima-inc.com/hi")
+            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
 //            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
 //            Observable.just("https://www.baidu.com")
                     .subscribeOn(Schedulers.io())
@@ -71,7 +71,7 @@ class MainActivity : Activity() {
                         val client = OkHttpClient.Builder()
                                 .retryOnConnectionFailure(false)
 //                                .eventListener(LogEventListener)
-                                .dns { mutableListOf(InetAddress.getByName("172.17.19.17")) }
+//                                .dns { mutableListOf(InetAddress.getByName("172.17.19.17")) }
                                 .build()
 
                         val request = Request.Builder()

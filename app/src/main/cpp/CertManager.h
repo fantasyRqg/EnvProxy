@@ -24,13 +24,13 @@ public:
 
     const SSLCert *const getCommonCert();
 
-    EVP_PKEY * getBaseKey();
+    EVP_PKEY *getBaseKey();
 
     virtual ~CertManager();
 
 private:
     struct cmp_str {
-        bool operator()(char const *a, char const *b) {
+        bool operator()(char const *a, char const *b) const {
             return std::strcmp(a, b) < 0;//比较字符串的内容
         }
     };

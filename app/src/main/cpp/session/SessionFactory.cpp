@@ -109,26 +109,26 @@ static void buildSessionProcess(SessionInfo *si) {
             si->session = tcp;
             tcp->next = nullptr;
 
-            if (si->dPort == 80) {
-                auto http = new HttpSession(si);
-                http->prev = tcp;
-                http->next = nullptr;
-
-                tcp->next = http;
-            }
-            else if (si->dPort == 443) {
-                auto tls = new TlsSession(si);
-                auto http = new HttpSession(si);
-                tls->next = http;
-                http->next = nullptr;
-                tls->prev = tcp;
-                http->prev = tls;
-
-                tcp->next = tls;
-            }
-            else {
-                tcp->next = nullptr;
-            }
+//            if (si->dPort == 80) {
+//                auto http = new HttpSession(si);
+//                http->prev = tcp;
+//                http->next = nullptr;
+//
+//                tcp->next = http;
+//            }
+//            else if (si->dPort == 443) {
+//                auto tls = new TlsSession(si);
+//                auto http = new HttpSession(si);
+//                tls->next = http;
+//                http->next = nullptr;
+//                tls->prev = tcp;
+//                http->prev = tls;
+//
+//                tcp->next = tls;
+//            }
+//            else {
+//                tcp->next = nullptr;
+//            }
         }
             break;
         case IPPROTO_UDP: {
@@ -138,15 +138,15 @@ static void buildSessionProcess(SessionInfo *si) {
 
             udp->next = nullptr;
 
-            if (si->dPort == 53) {
-                auto dns = new DnsSession(si);
-                dns->next = nullptr;
-                dns->prev = udp;
-
-                udp->next = dns;
-            } else {
-                udp->next = nullptr;
-            }
+//            if (si->dPort == 53) {
+//                auto dns = new DnsSession(si);
+//                dns->next = nullptr;
+//                dns->prev = udp;
+//
+//                udp->next = dns;
+//            } else {
+//                udp->next = nullptr;
+//            }
         }
             break;
         default:

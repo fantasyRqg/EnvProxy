@@ -2,9 +2,9 @@
 // Created by Rqg on 03/04/2018.
 //
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cerrno>
 #include <cstring>
 #include <sys/resource.h>
 #include <sys/socket.h>
@@ -19,6 +19,9 @@
 #include <netinet/udp.h>
 #include <netinet/tcp.h>
 #include <netinet/icmp6.h>
+#include <arpa/inet.h>
+#include <linux/in6.h>
+#include <linux/un.h>
 
 #include <openssl/err.h>
 #include <openssl/dh.h>
@@ -27,7 +30,6 @@
 #include <openssl/tls1.h>
 
 #include "proxyEngine.h"
-#include "log.h"
 #include "ip/IpPackageFactory.h"
 #include "ip/IpHandler.h"
 #include "transport/TransportFactory.h"
@@ -35,9 +37,11 @@
 #include "session/SessionFactory.h"
 #include "BufferPool.h"
 #include "util.h"
+#include "log.h"
 
 #define LOG_TAG "proxyEngine"
 
+void reportDataToWs(uint8_t *data, size_t len);
 
 proxyEngine::proxyEngine(size_t mtu)
         : mMTU(mtu),
@@ -50,6 +54,60 @@ proxyEngine::proxyEngine(size_t mtu)
 
 proxyEngine::~proxyEngine() {
     cleanJni();
+}
+
+int localSock = -1;
+
+int createLocalSocket() {
+    int sock;
+    if ((sock = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0)) < 0) {
+        ALOGE("socket() failed: %s (socket sock = %d)\n", strerror(errno), sock);
+        return -1;
+    }
+
+    int flags;
+    if (-1 == (flags = fcntl(sock, F_GETFL, 0))) {
+        flags = 0;
+    }
+    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+
+    return sock;
+}
+
+#define LOCAL_SOCKET_NAME "\0relay"
+
+int startLocalSocket() {
+    struct sockaddr_un addr{};
+    const char name[] = LOCAL_SOCKET_NAME;
+
+
+    addr.sun_family = AF_LOCAL;
+    // size-1 because abstract socket names are *not* null terminated
+    memcpy(addr.sun_path, name, sizeof(name) - 1);
+
+    //https://github.com/pocoproject/poco/issues/2042
+    //this is a linux peculiarity, size for abstract namespace socket address should be
+    auto alen = sizeof(addr.sun_family) + sizeof(name) - 1;
+
+    auto sock = createLocalSocket();
+    if (connect(sock, (struct sockaddr *) &addr, alen) < 0) {
+        ALOGE("connect() failed: %s (sock = %d)", strerror(errno), sock);
+        return -1;
+    }
+
+    return sock;
+}
+
+void reportDataToWs(uint8_t *data, size_t len) {
+    if (localSock > 0) {
+        auto rl = write(localSock, data, len);
+
+        if (rl != len) {
+            ALOGW("write localSock not integrity");
+        }
+    } else {
+        ALOGW("localSock is invalid");
+    }
 }
 
 void proxyEngine::handleEvents() {
@@ -90,7 +148,11 @@ void proxyEngine::handleEvents() {
             mMTU,
             maxsessions,
             0,
-            certManager};
+            certManager,
+            reportDataToWs
+    };
+
+    localSock = startLocalSocket();
 
 
     //ip package factory
@@ -230,6 +292,7 @@ void proxyEngine::handleEvents() {
     ALOGI("proxy stop");
 }
 
+
 void proxyEngine::logPkt(const IpPackage *ipPkt, const TransportPkt *tPkt) const {
     ADDR_TO_STR(ipPkt);
 
@@ -266,6 +329,9 @@ IpPackage *proxyEngine::checkTun(ProxyContext *context, epoll_event *pEvent,
                 // Retry later
                 return nullptr;
         } else if (length > 0) {
+
+            reportDataToWs(buffer, length);
+
             auto ipPkt = ipPackageFactory->createIpPackage(buffer, static_cast<size_t>(length));
             if (ipPkt == NULL) {
                 ALOGW("unhandled package ip_version %d", *buffer >> 4);

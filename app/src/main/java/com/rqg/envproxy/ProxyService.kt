@@ -140,7 +140,7 @@ class ProxyService : VpnService() {
                 .setSession(getString(R.string.app_name))
                 .setMtu(ProxyNative.getMTU())
                 .setBlocking(false)
-                .addAllowedApplication(BuildConfig.APPLICATION_ID)
+//                .addAllowedApplication(BuildConfig.APPLICATION_ID)
                 .setConfigureIntent(pi)
 
         // VPN address

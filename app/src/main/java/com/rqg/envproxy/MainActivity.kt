@@ -62,9 +62,9 @@ class MainActivity : Activity() {
         }
 
         btn.setOnClickListener {
-//            Observable.just("https://olympic.qima-inc.com/hi")
-            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
-//            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
+            //            Observable.just("https://olympic.qima-inc.com/hi")
+//            Observable.just("https://olympic.qima-inc.com/api/apps.get?page=0&app_id=&app_version=&type=&count=10&end_time=2018-05-10")
+            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
 //            Observable.just("https://www.baidu.com")
                     .subscribeOn(Schedulers.io())
                     .map {
@@ -100,23 +100,23 @@ class MainActivity : Activity() {
                 .sendBroadcast(Intent(ProxyService.STATUS_BROADCAST_TRIGGER))
 
 
-        val subscribe = Observable.just(true)
-                .observeOn(Schedulers.io())
-                .map {
-                    sslCmdReady = SSLCmd.prepareOpenSSLExecutable()
-                    it
-                }
-                .map {
-                    if (!checkCAInstalled()) {
-                        installCa()
-                    }
-
-                    it
-                }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    updateRootCertStatus()
-                }
+//        val subscribe = Observable.just(true)
+//                .observeOn(Schedulers.io())
+//                .map {
+//                    sslCmdReady = SSLCmd.prepareOpenSSLExecutable()
+//                    it
+//                }
+//                .map {
+//                    if (!checkCAInstalled()) {
+//                        installCa()
+//                    }
+//
+//                    it
+//                }
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe {
+//                    updateRootCertStatus()
+//                }
     }
 
 

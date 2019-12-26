@@ -54,6 +54,7 @@ class BufferPool;
 
 class proxyEngine;
 
+typedef void (*reportData)(uint8_t *, size_t);
 
 struct ProxyContext {
     proxyEngine *engine;
@@ -63,6 +64,7 @@ struct ProxyContext {
     int maxSessions;
     int sessionCount;
     CertManager *certManager;
+    reportData reportFn;
 };
 
 //#define balloc context->bufferPool->allocBuffer

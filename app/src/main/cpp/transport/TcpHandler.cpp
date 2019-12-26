@@ -704,6 +704,9 @@ ssize_t write_tcp(const SessionInfo *sessionInfo, const TcpStatus *status, const
 
     ssize_t res = write(sessionInfo->context->tunFd, buffer, len);
 
+    sessionInfo->context->reportFn(buffer, len);
+
+
     // Write pcap record
     if (res < 0) {
         ALOGE("TCP write%s%s%s%s data %zu error %u: %s",
@@ -1092,7 +1095,7 @@ void *TcpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
 
         // Monitor events
         memset(&sessionInfo->ev, 0, sizeof(struct epoll_event));
-        sessionInfo->ev.events = EPOLLOUT | EPOLLERR;
+        sessionInfo->ev.events = EPOLLERR;
         sessionInfo->ev.data.ptr = sessionInfo;
         if (epoll_ctl(sessionInfo->context->epollFd, EPOLL_CTL_ADD, status->socket,
                       &sessionInfo->ev)) {

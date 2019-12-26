@@ -181,6 +181,8 @@ ssize_t write_icmp(SessionInfo *sessionInfo, IcmpStatus *status,
 
     ssize_t res = write(sessionInfo->context->tunFd, buffer, len);
 
+    sessionInfo->context->reportFn(buffer, len);
+
     // Write PCAP record
     if (res < 0) {
         ALOGW("ICMP write error %d: %s", errno, strerror(errno));
@@ -207,9 +209,9 @@ void IcmpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
         socklen_t optlen = sizeof(int);
         int err = getsockopt(status->socket, SOL_SOCKET, SO_ERROR, &serr, &optlen);
         if (err < 0)
-            ALOGE("ICMP getsockopt error %d: %s", errno, strerror(errno));
+                ALOGE("ICMP getsockopt error %d: %s", errno, strerror(errno));
         else if (serr)
-            ALOGE("ICMP SO_ERROR %d: %s", serr, strerror(serr));
+                ALOGE("ICMP SO_ERROR %d: %s", serr, strerror(serr));
 
         status->stop = true;
     } else {
@@ -218,7 +220,7 @@ void IcmpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
             sessionInfo->lastActive = time(NULL);
 
             uint16_t blen = (uint16_t) (sessionInfo->version == IPVERSION ? ICMP4_MAXMSG
-                                                                            : ICMP6_MAXMSG);
+                                                                          : ICMP6_MAXMSG);
             uint8_t *buffer = static_cast<uint8_t *>(malloc(blen));
             ssize_t bytes = recv(status->socket, buffer, blen, 0);
             if (bytes < 0) {
@@ -304,7 +306,7 @@ void *IcmpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *firs
     sessionInfo->ev.events = EPOLLIN | EPOLLERR;
     sessionInfo->ev.data.ptr = s;
     if (epoll_ctl(sessionInfo->context->epollFd, EPOLL_CTL_ADD, s->socket, &sessionInfo->ev))
-        ALOGE("epoll add icmp error %d: %s", errno, strerror(errno));
+            ALOGE("epoll add icmp error %d: %s", errno, strerror(errno));
 
 
     createFail:
@@ -358,7 +360,7 @@ int IcmpHandler::checkSession(SessionInfo *sessionInfo) {
             }
 
             if (close(status->socket))
-                ALOGE("ICMP close %d error %d: %s", status->socket, errno, strerror(errno));
+                    ALOGE("ICMP close %d error %d: %s", status->socket, errno, strerror(errno));
 
             status->socket = -1;
         }

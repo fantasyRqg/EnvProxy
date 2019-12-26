@@ -196,17 +196,17 @@ int open_udp_socket(SessionInfo *sessionInfo, UdpStatus *status) {
 
             int loop = 1; // true
             if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &loop, sizeof(loop)))
-                ALOGE("UDP setsockopt IPV6_MULTICAST_LOOP error %d: %s", errno, strerror(errno));
+                    ALOGE("UDP setsockopt IPV6_MULTICAST_LOOP error %d: %s", errno, strerror(errno));
 
             int ttl = -1; // route default
             if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ttl, sizeof(ttl)))
-                ALOGE("UDP setsockopt IPV6_MULTICAST_HOPS error %d: %s", errno, strerror(errno));
+                    ALOGE("UDP setsockopt IPV6_MULTICAST_HOPS error %d: %s", errno, strerror(errno));
 
             struct ipv6_mreq mreq6;
             memcpy(&mreq6.ipv6mr_multiaddr, &sessionInfo->dstAddr.ip6, sizeof(struct in6_addr));
             mreq6.ipv6mr_interface = INADDR_ANY;
             if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq6, sizeof(mreq6)))
-                ALOGE("UDP setsockopt IPV6_ADD_MEMBERSHIP error %d: %s", errno, strerror(errno));
+                    ALOGE("UDP setsockopt IPV6_ADD_MEMBERSHIP error %d: %s", errno, strerror(errno));
         }
     }
 
@@ -311,6 +311,8 @@ ssize_t write_udp(const SessionInfo *sessionInfo, const UdpStatus *status,
 
     ssize_t res = write(sessionInfo->context->tunFd, buffer, len);
 
+    sessionInfo->context->reportFn(buffer, len);
+
     // Write PCAP record
     if (res < 0) {
         ALOGW("UDP write error %d: %s", errno, strerror(errno));
@@ -338,9 +340,9 @@ void UdpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
         socklen_t optlen = sizeof(int);
         int err = getsockopt(status->socket, SOL_SOCKET, SO_ERROR, &serr, &optlen);
         if (err < 0)
-            ALOGE("UDP getsockopt error %d: %s", errno, strerror(errno));
+                ALOGE("UDP getsockopt error %d: %s", errno, strerror(errno));
         else if (serr)
-            ALOGE("UDP SO_ERROR %d: %s", serr, strerror(serr));
+                ALOGE("UDP SO_ERROR %d: %s", serr, strerror(serr));
 
         status->state = UDP_FINISHING;
     } else {
@@ -428,7 +430,7 @@ void *UdpHandler::createStatusData(SessionInfo *sessionInfo, TransportPkt *first
     sessionInfo->ev.events = EPOLLIN | EPOLLERR;
     sessionInfo->ev.data.ptr = sessionInfo;
     if (epoll_ctl(sessionInfo->context->epollFd, EPOLL_CTL_ADD, status->socket, &sessionInfo->ev))
-        ALOGE("epoll add udp error %d: %s", errno, strerror(errno));
+            ALOGE("epoll add udp error %d: %s", errno, strerror(errno));
 
     return status;
 }
@@ -488,7 +490,7 @@ int UdpHandler::checkSession(SessionInfo *sessionInfo) {
             }
 
             if (close(status->socket))
-                ALOGE("UDP close %d error %d: %s", status->socket, errno, strerror(errno));
+                    ALOGE("UDP close %d error %d: %s", status->socket, errno, strerror(errno));
             status->socket = -1;
         }
 

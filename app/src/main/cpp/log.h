@@ -9,7 +9,7 @@
 #include <netinet/ip6.h>
 
 
-#define ENABLE_LOG
+//#define ENABLE_LOG
 
 
 #ifdef ENABLE_LOG

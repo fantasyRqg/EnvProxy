@@ -1,16 +1,14 @@
 package com.rqg.envproxy
 
 import android.app.*
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Color
 import android.net.VpnService
 import android.os.Build
-import android.support.annotation.RequiresApi
-import android.support.v4.app.NotificationCompat
-import android.support.v4.content.LocalBroadcastManager
+import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
 
 /**
  * * Created by rqg on 03/04/2018.
@@ -19,25 +17,26 @@ import android.support.v4.content.LocalBroadcastManager
 
 class ProxyService : VpnService() {
     companion object {
-        const val STATUS_BROADCAST = "STATUS_BROADCAST"
-        const val STATUS_BROADCAST_TRIGGER = "STATUS_BROADCAST_TRIGGER"
+        private const val TAG = "ProxyService"
 
-        const val PROXY_STATUS = "PROXY_STATUS"
         const val STATUS_RUNNING = 1
-        const val STATUS_STOPED = 2
+        const val STATUS_STOPPED = 2
 
         const val PROXY_CMD = "PROXY_CMD"
         const val CMD_START = 1
         const val CMD_STOP = 2
 
+        const val APP_PN_CMD = "APP_PN_CMD"
+
         const val NOTIFICATION_CHANNEL = "EnvProxy"
     }
 
     private val proxyNative by lazy { ProxyNative(this) }
-
+    private var appPackageName = ""
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val cmd = intent?.getIntExtra(PROXY_CMD, -1)
+        appPackageName = intent?.getStringExtra(APP_PN_CMD) ?: ""
 
         when (cmd) {
             CMD_START -> {
@@ -54,6 +53,7 @@ class ProxyService : VpnService() {
     }
 
     private fun stopProxy() {
+        Log.d(TAG, "stopProxy: ")
         proxyNative.stopProxy()
     }
 
@@ -63,14 +63,16 @@ class ProxyService : VpnService() {
     }
 
     private fun startProxy() {
+        ServiceBus.publish(STATUS_RUNNING)
         startForeground(1, getNotification())
         val fileDp = getVpnBuilder().establish()
         proxyNative.vpnFileDescriptor = fileDp
         Thread {
-
             setKeyAndCertificate()
             proxyNative.startProxy()
             proxyNative.vpnFileDescriptor?.close()
+            stopForeground(true)
+            ServiceBus.publish(STATUS_STOPPED)
         }.start()
     }
 
@@ -82,14 +84,6 @@ class ProxyService : VpnService() {
 //        proxyNative.setKeyAndCertsDir(keyFile.absolutePath, certFile.absolutePath)
     }
 
-    private val triggerReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val bi = Intent(STATUS_BROADCAST)
-            bi.putExtra(PROXY_STATUS, if (proxyNative.isProxyRunning) STATUS_RUNNING else STATUS_STOPED)
-            LocalBroadcastManager.getInstance(this@ProxyService)
-                .sendBroadcast(bi)
-        }
-    }
 
     override fun protect(socket: Int): Boolean {
         val protect = super.protect(socket)
@@ -98,14 +92,11 @@ class ProxyService : VpnService() {
 
     override fun onCreate() {
         super.onCreate()
-        LocalBroadcastManager.getInstance(this)
-            .registerReceiver(triggerReceiver, IntentFilter(STATUS_BROADCAST_TRIGGER))
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        LocalBroadcastManager.getInstance(this@ProxyService)
-            .unregisterReceiver(triggerReceiver)
 
         stopProxy()
     }
@@ -165,6 +156,10 @@ class ProxyService : VpnService() {
             .setBlocking(false)
 //                .addAllowedApplication(BuildConfig.APPLICATION_ID)
             .setConfigureIntent(pi)
+
+        if (!appPackageName.isBlank()) {
+            builder.addAllowedApplication(appPackageName)
+        }
 
         // VPN address
         builder.addAddress("10.1.10.1", 32)

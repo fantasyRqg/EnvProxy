@@ -8,6 +8,7 @@
 #include <cstring>
 #include <sys/resource.h>
 #include <sys/socket.h>
+#include <sys/eventfd.h>
 #include <poll.h>
 #include <unistd.h>
 
@@ -154,6 +155,16 @@ void proxyEngine::handleEvents() {
 
     localSock = startLocalSocket();
 
+    //prepare stop notify
+    auto exit_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+    struct epoll_event ev_exit;
+    memset(&ev_exit, 0, sizeof(struct epoll_event));
+    ev_exit.events = EPOLLIN | EPOLLERR;
+    ev_exit.data.ptr = &ev_exit;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, exit_fd, &ev_exit)) {
+        ALOGE("epoll add exit error %d: %s", errno, strerror(errno));
+    }
+    exitFd = exit_fd;
 
     //ip package factory
     IpPackageFactory ipPackageFactory(&context);
@@ -171,6 +182,7 @@ void proxyEngine::handleEvents() {
     }
 
     long long last_check = 0;
+
     while (mRunning) {
         //main looping
 
@@ -236,7 +248,10 @@ void proxyEngine::handleEvents() {
         ALOGV("epoll wait %d ms, ready %d", wait_ms, ready);
 
         for (int i = 0; i < ready; ++i) {
-            if (ev[i].data.ptr == &ev_tun) {
+            if (ev[i].data.ptr == &ev_exit) {
+                ALOGD("exit loop %d", ev[i].events);
+                goto exit_loop;
+            } else if (ev[i].data.ptr == &ev_tun) {
 //                 Check upstream
                 ALOGD("tun epoll ready %d/%d in %d out %d err %d hup %d",
                       i, ready,
@@ -282,8 +297,12 @@ void proxyEngine::handleEvents() {
                 si->transportHandler->onSocketEvent(si, &ev[i]);
             }
         }
-
     }
+
+    exit_loop:
+    close(exit_fd);
+    exitFd = -1;
+    close(localSock);
 
     // clean up jni env
     cleanJni();
@@ -351,6 +370,10 @@ IpPackage *proxyEngine::checkTun(ProxyContext *context, epoll_event *pEvent,
 
 void proxyEngine::stopHandleEvents() {
     mRunning = false;
+    ALOGD("stopHandleEvents %d", exitFd);
+    if (exitFd > 0) {
+        eventfd_write(exitFd, 1);
+    }
 }
 
 bool proxyEngine::isProxyRunning() {

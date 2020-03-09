@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,70 +8,55 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/tcp_count"
-        style="@style/CountTextView" />
-
-    <TextView
-        android:id="@+id/udp_count"
-        style="@style/CountTextView" />
-
-    <TextView
-        android:id="@+id/icmp_count"
-        style="@style/CountTextView" />
-
-    <TextView
-        android:id="@+id/unknown_count"
-        style="@style/CountTextView" />
-
-
-    <TextView
-        android:id="@+id/cert_status"
-        style="@style/CountTextView"
-        android:layout_marginTop="15dp"
-        android:padding="5dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="20dp"
         android:gravity="center"
         android:orientation="horizontal">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:layout_marginRight="15dp"
-            android:text="@string/vpn_switch" />
+            android:text="Vpn" />
 
         <com.kyleduo.switchbutton.SwitchButton
             android:id="@+id/vpn_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            app:kswTextOff="OFF"
+            app:kswTextOn="ON" />
     </LinearLayout>
 
 
-    <Button
-        android:id="@+id/btn"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="Get App" />
+        android:layout_marginTop="15dp"
+        android:background="@drawable/bg_dash"
+        android:gravity="center"
+        android:id="@+id/app_info"
+        android:orientation="horizontal"
+        android:padding="5dp">
 
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/app_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
 
         <TextView
-            android:id="@+id/tv_response"
-            android:layout_width="match_parent"
+            android:id="@+id/app_name"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
-            android:padding="5dp" />
+            android:layout_marginLeft="8dp"
+            android:text="All" />
 
-    </ScrollView>
-
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginLeft="8dp"
+            android:src="@drawable/icon_dropdown" />
+    </LinearLayout>
 </LinearLayout>

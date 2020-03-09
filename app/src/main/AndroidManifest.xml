@@ -3,7 +3,6 @@
     package="com.rqg.envproxy">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
     <application
         android:name=".App"
         android:allowBackup="true"

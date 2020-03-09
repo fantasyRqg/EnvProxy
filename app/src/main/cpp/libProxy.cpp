@@ -72,7 +72,7 @@ void setKeyAndCertificate(JNIEnv *env, jobject thiz, jstring key, jstring certsD
     memcpy(ck, nKey, keyLen);
     memcpy(cc, nCert, certLen);
 
-    getProxyEngine(env, thiz)->setKeyAndCertWorkingDir(nCert, nKey);
+//    getProxyEngine(env, thiz)->setKeyAndCertWorkingDir(nCert, nKey);
 
     env->ReleaseStringUTFChars(key, nKey);
     env->ReleaseStringUTFChars(certsDir, nCert);

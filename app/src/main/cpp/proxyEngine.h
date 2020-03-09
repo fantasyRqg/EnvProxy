@@ -58,6 +58,8 @@ private:
 
     CertManager *certManager = nullptr;
 
+    int exitFd = -1;
+
 private:
     IpPackage *
     checkTun(ProxyContext *context, epoll_event *pEvent, IpPackageFactory *ipPackageFactory);

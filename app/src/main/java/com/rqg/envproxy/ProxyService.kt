@@ -1,13 +1,14 @@
 package com.rqg.envproxy
 
-import android.app.Notification
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.net.VpnService
+import android.os.Build
+import android.support.annotation.RequiresApi
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.LocalBroadcastManager
 
@@ -86,7 +87,7 @@ class ProxyService : VpnService() {
             val bi = Intent(STATUS_BROADCAST)
             bi.putExtra(PROXY_STATUS, if (proxyNative.isProxyRunning) STATUS_RUNNING else STATUS_STOPED)
             LocalBroadcastManager.getInstance(this@ProxyService)
-                    .sendBroadcast(bi)
+                .sendBroadcast(bi)
         }
     }
 
@@ -98,33 +99,55 @@ class ProxyService : VpnService() {
     override fun onCreate() {
         super.onCreate()
         LocalBroadcastManager.getInstance(this)
-                .registerReceiver(triggerReceiver, IntentFilter(STATUS_BROADCAST_TRIGGER))
+            .registerReceiver(triggerReceiver, IntentFilter(STATUS_BROADCAST_TRIGGER))
     }
 
     override fun onDestroy() {
         super.onDestroy()
         LocalBroadcastManager.getInstance(this@ProxyService)
-                .unregisterReceiver(triggerReceiver)
+            .unregisterReceiver(triggerReceiver)
 
         stopProxy()
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel(channelId: String, channelName: String): String {
+        val chan = NotificationChannel(
+            channelId,
+            channelName, NotificationManager.IMPORTANCE_HIGH
+        )
+        chan.lightColor = Color.BLUE
+        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        service.createNotificationChannel(chan)
+        return channelId
+    }
+
     private fun getNotification(): Notification? {
         val intent = Intent(this, MainActivity::class.java)
         val pi = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
-        val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentIntent(pi)
-                .setOngoing(true)
-                .setAutoCancel(false)
-                .setContentTitle("Env Proxy")
-                .setContentText("desc")
-                .setCategory(NotificationCompat.CATEGORY_STATUS)
-                .setVisibility(NotificationCompat.VISIBILITY_SECRET)
-                .setPriority(NotificationCompat.PRIORITY_MIN)
-                .build()
+        val channelId =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                createNotificationChannel(NOTIFICATION_CHANNEL, NOTIFICATION_CHANNEL)
+            } else {
+                // If earlier version channel ID is not used
+                // https://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#NotificationCompat.Builder(android.content.Context)
+                NOTIFICATION_CHANNEL
+            }
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentIntent(pi)
+            .setOngoing(true)
+            .setAutoCancel(false)
+            .setContentTitle("Env Proxy")
+            .setContentText("desc")
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .build()
 
         return notification
 
@@ -137,11 +160,11 @@ class ProxyService : VpnService() {
 
 
         val builder = Builder()
-                .setSession(getString(R.string.app_name))
-                .setMtu(ProxyNative.getMTU())
-                .setBlocking(false)
+            .setSession(getString(R.string.app_name))
+            .setMtu(ProxyNative.getMTU())
+            .setBlocking(false)
 //                .addAllowedApplication(BuildConfig.APPLICATION_ID)
-                .setConfigureIntent(pi)
+            .setConfigureIntent(pi)
 
         // VPN address
         builder.addAddress("10.1.10.1", 32)

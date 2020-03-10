@@ -83,7 +83,7 @@ class MainActivity : BaseActivity() {
 //            sendSegment()
 //        }
 
-        loadWechat()
+//        loadWechat()
     }
 
 

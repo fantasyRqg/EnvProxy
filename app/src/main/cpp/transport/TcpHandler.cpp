@@ -148,8 +148,7 @@ void getPackageStr(TransportPkt *pkt, struct TcpStatus *status, char *pktStr) {
             source, ntohs(tcphdr->source),
             dest, ntohs(tcphdr->dest),
             ntohl(tcphdr->seq) - (status == nullptr ? 0 : status->remote_start),
-            tcphdr->ack ? ntohl(tcphdr->ack_seq) - (status == nullptr ? 0 : status->local_start)
-                        : 0,
+            tcphdr->ack ? ntohl(tcphdr->ack_seq) - (status == nullptr ? 0 : status->local_start) : 0,
             pkt->ipPackage->payloadSize, ntohs(tcphdr->window));
 #endif
 }
@@ -217,6 +216,17 @@ void queue_tcp(SessionInfo *sessionInfo,
               seq - status->remote_start,
               seq + datalen - status->remote_start);
     else {
+
+//        DataBuffer *ebuff = status->toSocket;
+//
+//        while (1) {
+//            if (ebuff == nullptr || ebuff->next == nullptr) {
+//                break;
+//            }
+//            ebuff = ebuff->next;
+//        }
+
+//        if (ebuff == nullptr || ebuff->ack != tcphdr->ack) {
         //process sessions
         DataBuffer *dbuff = new DataBuffer();
         dbuff->size = datalen;
@@ -224,10 +234,25 @@ void queue_tcp(SessionInfo *sessionInfo,
         memcpy(dbuff->data, data, datalen);
         dbuff->next = nullptr;
         dbuff->sent = 0;
-        //keep remote_seq change before onTunDown
-        status->remote_seq = seq + datalen;
+        dbuff->psh = tcphdr->psh != 0;
+        dbuff->ack = tcphdr->ack;
 
         sessionInfo->session->onTunDown(sessionInfo, dbuff);
+//        } else {
+//            auto od = ebuff->data;
+//            ebuff->data = static_cast<uint8_t *>(malloc(datalen + ebuff->size));
+//            memcpy(ebuff->data, od, ebuff->size);
+//            memcpy(ebuff->data + ebuff->size, data, datalen);
+//            ebuff->size += datalen;
+//            ebuff->psh = tcphdr->psh != 0;
+//            ebuff->ack = tcphdr->ack;
+//
+//            free(od);
+//        }
+
+
+        //keep remote_seq change before onTunDown
+        status->remote_seq = seq + datalen;
 
 
         // Get receive window
@@ -836,6 +861,8 @@ void TcpHandler::onSocketEvent(SessionInfo *sessionInfo, epoll_event *ev) {
             if (ev->events & EPOLLOUT) {
                 if (writeForwardData(sessionInfo, status) <= 0) {
                     ALOGW("%s, forward data nothing", str_session);
+                } else {
+                    write_ack(sessionInfo, status);
                 }
             }
 
@@ -949,8 +976,10 @@ int writeForwardData(SessionInfo *sessionInfo, TcpStatus *status) {
                           dbuf->data + dbuf->sent,
                           dbuf->size - dbuf->sent,
                           MSG_NOSIGNAL);
-//                          (unsigned int) (MSG_NOSIGNAL | (status->toSocket->psh ? 0 : MSG_MORE))
+//                          (unsigned int) (MSG_NOSIGNAL | (dbuf->psh ? 0 : MSG_MORE)));
+//        auto dsent = write(status->socket, dbuf->data + dbuf->sent, dbuf->size - dbuf->sent);
 
+        ALOGV("writeForwardData %s, dsent:%d, psh:%d", str_session, dsent, dbuf->psh);
         if (dsent < 0) {
             ALOGE("%s send error %d: %s", str_session, errno, strerror(errno));
             if (errno == EINTR || errno == EAGAIN) {

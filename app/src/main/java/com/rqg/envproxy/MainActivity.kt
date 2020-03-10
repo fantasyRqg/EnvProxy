@@ -9,7 +9,10 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.FileInputStream
 import java.io.IOException
 import java.security.KeyStore
@@ -75,8 +78,62 @@ class MainActivity : BaseActivity() {
             }, {
                 Log.e(TAG, "onCreate: ", it)
             })
+
+//        send_segment.rxClick {
+//            sendSegment()
+//        }
+
+        loadWechat()
     }
 
+
+    private fun sendSegment() {
+        Observable.just("http://192.168.31.86:8888/test_segment")
+//            Observable.just("https://raw.githubusercontent.com/barretlee/autocreate-ca/master/cnf/intermediate-ca")
+//            Observable.just("https://www.baidu.com")
+            .subscribeOn(Schedulers.io())
+            .map {
+                val client = OkHttpClient.Builder()
+                    .retryOnConnectionFailure(false)
+//                                .eventListener(LogEventListener)
+//                                .dns { mutableListOf(InetAddress.getByName("172.17.19.17")) }
+                    .build()
+
+
+//                val body = RequestBody.create(
+//
+//                )
+                val request = Request.Builder()
+                    .url(it)
+//                    .post(body)
+                    .build()
+                client.newCall(request)
+                    .execute()
+                    .body()
+                    ?.charStream()
+                    ?.readText()
+            }.dsubscribe({
+                Log.d(TAG, "sendSegment: $it")
+            }, {
+                Log.e(TAG, "sendSegment: ", it)
+            })
+    }
+
+    private fun loadWechat() {
+        val pn = "com.tencent.mm"
+        val info = packageManager.getApplicationInfo(pn, 0)
+
+
+        ViewModelProvider(this).get(VM::class.java)
+            .changeApp
+            .postValue(
+                AppInfo(
+                    packageManager.getApplicationLabel(info),
+                    pn,
+                    packageManager.getApplicationIcon(info)
+                )
+            )
+    }
 
     private fun installCa() {
         val intent = KeyChain.createInstallIntent()

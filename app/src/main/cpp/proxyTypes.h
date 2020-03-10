@@ -133,6 +133,8 @@ struct DataBuffer {
     uint8_t *data = nullptr;
     uint16_t size;
     uint16_t sent;
+    uint16_t ack;
+    bool psh;
     DataBuffer *next = nullptr;
 };
 

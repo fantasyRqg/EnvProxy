@@ -38,9 +38,11 @@
 #include "session/SessionFactory.h"
 #include "BufferPool.h"
 #include "util.h"
+
 #include "log.h"
 
 #define LOG_TAG "proxyEngine"
+
 
 void reportDataToWs(uint8_t *data, size_t len);
 
@@ -58,6 +60,7 @@ proxyEngine::~proxyEngine() {
 }
 
 int localSock = -1;
+ProxyContext *ctx;
 
 int createLocalSocket() {
     int sock;
@@ -71,6 +74,11 @@ int createLocalSocket() {
         flags = 0;
     }
     fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 100;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *) &tv, sizeof tv);
 
     return sock;
 }
@@ -99,15 +107,98 @@ int startLocalSocket() {
     return sock;
 }
 
+struct capData {
+    uint8_t *data;
+    size_t len;
+    capData *next;
+};
+
+capData *reportHeader = nullptr;
+capData *reportTail = nullptr;
+epoll_event ev_report;
+bool reportRespWaiting = false;
+
+
 void reportDataToWs(uint8_t *data, size_t len) {
     if (localSock > 0) {
-        auto rl = write(localSock, data, len);
+        auto item = (capData *) (malloc(sizeof(capData)));
+        item->data = (uint8_t *) malloc(len);
+        memcpy(item->data, data, len);
+        item->next = nullptr;
+        item->len = len;
 
-        if (rl != len) {
-            ALOGW("write localSock not integrity");
+        if (reportHeader == nullptr) {
+            reportHeader = item;
+            reportTail = item;
+        } else {
+            reportTail->next = item;
+            reportTail = item;
+        }
+
+        if (!reportRespWaiting) {
+            ev_report.events = EPOLLOUT | EPOLLIN;
+            if (epoll_ctl(ctx->epollFd, EPOLL_CTL_MOD, localSock, &ev_report)) {
+                ALOGE("epoll mod localSock error %d: %s", errno, strerror(errno));
+            }
         }
     } else {
-        ALOGW("localSock is invalid");
+        ALOGW("capDataToWs localSock is invalid");
+    }
+}
+
+
+void writeCapData() {
+    auto item = reportHeader;
+    if (item == nullptr || reportRespWaiting) {
+        ev_report.events = EPOLLIN;
+        if (epoll_ctl(ctx->epollFd, EPOLL_CTL_MOD, localSock, &ev_report)) {
+            ALOGE("epoll mod localSock error %d: %s", errno, strerror(errno));
+        }
+        return;
+    }
+
+    auto rl = write(localSock, item->data, item->len);
+
+    if (rl != item->len) {
+        ALOGW("writeCapData report data fail");
+        ev_report.events = EPOLLIN;
+        if (epoll_ctl(ctx->epollFd, EPOLL_CTL_MOD, localSock, &ev_report)) {
+            ALOGE("epoll mod localSock error %d: %s", errno, strerror(errno));
+        }
+        return;
+    } else {
+        ALOGV("writeCapData %d", rl);
+    }
+
+    reportHeader = item->next;
+    if (reportTail == item) {
+        reportTail = nullptr;
+    }
+
+    free(item->data);
+    free(item);
+
+    if (reportHeader == nullptr) {
+        ev_report.events = EPOLLIN;
+        if (epoll_ctl(ctx->epollFd, EPOLL_CTL_MOD, localSock, &ev_report)) {
+            ALOGE("epoll mod localSock error %d: %s", errno, strerror(errno));
+        }
+    }
+
+    reportRespWaiting = true;
+}
+
+void readReportResponse() {
+    reportRespWaiting = false;
+
+    uint8_t buf[20];
+    auto rl = read(localSock, buf, 20);
+
+    ALOGD("readReportResponse %d, %c", rl, buf[0]);
+
+    ev_report.events = EPOLLOUT | EPOLLIN;
+    if (epoll_ctl(ctx->epollFd, EPOLL_CTL_MOD, localSock, &ev_report)) {
+        ALOGE("epoll mod localSock error %d: %s", errno, strerror(errno));
     }
 }
 
@@ -152,8 +243,17 @@ void proxyEngine::handleEvents() {
             certManager,
             reportDataToWs
     };
+    ctx = &context;
 
     localSock = startLocalSocket();
+    //prepare report event
+    memset(&ev_report, 0, sizeof(struct epoll_event));
+    ev_report.events = EPOLLIN;
+    ev_report.data.ptr = &ev_report;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, localSock, &ev_report)) {
+        ALOGE("epoll add localSock error %d: %s", errno, strerror(errno));
+        return;
+    }
 
     //prepare stop notify
     auto exit_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
@@ -170,6 +270,7 @@ void proxyEngine::handleEvents() {
     IpPackageFactory ipPackageFactory(&context);
     TransportFactory transportFactory;
     SessionFactory sessionFactory(maxsessions);
+
 
     //monitor tun event
     struct epoll_event ev_tun;
@@ -248,7 +349,14 @@ void proxyEngine::handleEvents() {
         ALOGV("epoll wait %d ms, ready %d", wait_ms, ready);
 
         for (int i = 0; i < ready; ++i) {
-            if (ev[i].data.ptr == &ev_exit) {
+            if (ev[i].data.ptr == &ev_report) {
+                if (ev[i].events & EPOLLIN) {
+                    readReportResponse();
+                } else if (ev[i].events & EPOLLOUT) {
+                    writeCapData();
+                }
+
+            } else if (ev[i].data.ptr == &ev_exit) {
                 ALOGD("exit loop %d", ev[i].events);
                 goto exit_loop;
             } else if (ev[i].data.ptr == &ev_tun) {
@@ -303,6 +411,8 @@ void proxyEngine::handleEvents() {
     close(exit_fd);
     exitFd = -1;
     close(localSock);
+    ctx = nullptr;
+    close(epoll_fd);
 
     // clean up jni env
     cleanJni();

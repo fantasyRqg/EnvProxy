@@ -32,12 +32,12 @@
 
 
     <LinearLayout
+        android:id="@+id/app_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
         android:background="@drawable/bg_dash"
         android:gravity="center"
-        android:id="@+id/app_info"
         android:orientation="horizontal"
         android:padding="5dp">
 
@@ -59,4 +59,11 @@
             android:layout_marginLeft="8dp"
             android:src="@drawable/icon_dropdown" />
     </LinearLayout>
+
+
+<!--    <Button-->
+<!--        android:id="@+id/send_segment"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="send segment" />-->
 </LinearLayout>
